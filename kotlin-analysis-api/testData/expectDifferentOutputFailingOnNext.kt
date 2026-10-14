@@ -17,11 +17,17 @@
 
 // TEST PROCESSOR: TestFrameworkExpectDifferentOutputProcessor
 // EXPECTED:
-// This should be in both configurations
-// EXPECT CURRENT: This should be expected when enableNewFeatures = false
-// EXPECT NEXT: This should cause a failure when enableNewFeatures = true
-// This also be in both configurations
+// This should be in all configurations
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: This should be expected when enableBackingFields = false
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: This different output should be expected when enableBackingFields = true
+// EXPECT ENABLE_CONTEXT_PARAMETERS = FALSE: This should be expected when enableContextParameters = false
+// EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: This different output should be expected when enableContextParameters = true
+// EXPECT ENABLE_BACKING_FIELDS = FALSE, ENABLE_CONTEXT_PARAMETERS = FALSE: Combined configuration: enableBackingFields = false, enableContextParameters = false
+// EXPECT ENABLE_BACKING_FIELDS = TRUE, ENABLE_CONTEXT_PARAMETERS = FALSE: Combined configuration: enableBackingFields = true, enableContextParameters = false
+// EXPECT ENABLE_BACKING_FIELDS = FALSE, ENABLE_CONTEXT_PARAMETERS = TRUE: Combined configuration: enableBackingFields = false, enableContextParameters = true
+// EXPECT ENABLE_BACKING_FIELDS = TRUE, ENABLE_CONTEXT_PARAMETERS = TRUE: This should cause a failure when enableBackingFields = true and enableContextParameters = true
+// This should also be in all configurations
 // END
 
 // N.B.: Explicitly empty file. This test asserts that the test framework can change the expected test output with
-// the EXPECT CURRENT and EXPECT NEXT directives.
+// the EXPECT directives.

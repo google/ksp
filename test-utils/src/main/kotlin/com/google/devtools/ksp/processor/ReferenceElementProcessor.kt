@@ -17,14 +17,15 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.getPropertyDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-open class ReferenceElementProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+open class ReferenceElementProcessor(override val apiFeatures: ApiFeatures): AbstractTestProcessor() {
     val results = mutableListOf<String>()
-    val collector = ReferenceCollector(enableNewFeatures)
+    val collector = ReferenceCollector(apiFeatures)
     val references = mutableSetOf<KSTypeReference>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -86,7 +87,7 @@ open class ReferenceElementProcessor(override val enableNewFeatures: Boolean): A
     }
 }
 
-class ReferenceCollector(enableNewFeatures: Boolean) : KSTopDownVisitor<MutableSet<KSTypeReference>, Unit>(enableNewFeatures) {
+class ReferenceCollector(apiFeatures: ApiFeatures) : KSTopDownVisitor<MutableSet<KSTypeReference>, Unit>(apiFeatures) {
     override fun defaultHandler(node: KSNode, data: MutableSet<KSTypeReference>) = Unit
 
     override fun visitTypeReference(typeReference: KSTypeReference, data: MutableSet<KSTypeReference>) {

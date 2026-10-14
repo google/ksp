@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.common.impl
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
@@ -43,9 +44,9 @@ interface AnnotationResolutionStrategy {
      *
      * @param annotationName is the fully qualified name of the fully expanded type (i.e. no type alias); using '.' as separator.
      * @param inDepth whether to check symbols in depth, i.e. check symbols from local declarations. Operation can be expensive if true.
-     * @param enableNewFeatures whether to return backing fields and context parameter symbols or operate in existing mode.
+     * @param apiFeatures the API feature configuration.
      * @return Elements annotated with the specified annotation.
      *
      */
-    fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean, enableNewFeatures: Boolean): Sequence<KSAnnotated>
+    fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean, apiFeatures: ApiFeatures): Sequence<KSAnnotated>
 }

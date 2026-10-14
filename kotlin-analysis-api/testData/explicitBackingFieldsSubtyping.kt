@@ -17,26 +17,26 @@
 
 // TEST PROCESSOR: ExplicitBackingFieldsSubtypingProcessor
 // EXPECTED:
-// EXPECT NEXT: MyClass.prop1: List<String>
-// EXPECT NEXT: MyClass.prop1.field: MutableList<String>
-// EXPECT NEXT: MyClass.prop2: List<String>
-// EXPECT NEXT: MyClass.prop2.field: List<String>
-// EXPECT NEXT: MyClass.prop3: List<String>
-// EXPECT NEXT: MyClass.prop3.field: MutableList<String>
-// EXPECT NEXT: MyClass.prop4: List<Int>
-// EXPECT NEXT: MyClass.prop4.field: MutableList<Int>
-// EXPECT NEXT: MyClass.propA: A
-// EXPECT NEXT: MyClass.propA.field: B
-// EXPECT NEXT: Other.prop1: List<String>
-// EXPECT NEXT: Other.prop1.field: List<String>
-// EXPECT NEXT: Other.prop2: List<String>
-// EXPECT NEXT: Other.prop2.field: List<String>
-// EXPECT NEXT: Other.prop3: List<String>
-// EXPECT NEXT: Other.prop3.field: List<String>
-// EXPECT NEXT: Other.prop4: List<Int>
-// EXPECT NEXT: Other.prop4.field: List<Int>
-// EXPECT NEXT: Other.propA: A
-// EXPECT NEXT: Other.propA.field: A
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: MyClass.prop1: List<String>
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: MyClass.prop1.field: MutableList<String>
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: MyClass.prop2: List<String>
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: MyClass.prop2.field: List<String>
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: MyClass.prop3: List<String>
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: MyClass.prop3.field: MutableList<String>
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: MyClass.prop4: List<Int>
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: MyClass.prop4.field: MutableList<Int>
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: MyClass.propA: A
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: MyClass.propA.field: B
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Other.prop1: List<String>
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Other.prop1.field: List<String>
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Other.prop2: List<String>
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Other.prop2.field: List<String>
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Other.prop3: List<String>
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Other.prop3.field: List<String>
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Other.prop4: List<Int>
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Other.prop4.field: List<Int>
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Other.propA: A
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Other.propA.field: A
 // END
 
 // MODULE: lib

@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.test
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.test.annotations.Bug
 import com.google.devtools.ksp.test.annotations.BugState
 import com.google.devtools.ksp.test.annotations.Negative
@@ -33,8 +34,8 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 @TestDataPath($$"$CONTENT_ROOT/testData")
 abstract class KSPUnitTestSuite(
     experimentalPsiResolution: Boolean,
-    enableNewFeatures: Boolean,
-) : AbstractKSPAATest(experimentalPsiResolution, enableNewFeatures) {
+    apiFeatures: ApiFeatures,
+) : AbstractKSPAATest(experimentalPsiResolution, apiFeatures) {
 
     companion object {
         internal const val AA_PATH: String = "../kotlin-analysis-api/testData"
@@ -236,6 +237,17 @@ abstract class KSPUnitTestSuite(
     @Test
     fun testChangingBehavior() {
         runTest("$AA_PATH/changingBehavior.kt")
+    }
+
+    @Bug(
+        "https://github.com/google/ksp/issues/3250",
+        BugState.FIXED,
+        "Regression test to ensure the old `registerProcessorForNewFeatures` opt-in mechanism is maintained thus ensuring binary compatibility."
+    )
+    @TestMetadata("registerProcessorForNewFeatures.kt")
+    @Test
+    fun testRegisterProcessorForNewFeatures() {
+        runTest("$AA_PATH/registerProcessorForNewFeatures.kt")
     }
 
     @TestMetadata("checkOverride.kt")
@@ -1085,10 +1097,34 @@ abstract class KSPUnitTestSuite(
     fun testExpectDifferentOutputFailingOnCurrent() {
         // N.B.: This test is supposed to fail on one configuration.
         // It asserts that the test output actually varies depending on the configuration.
-        if (enableNewFeatures) {
-            runTest("$AA_PATH/expectDifferentOutputFailingOnCurrent.kt")
-        } else {
+        if (!apiFeatures.enableBackingFields && !apiFeatures.enableContextParameters) {
             runFailingTest("$AA_PATH/expectDifferentOutputFailingOnCurrent.kt")
+        } else {
+            runTest("$AA_PATH/expectDifferentOutputFailingOnCurrent.kt")
+        }
+    }
+
+    @TestMetadata("expectDifferentOutputFailingOnBackingFields.kt")
+    @Test
+    fun testExpectDifferentOutputFailingOnBackingFields() {
+        // N.B.: This test is supposed to fail on one configuration.
+        // It asserts that the test output actually varies depending on the configuration.
+        if (apiFeatures.enableBackingFields && !apiFeatures.enableContextParameters) {
+            runFailingTest("$AA_PATH/expectDifferentOutputFailingOnBackingFields.kt")
+        } else {
+            runTest("$AA_PATH/expectDifferentOutputFailingOnBackingFields.kt")
+        }
+    }
+
+    @TestMetadata("expectDifferentOutputFailingOnContextParameters.kt")
+    @Test
+    fun testExpectDifferentOutputFailingOnContextParameters() {
+        // N.B.: This test is supposed to fail on one configuration.
+        // It asserts that the test output actually varies depending on the configuration.
+        if (!apiFeatures.enableBackingFields && apiFeatures.enableContextParameters) {
+            runFailingTest("$AA_PATH/expectDifferentOutputFailingOnContextParameters.kt")
+        } else {
+            runTest("$AA_PATH/expectDifferentOutputFailingOnContextParameters.kt")
         }
     }
 
@@ -1097,7 +1133,7 @@ abstract class KSPUnitTestSuite(
     fun testExpectDifferentOutputFailingOnNext() {
         // N.B.: This test is supposed to fail on one configuration.
         // It asserts that the test output actually varies depending on the configuration.
-        if (enableNewFeatures) {
+        if (apiFeatures.enableBackingFields && apiFeatures.enableContextParameters) {
             runFailingTest("$AA_PATH/expectDifferentOutputFailingOnNext.kt")
         } else {
             runTest("$AA_PATH/expectDifferentOutputFailingOnNext.kt")

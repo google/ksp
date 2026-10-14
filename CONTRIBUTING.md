@@ -65,9 +65,9 @@ Here are some [sample test processors](kotlin-analysis-api/src/test/kotlin/com/g
     * [required] Ensure your test processor is in the package `com.google.devtools.ksp.processor`.
     * [required] The test processor must extend the `AbstractTestProcessor` class.
     * [required] Make sure you override `toResult()` function to collect test results.
-    * [required] The test processor must have a constructor parameter of type boolean.
-      Specifically, it must override the `enableNewFeatures` property in `AbstractTestProcessor`.
-      In other words, the constructor parameter list must be as follows: `class MyProcessor(override val enableNewFeatures: Boolean)`.
+    * [required] The test processor must have a constructor parameter of type [`ApiFeatures`](api/src/main/kotlin/com/google/devtools/ksp/ApiFeatures.kt).
+      Specifically, it must override the `apiFeatures` property in [`SymbolProcessor`](api/src/main/kotlin/com/google/devtools/ksp/processing/SymbolProcessor.kt).
+      In other words, the constructor parameter list must be as follows: `class MyProcessor(override val apiFeatures: ApiFeatures)`.
     * Leverage visitors for easy traversal of the test case.
     * To help with easy testing, you can create an annotation for test, and annotate the specific part of the code to avoid doing excess filtering when traveling along the program.
 * Write your test case to work with the test processor.
@@ -79,8 +79,13 @@ Here are some [sample test processors](kotlin-analysis-api/src/test/kotlin/com/g
         * [optional] Add `// PROCESSOR INPUT: <input/predicate>` to specify inputs or predicates for the test processor (e.g. `// PROCESSOR INPUT: Anno` or `// PROCESSOR INPUT: kotlin.annotation.Retention, kotlin.annotation.Target`, as in [`aliasedAnnotation.kt`](kotlin-analysis-api/testData/getSymbolsWithAnnotation/aliasedAnnotation.kt)).
           Note: for a processor to accept input, its constructor must have a single `List<String>` parameter.
           This is a handy way of writing a parametric test processor.
-          The `List<String>` parameter list must come before the `enableNewFeatures` property.
-        * Immediately after the test processor line(s), start your expected result lines. Every line should start with `// ` (with a space after `//`).
+          The `List<String>` parameter must come before the `apiFeatures` property (e.g. `class MyProcessor(val input: List<String>, override val apiFeatures: ApiFeatures)`).
+        * Immediately after the test processor line(s), add `// EXPECTED:` and start your expected result lines. Every line should start with `// ` (with a space after `//`).
+            * Regular `// <expected output>` lines apply to all [`ApiFeatures`](api/src/main/kotlin/com/google/devtools/ksp/ApiFeatures.kt) configurations.
+            * [optional] If an expected output line only applies to specific [`ApiFeatures`](api/src/main/kotlin/com/google/devtools/ksp/ApiFeatures.kt) configurations, use the `EXPECT` directive:
+              `// EXPECT <FEATURE> = <BOOLEAN>[, <FEATURE> = <BOOLEAN>]: <expected output>`
+              where `<FEATURE>` is the screaming snake case name of a property in [`ApiFeatures`](api/src/main/kotlin/com/google/devtools/ksp/ApiFeatures.kt) (e.g. `ENABLE_BACKING_FIELDS` or `ENABLE_CONTEXT_PARAMETERS`) and `<BOOLEAN>` is `TRUE` or `FALSE`.
+            * Multiple feature constraints can be combined on the same line separated by a comma (e.g. `// EXPECT ENABLE_BACKING_FIELDS = TRUE, ENABLE_CONTEXT_PARAMETERS = FALSE: <expected output>`). If a feature is omitted on an `EXPECT` line, the expectation applies to both `TRUE` and `FALSE` values of the omitted feature. Use the minimal number of directives needed (see [`expectDifferentOutput.kt`](kotlin-analysis-api/testData/expectDifferentOutput.kt) for an example).
         * Add `// END` to indicate the end of expected test results.
         * Then follows the virtual files section till the end of the test file.
         * You can use `// FILE: <file name>` to create files that will be available at runtime of the test.
@@ -90,8 +95,8 @@ Here are some [sample test processors](kotlin-analysis-api/src/test/kotlin/com/g
     * The `@Bug` annotation requires a link to an open or existing GitHub issue (e.g., `@Bug("https://github.com/google/ksp/issues/<issue_number>", BugState.OPEN)`).
     * Use the `@Negative` marker annotation if applicable.
 * Run generated tests with the `:kotlin-analysis-api:test` gradle task.
-    * This will execute all tests in the KSP test suite. To run your test only, specify the test name with 
-    `--tests "com.google.devtools.ksp.test.KSPUnitTestSuite.<name of your test>"`
+    * This will execute all tests in the KSP test suite across all configured [`ApiFeatures`](api/src/main/kotlin/com/google/devtools/ksp/ApiFeatures.kt) and resolution strategy test suites ([`AAConfiguredUnitTestSuite.kt`](kotlin-analysis-api/src/test/kotlin/com/google/devtools/ksp/test/AAConfiguredUnitTestSuite.kt) and [`PsiConfiguredUnitTestSuite.kt`](kotlin-analysis-api/src/test/kotlin/com/google/devtools/ksp/test/PsiConfiguredUnitTestSuite.kt)). To run your test only, specify the test name with
+    `--tests "com.google.devtools.ksp.test.*UnitTestSuite.<name of your test>"`
     * Make sure your change is not breaking any existing test as well :).
 * [optional] You can run the `./gradlew check` task as well to run all tests.
     * This task runs all integration tests as well, so it might take a while to complete.

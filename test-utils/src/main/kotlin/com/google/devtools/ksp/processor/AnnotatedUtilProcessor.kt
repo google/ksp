@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.isAnnotationPresent
@@ -26,7 +27,7 @@ import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 import kotlin.reflect.KClass
 
-class AnnotatedUtilProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+class AnnotatedUtilProcessor(override val apiFeatures: ApiFeatures): AbstractTestProcessor() {
     val results = mutableListOf<String>()
     private val annotationKClasses = listOf(
         ParametersTestAnnotation::class,
@@ -34,7 +35,7 @@ class AnnotatedUtilProcessor(override val enableNewFeatures: Boolean): AbstractT
         ParametersTestWithNegativeDefaultsAnnotation::class,
         OuterAnnotation::class
     )
-    private val visitors = listOf(IsAnnotationPresentVisitor(enableNewFeatures), GetAnnotationsByTypeVisitor(enableNewFeatures))
+    private val visitors = listOf(IsAnnotationPresentVisitor(apiFeatures), GetAnnotationsByTypeVisitor(apiFeatures))
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         resolver.getSymbolsWithAnnotation("com.google.devtools.ksp.processor.Test", true).forEach {
@@ -48,7 +49,7 @@ class AnnotatedUtilProcessor(override val enableNewFeatures: Boolean): AbstractT
         return results
     }
 
-    inner class IsAnnotationPresentVisitor(enableNewFeatures: Boolean)  : KSTopDownVisitor<MutableCollection<String>, Unit>(enableNewFeatures) {
+    inner class IsAnnotationPresentVisitor(apiFeatures: ApiFeatures)  : KSTopDownVisitor<MutableCollection<String>, Unit>(apiFeatures) {
         @OptIn(KspExperimental::class)
         override fun visitAnnotated(annotated: KSAnnotated, data: MutableCollection<String>) {
             annotationKClasses.forEach { clazz ->
@@ -62,7 +63,7 @@ class AnnotatedUtilProcessor(override val enableNewFeatures: Boolean): AbstractT
         }
     }
 
-    inner class GetAnnotationsByTypeVisitor(enableNewFeatures: Boolean)  : KSTopDownVisitor<MutableCollection<String>, Unit>(enableNewFeatures) {
+    inner class GetAnnotationsByTypeVisitor(apiFeatures: ApiFeatures)  : KSTopDownVisitor<MutableCollection<String>, Unit>(apiFeatures) {
         @OptIn(KspExperimental::class)
         override fun visitAnnotated(annotated: KSAnnotated, data: MutableCollection<String>) {
             annotationKClasses.forEach { clazz ->

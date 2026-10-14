@@ -18,13 +18,13 @@
 // TEST PROCESSOR: BackingFieldsPackageNameNPEProcessor
 // PROCESSOR INPUT: annotations.Select
 // EXPECTED:
-// EXPECT CURRENT: annotations.Select: MyClass.myProp: test
-// EXPECT CURRENT: annotations.Select: MyJavaClass.x: com.example.jcl
-// EXPECT CURRENT: annotations.Select: Other.myOtherProp: my.other.test
-// EXPECT NEXT: annotations.Select: MyClass.myProp.field: test
-// EXPECT NEXT: annotations.Select: MyJavaClass.x.field: com.example.jcl
-// EXPECT NEXT: annotations.Select: MyJavaClass.x: com.example.jcl
-// EXPECT NEXT: annotations.Select: Other.myOtherProp.field: my.other.test
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: annotations.Select: MyClass.myProp: test
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: annotations.Select: MyJavaClass.x: com.example.jcl
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: annotations.Select: Other.myOtherProp: my.other.test
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: annotations.Select: MyClass.myProp.field: test
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: annotations.Select: MyJavaClass.x.field: com.example.jcl
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: annotations.Select: MyJavaClass.x: com.example.jcl
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: annotations.Select: Other.myOtherProp.field: my.other.test
 // END
 
 // FILE: Select.kt

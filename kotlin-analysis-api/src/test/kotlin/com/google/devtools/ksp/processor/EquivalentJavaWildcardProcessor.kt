@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
@@ -25,14 +26,14 @@ import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-open class EquivalentJavaWildcardProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
+open class EquivalentJavaWildcardProcessor(override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
         resolver.getNewFiles().forEach {
             resolver.getNewFiles().forEach {
-                it.accept(RefVisitor(results, resolver, enableNewFeatures), "")
+                it.accept(RefVisitor(results, resolver, apiFeatures), "")
             }
         }
 
@@ -43,8 +44,8 @@ open class EquivalentJavaWildcardProcessor(override val enableNewFeatures: Boole
         return results
     }
 
-    private class RefVisitor(val results: MutableList<String>, val resolver: Resolver, enableNewFeatures: Boolean) :
-        KSTopDownVisitor<String, Unit>(enableNewFeatures) {
+    private class RefVisitor(val results: MutableList<String>, val resolver: Resolver, apiFeatures: ApiFeatures) :
+        KSTopDownVisitor<String, Unit>(apiFeatures) {
         override fun defaultHandler(node: KSNode, data: String) = Unit
 
         private fun KSTypeReference.pretty(): String {

@@ -28,27 +28,27 @@
 // f1: \n top level function\n
 // f2: \n member function\n
 // foo: \n\n\n member function\n\n
-// EXPECT NEXT: j1.field: \n field\n
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: j1.field: \n field\n
 // j1: \n field\n
-// EXPECT NEXT: j2.field: null
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: j2.field: null
 // j2: null
-// EXPECT NEXT: j3.field: null
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: j3.field: null
 // j3: null
-// EXPECT NEXT: v1.field: \n\n top level property\n\n
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: v1.field: \n\n top level property\n\n
 // v1: \n\n top level property\n\n
-// EXPECT NEXT: v2.field:  Irregular doc comment 1
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: v2.field:  Irregular doc comment 1
 // v2:  Irregular doc comment 1
-// EXPECT NEXT: v3.field: \n Irregular doc comment 2
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: v3.field: \n Irregular doc comment 2
 // v3: \n Irregular doc comment 2
-// EXPECT NEXT: v4.field: Irregular doc comment 3 *\n
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: v4.field: Irregular doc comment 3 *\n
 // v4: Irregular doc comment 3 *\n
-// EXPECT NEXT: v5.field: \n owned doc comment\n
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: v5.field: \n owned doc comment\n
 // v5: \n owned doc comment\n
-// EXPECT NEXT: v6.field: null
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: v6.field: null
 // v6: null
-// EXPECT NEXT: v7.field: null
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: v7.field: null
 // v7: null
-// EXPECT NEXT: v8.field: \n member property\n
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: v8.field: \n member property\n
 // v8: \n member property\n
 // END
 // FILE: KotlinSrc.kt

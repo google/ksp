@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
@@ -26,7 +27,7 @@ import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
 @Suppress("unused") // used in tests
 @OptIn(KspExperimental::class)
-open class IsMutableProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
+open class IsMutableProcessor(override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
     lateinit var results: List<String>
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -34,7 +35,7 @@ open class IsMutableProcessor(override val enableNewFeatures: Boolean) : Abstrac
             resolver.getDeclarationsFromPackage(pkg)
                 .flatMap { declaration ->
                     val properties = mutableListOf<KSPropertyDeclaration>()
-                    declaration.accept(AllMembersVisitor(enableNewFeatures), properties)
+                    declaration.accept(AllMembersVisitor(apiFeatures), properties)
                     properties
                 }.map {
                     "${it.qualifiedName?.asString()}: ${it.isMutable}"
@@ -43,8 +44,8 @@ open class IsMutableProcessor(override val enableNewFeatures: Boolean) : Abstrac
         return emptyList()
     }
 
-    private class AllMembersVisitor(enableNewFeatures: Boolean) :
-        KSTopDownVisitor<MutableList<KSPropertyDeclaration>, Unit>(enableNewFeatures) {
+    private class AllMembersVisitor(apiFeatures: ApiFeatures) :
+        KSTopDownVisitor<MutableList<KSPropertyDeclaration>, Unit>(apiFeatures) {
         override fun defaultHandler(node: KSNode, data: MutableList<KSPropertyDeclaration>) {
         }
 

@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.isConstructor
@@ -7,7 +8,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
 @KspExperimental
-class DeclarationOrderProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+class DeclarationOrderProcessor(override val apiFeatures: ApiFeatures): AbstractTestProcessor() {
     private val result = mutableListOf<String>()
     override fun toResult() = result
 

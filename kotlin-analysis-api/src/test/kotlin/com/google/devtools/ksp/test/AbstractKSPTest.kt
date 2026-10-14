@@ -17,8 +17,11 @@
 
 package com.google.devtools.ksp.test
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.InternalKSPException
+import com.google.devtools.ksp.KSApiFeatures
 import com.google.devtools.ksp.processor.AbstractTestProcessor
+import com.google.devtools.ksp.symbol.NonExistLocation
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
@@ -63,6 +66,7 @@ import java.io.File
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
+import kotlin.reflect.full.memberProperties
 
 abstract class DisposableTest {
     private var _disposable: Disposable? = null
@@ -80,24 +84,13 @@ abstract class DisposableTest {
     }
 }
 
-abstract class AbstractKSPTest(frontend: FrontendKind<*>, val enableNewFeatures: Boolean) : DisposableTest() {
+abstract class AbstractKSPTest(frontend: FrontendKind<*>, val apiFeatures: ApiFeatures) : DisposableTest() {
     companion object {
         const val COMMENT_TOKEN = "//"
         const val TEST_PROCESSOR = "$COMMENT_TOKEN TEST PROCESSOR:"
         const val PROCESSOR_INPUT = "$COMMENT_TOKEN PROCESSOR INPUT:"
         const val EXPECTED_RESULTS = "$COMMENT_TOKEN EXPECTED:"
-
-        /**
-         * A directive controlling the expected test output when [enableNewFeatures] is `false`. The test output is
-         * expected to include the content on this line (modulo the directive).
-         */
-        const val EXPECT_CURRENT = "$COMMENT_TOKEN EXPECT CURRENT:"
-
-        /**
-         * A directive controlling the expected test output when [enableNewFeatures] is `true`. The test output is
-         * expected to include the content on this line (modulo the directive).
-         */
-        const val EXPECT_NEXT = "$COMMENT_TOKEN EXPECT NEXT:"
+        const val EXPECT_LINE = "$COMMENT_TOKEN EXPECT"
         const val EXPECTED_RESULTS_END = "$COMMENT_TOKEN END"
         const val MODULE = "$COMMENT_TOKEN MODULE:"
         const val COMPILER_MODULE_NAME = "$COMMENT_TOKEN COMPILER MODULE NAME:"
@@ -319,7 +312,7 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>, val enableNewFeatures:
         val processorClass = mkTestProcessorClass(parseTestProcessorName(fileContents))
         val testProcessor = mkProcessor(processorArguments, processorClass)
 
-        val expected = parseExpectedOutput(fileContents)[enableNewFeatures]
+        val expected = parseExpectedOutput(fileContents)[ApiFeaturesTestHelpers.from(apiFeatures)]
             ?.joinToString("\n")
             ?: ""
 
@@ -351,42 +344,42 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>, val enableNewFeatures:
 
     /**
      * Given the test file content, [parseExpectedOutput] returns a map of expected test results/output based
-     * on the [enableNewFeatures] feature toggle. Thus, given the feature toggle, the caller may index into the
+     * on the [apiFeatures] configuration. Thus, given the feature toggle, the caller may index into the
      * returned map to obtain the expected test results.
      *
-     * [parseExpectedOutput] removes directives such as [EXPECT_CURRENT] and [EXPECT_NEXT] and removes dangling
+     * [parseExpectedOutput] removes directives such as `EXPECT ENABLE_BACKING_FIELDS = TRUE` and removes dangling
      * whitespace and comments. In other words, if `// MyExpectedOutput` is declared in the test file,
-     * the value `"MyExpectedOutput"` is in the returned list (for both configurations).
+     * the value `"MyExpectedOutput"` is in the returned list for all configurations.
      */
-    private fun parseExpectedOutput(fileContents: List<String>): Map<Boolean, List<String>> {
+    private fun parseExpectedOutput(fileContents: List<String>): Map<ApiFeatures, List<String>> {
         val rawExpectedOutput =
             fileContents
                 .dropWhile { !it.startsWith(EXPECTED_RESULTS) }
                 .drop(1)
                 .takeWhile { !it.startsWith(EXPECTED_RESULTS_END) }
 
-        // Define simple aliases for readability
-        val newFeaturesDisabledConfiguration = false
-        val newFeaturesEnabledConfiguration = true
-
-        return buildMap<Boolean, MutableList<String>> {
+        return buildMap<ApiFeatures, MutableList<String>> {
             rawExpectedOutput.forEach { line ->
-                when {
-                    line.startsWith(EXPECT_CURRENT) ->
-                        getOrPut(newFeaturesDisabledConfiguration, ::mutableListOf)
-                            .add(line.drop(EXPECT_CURRENT.length).trim())
+                if (line.startsWith(EXPECT_LINE)) {
+                    // The expectation is combination of feature values
+                    val featureConfigStrings = line
+                        .drop(EXPECT_LINE.length)
+                        .takeWhile { it != ':' }
+                        .split(',')
+                        .map { it.trim() }
 
-                    line.startsWith(EXPECT_NEXT) ->
-                        getOrPut(newFeaturesEnabledConfiguration, ::mutableListOf)
-                            .add(line.drop(EXPECT_NEXT.length).trim())
-
-                    else ->
-                        line.drop(COMMENT_TOKEN.length).trim().let {
-                            getOrPut(newFeaturesDisabledConfiguration, ::mutableListOf)
-                                .add(it)
-                            getOrPut(newFeaturesEnabledConfiguration, ::mutableListOf)
-                                .add(it)
-                        }
+                    val expectedValue = line.dropWhile { it != ':' }.drop(1).trim()
+                    val parsedFeatures = ApiFeaturesTestHelpers.parse(featureConfigStrings)
+                    parsedFeatures.forEach { parsedFeatures ->
+                        getOrPut(parsedFeatures, ::mutableListOf)
+                            .add(expectedValue)
+                    }
+                } else {
+                    // Add the expectation to all configurations
+                    ApiFeaturesTestHelpers.ALL_COMBINATIONS.forEach { apiFeatures ->
+                        getOrPut(apiFeatures, ::mutableListOf)
+                            .add(line.drop(COMMENT_TOKEN.length).trim())
+                    }
                 }
             }
         }
@@ -396,15 +389,95 @@ abstract class AbstractKSPTest(frontend: FrontendKind<*>, val enableNewFeatures:
         processorArguments: List<String>?,
         processorClass: Class<*>
     ): AbstractTestProcessor = if (processorArguments == null) {
-        // Instantiate processor class with enableNewFeatures param
+        // Instantiate processor class with apiFeatures param
         processorClass
-            .getDeclaredConstructor(Boolean::class.java)
-            .newInstance(this.enableNewFeatures) as AbstractTestProcessor
+            .getDeclaredConstructor(ApiFeatures::class.java)
+            .newInstance(this.apiFeatures) as AbstractTestProcessor
     } else {
         // Instantiate parameterized processor class
         processorClass
-            .getDeclaredConstructor(List::class.java, Boolean::class.java)
-            .newInstance(processorArguments, this.enableNewFeatures) as AbstractTestProcessor
+            .getDeclaredConstructor(List::class.java, ApiFeatures::class.java)
+            .newInstance(processorArguments, this.apiFeatures) as AbstractTestProcessor
+    }
+
+    internal object ApiFeaturesTestHelpers {
+
+        val ALL_COMBINATIONS = setOf(
+            KSApiFeatures(enableBackingFields = true, enableContextParameters = true),
+            KSApiFeatures(enableBackingFields = true, enableContextParameters = false),
+            KSApiFeatures(enableBackingFields = false, enableContextParameters = true),
+            KSApiFeatures(enableBackingFields = false, enableContextParameters = false),
+        )
+
+        @JvmStatic
+        fun from(apiFeatures: ApiFeatures): KSApiFeatures =
+            apiFeatures as? KSApiFeatures ?: KSApiFeatures(
+                enableBackingFields = apiFeatures.enableBackingFields,
+                enableContextParameters = apiFeatures.enableContextParameters
+            )
+
+        /**
+         * Parses a string of the form `ENABLE_FEATURE = BOOLEAN` where whitespace is optional.
+         * `ENABLE_FEATURE` is a screaming snake case version of the properties in [ApiFeatures]
+         * and `BOOLEAN` is just the uppercase string representation of a boolean literal `true, false`.
+         *
+         * @return the set of [KSApiFeatures] configurations in [ALL_COMBINATIONS] that match the directive.
+         */
+        @JvmStatic
+        fun parse(str: String): Set<KSApiFeatures> =
+            str
+                .trim()
+                .split('=')
+                .map { it.trim() }
+                .let {
+                    val expectedSize = 2
+                    if (it.size != expectedSize) {
+                        throw InternalKSPException(
+                            message = "Expected list size to be exactly $expectedSize in ApiFeaturesImpl.parse. Was ${it.size}: $it",
+                            location = NonExistLocation,
+                            originatingClass = this.javaClass
+                        )
+                    }
+
+                    // Enumerate the properties of [ApiFeatures]
+                    // and look up the property based on the screaming snake case representation.
+                    val propertyByScreamingSnakeCase = ApiFeatures::class.memberProperties
+                        .associateBy { property -> camelCaseToScreamingSnakeCase(property.name) }
+
+                    val lhs = it[0]
+                    val rhs = it[1].lowercase().toBooleanStrict()
+                    val property = propertyByScreamingSnakeCase[lhs]
+                        ?: throw InternalKSPException(
+                            message = "Unknown feature '$lhs' in ApiFeatures directive. Supported features: ${propertyByScreamingSnakeCase.keys}",
+                            location = NonExistLocation,
+                            originatingClass = this.javaClass
+                        )
+
+                    ALL_COMBINATIONS.filter { config -> property.get(config) == rhs }.toSet()
+                }
+
+        @JvmStatic
+        fun parse(strs: Collection<String>): Set<KSApiFeatures> {
+            // Check for duplicate assignments
+            val duplicateFeatures = strs
+                .map { it.substringBefore('=').trim() }
+                .groupBy { it }
+                .filterValues { it.size > 1 }
+                .keys
+
+            if (duplicateFeatures.isNotEmpty()) {
+                throw InternalKSPException(
+                    message = "Feature(s) assigned multiple values in EXPECT directive: ${duplicateFeatures.joinToString()}",
+                    location = NonExistLocation,
+                    originatingClass = this.javaClass
+                )
+            }
+
+            return strs.map(::parse).fold(ALL_COMBINATIONS) { acc, matching -> acc intersect matching }
+        }
+
+        private fun camelCaseToScreamingSnakeCase(str: String): String =
+            str.replace(Regex("(?<=[a-z0-9])(?=[A-Z])"), "_").uppercase()
     }
 }
 
