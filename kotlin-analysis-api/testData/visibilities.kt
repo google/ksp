@@ -43,6 +43,8 @@
 // KtEnumWithVal: valueOf: PUBLIC
 // JavaAnnotation: value: PUBLIC
 // IntersectionC: property: PUBLIC
+// EXPECT NEXT: JavaClass.javaPackageField.field: JAVA_PACKAGE,visible in A, B, D: true, false, true
+// EXPECT NEXT: KotlinSubClass.y.field: PRIVATE,visible in A, B, D, KotlinSubClass: false, false, false, true
 // END
 
 // MODULE: lib
