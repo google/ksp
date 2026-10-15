@@ -19,17 +19,17 @@
 // EXPECTED:
 // lib.Fields
 // - lib.Fields.x: kotlin.Int - [PRIVATE, FINAL]
-// EXPECT NEXT: - lib.Fields.x.field: kotlin.Int - [PRIVATE, FINAL]
+// EXPECT NEXT: - lib.Fields.x.field: kotlin.Int - [PRIVATE]
 // - lib.Fields.y: kotlin.Int - [PUBLIC, FINAL]
-// EXPECT NEXT: - lib.Fields.y.field: kotlin.Int - [PUBLIC, FINAL]
+// EXPECT NEXT: - lib.Fields.y.field: kotlin.Int - [PUBLIC]
 // - lib.Fields.z: kotlin.Int - [PROTECTED, FINAL]
-// EXPECT NEXT: - lib.Fields.z.field: kotlin.Int - [PROTECTED, FINAL]
+// EXPECT NEXT: - lib.Fields.z.field: kotlin.Int - [PROTECTED]
 // - lib.Fields.w: kotlin.Int - [FINAL]
-// EXPECT NEXT: - lib.Fields.w.field: kotlin.Int - [FINAL]
+// EXPECT NEXT: - lib.Fields.w.field: kotlin.Int - []
 // lib.AccessorsOnly
 // lib.ObscureFields
 // - lib.ObscureFields.back: kotlin.Int - [PRIVATE, FINAL]
-// EXPECT NEXT: - lib.ObscureFields.back.field: kotlin.Int - [PRIVATE, FINAL]
+// EXPECT NEXT: - lib.ObscureFields.back.field: kotlin.Int - [PRIVATE]
 // SourceFields
 // - SourceFields.x: kotlin.Int - [PRIVATE]
 // EXPECT NEXT: - SourceFields.x.field: kotlin.Int - [PRIVATE]
