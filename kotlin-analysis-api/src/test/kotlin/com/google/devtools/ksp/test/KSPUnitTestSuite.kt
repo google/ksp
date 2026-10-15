@@ -625,7 +625,7 @@ abstract class KSPUnitTestSuite(
 
     @TestMetadata("getSymbolsWithAnnotation/localAnnotationClass.kt")
     @Test
-    fun testLocalAnnotationClass() {
+    open fun testLocalAnnotationClass() {
         runTest("$AA_PATH/getSymbolsWithAnnotation/localAnnotationClass.kt")
     }
 

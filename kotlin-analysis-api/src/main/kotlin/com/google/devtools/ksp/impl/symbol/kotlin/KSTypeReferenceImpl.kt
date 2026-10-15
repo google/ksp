@@ -35,11 +35,12 @@ import org.jetbrains.kotlin.analysis.api.types.KaType
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtDynamicType
 import org.jetbrains.kotlin.psi.KtNullableType
+import com.google.devtools.ksp.impl.KspDiagnostics
 import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.KtUserType
 
 class KSTypeReferenceImpl(
-    private val ktTypeReference: KtTypeReference,
+    internal val ktTypeReference: KtTypeReference,
     override val parent: KSNode?,
     private val additionalAnnotations: List<KaAnnotation>
 ) : KSTypeReference {
@@ -74,7 +75,11 @@ class KSTypeReferenceImpl(
 
     override fun resolve(): KSType {
         recordLookup(ktType, parent)
-        return KSTypeImpl.getCached(ktType)
+        val resolved = KSTypeImpl.getCached(ktType)
+        if (resolved.isError) {
+            KspDiagnostics.recordQueriedError(this, resolved)
+        }
+        return resolved
     }
 
     override val annotations: Sequence<KSAnnotation> by lazyMemoizedSequence {

@@ -49,7 +49,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
 import org.jetbrains.kotlin.analysis.api.types.KaType
 import org.jetbrains.kotlin.name.ClassId
 
-class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, override val parent: KSNode?) :
+class KSAnnotationJavaImpl private constructor(internal val psi: PsiAnnotation, override val parent: KSNode?) :
     KSAnnotation {
     companion object : KSObjectCache<PsiAnnotation, KSAnnotationJavaImpl>() {
         fun getCached(psi: PsiAnnotation, parent: KSNode?) =

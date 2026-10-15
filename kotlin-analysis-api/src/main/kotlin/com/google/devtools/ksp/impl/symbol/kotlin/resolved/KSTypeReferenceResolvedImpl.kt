@@ -20,6 +20,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin.resolved
 import com.google.devtools.ksp.common.IdKeyTriple
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.lazyMemoizedSequence
+import com.google.devtools.ksp.impl.KspDiagnostics
 import com.google.devtools.ksp.impl.recordLookup
 import com.google.devtools.ksp.impl.symbol.kotlin.Deferrable
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
@@ -51,9 +52,9 @@ import org.jetbrains.kotlin.psi.KtTypeParameter
  * directly attached to [ktType] (e.g., annotations on an extension receiver such as `fun @Anno Receiver.foo()`).
  */
 class KSTypeReferenceResolvedImpl private constructor(
-    private val ktType: KaType,
+    internal val ktType: KaType,
     override val parent: KSNode?,
-    private val index: Int,
+    internal val index: Int,
     private val additionalAnnotations: List<KaAnnotation>
 ) : KSTypeReference, Deferrable {
 
@@ -91,7 +92,11 @@ class KSTypeReferenceResolvedImpl private constructor(
 
     override fun resolve(): KSType {
         recordLookup(ktType, parent)
-        return KSTypeImpl.getCached(ktType)
+        val resolved = KSTypeImpl.getCached(ktType)
+        if (resolved.isError) {
+            KspDiagnostics.recordQueriedError(this, resolved)
+        }
+        return resolved
     }
 
     override val annotations: Sequence<KSAnnotation> by lazyMemoizedSequence {

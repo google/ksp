@@ -18,6 +18,7 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: InternalOfFriendsProcessor
 // EXPECTED:
+// KSP FAILED WITH EXIT CODE: PROCESSING_ERROR
 // fun1: MyClass0: MyClass0
 // fun2: <ERROR TYPE: hasInvoke1>: <ERROR TYPE: hasInvoke1>
 // fun3: MyClass2: MyClass2
