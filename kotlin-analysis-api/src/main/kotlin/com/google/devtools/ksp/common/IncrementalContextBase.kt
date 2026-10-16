@@ -314,10 +314,12 @@ abstract class IncrementalContextBase(
 
         val backupRoot = File(cachesDir, "backups")
         val cleanOutputs = sourceToOutputsMap.keys
+            .asSequence()
             .filter { it != removedOutputsKey && it !in dirtyFilesForRestore }
             .flatMap { sourceToOutputsMap[it] ?: emptyList() }
             .filter { it !in dirtyFilesForRestore }
             .distinct()
+            .toList()
         val restored = mutableListOf<File>()
         cleanOutputs.forEach { relativeOutput ->
             val output = File(baseDir, relativeOutput.path)
