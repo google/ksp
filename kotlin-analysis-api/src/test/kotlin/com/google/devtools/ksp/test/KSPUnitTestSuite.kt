@@ -688,6 +688,13 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/nullableTypes.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/3047", BugState.OPEN)
+    @TestMetadata("overridePropertyAnnotationArgument.kt")
+    @Test
+    fun testOverridePropertyAnnotationArgument() {
+        runTest("$AA_PATH/overridePropertyAnnotationArgument.kt")
+    }
+
     @TestMetadata("overridee/conflictingOverride.kt")
     @Test
     fun testConflictingOverride() {
