@@ -104,6 +104,9 @@ abstract class IncrementalContextBase(
 
     private val sourceToOutputsMap = FileToFilesMap(File(cachesDir, "sourceToOutputs"))
 
+    // Includes generated outputs and removed sources, not just the filtered source input list.
+    private var dirtyFilesForRestore: Set<File> = emptySet()
+
     private val onDemandImportsCache = ConcurrentHashMap<PsiJavaFile, List<String>>()
 
     protected val logFiles: MutableList<Closeable> = mutableListOf()
@@ -285,6 +288,7 @@ abstract class IncrementalContextBase(
             removedOutputsKey
         ).propagate(initialSet)
 
+        dirtyFilesForRestore = dirtyFiles
         updateFromRemovedOutputs()
 
         val dirtyKSFiles = ksFiles.filter { it.relativeFile in dirtyFiles }
@@ -298,6 +302,32 @@ abstract class IncrementalContextBase(
             dirtyFilesBySealed
         )
         return@closeFilesOnException dirtyKSFiles
+    }
+
+    /**
+     * Make unchanged outputs available before processors try to resolve them. The Gradle task
+     * removes the output directory before processing, so the backups are the only copies here.
+     * Dirty outputs (including outputs of removed sources) must be regenerated, not restored.
+     */
+    fun restoreCleanOutputsBeforeProcessing(): List<File> = closeFilesOnException {
+        if (!isIncremental || rebuild) return@closeFilesOnException emptyList()
+
+        val backupRoot = File(cachesDir, "backups")
+        val cleanOutputs = sourceToOutputsMap.keys
+            .filter { it != removedOutputsKey && it !in dirtyFilesForRestore }
+            .flatMap { sourceToOutputsMap[it] ?: emptyList() }
+            .filter { it !in dirtyFilesForRestore }
+            .distinct()
+        val restored = mutableListOf<File>()
+        cleanOutputs.forEach { relativeOutput ->
+            val output = File(baseDir, relativeOutput.path)
+            val backup = File(backupRoot, output.toRelativeString(kspOutputDir))
+            if (backup.exists()) {
+                copyWithTimestamp(backup, output, true)
+                restored.add(output)
+            }
+        }
+        restored
     }
 
     // Loop detection isn't needed because of overwritten checks in CodeGeneratorImpl

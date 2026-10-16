@@ -584,6 +584,22 @@ class KotlinSymbolProcessing(
                 }
             }
 
+            val restoredCleanOutputs = incrementalContext.restoreCleanOutputsBeforeProcessing()
+            if (restoredCleanOutputs.isNotEmpty()) {
+                val dirtyPointers = allDirtyKSFiles.filterIsInstance<Deferrable>().map { it.defer() }
+                dropCaches()
+                // Register clean cached sources for resolution, but do not offer their annotations
+                // as new/dirty processing candidates or count them as newly generated outputs.
+                prepareNewKSFiles(
+                    env,
+                    javaFileManager,
+                    restoredCleanOutputs.filter { it.extension.lowercase() == "kt" },
+                    restoredCleanOutputs.filter { it.extension.lowercase() == "java" },
+                )
+                allDirtyKSFiles = dirtyPointers.map { it!!.restore() as KSFile }
+                newKSFiles = allDirtyKSFiles
+            }
+
             // Run processors until either
             // 1) there is an error
             // 2) there is no more new files.
