@@ -98,10 +98,13 @@ import org.jetbrains.kotlin.analysis.low.level.api.fir.lazy.resolve.LLFirResolut
 import org.jetbrains.kotlin.analysis.low.level.api.fir.providers.LLSealedInheritorsProvider
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
+import org.jetbrains.kotlin.cli.jvm.compiler.CliMetadataFinderFactory
+import org.jetbrains.kotlin.cli.jvm.compiler.CliVirtualFileFinderFactory
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreApplicationEnvironmentMode
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreProjectEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.setupIdeaStandaloneExecution
+import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesDynamicCompoundIndex
 import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.config.KotlinCompilerVersion
@@ -111,7 +114,9 @@ import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 import org.jetbrains.kotlin.diagnostics.KtRegisteredDiagnosticFactoriesStorage
 import org.jetbrains.kotlin.fir.declarations.SealedClassInheritorsProvider
 import org.jetbrains.kotlin.fir.session.registerResolveComponents
+import org.jetbrains.kotlin.load.kotlin.MetadataFinderFactory
 import org.jetbrains.kotlin.load.kotlin.PackagePartProvider
+import org.jetbrains.kotlin.load.kotlin.VirtualFileFinderFactory
 import org.jetbrains.kotlin.platform.CommonPlatforms
 import org.jetbrains.kotlin.platform.JsPlatform
 import org.jetbrains.kotlin.platform.TargetPlatform
@@ -391,6 +396,25 @@ class KotlinSymbolProcessing(
             // replace KaFirStopWorldCacheCleaner with no op implementation
             @OptIn(KaImplementationDetail::class)
             registerService(KaFirCacheCleaner::class.java, NoOpCacheCleaner::class.java)
+
+            if (kspConfig is KSPJvmConfig) {
+                val rootsIndex = JvmDependenciesDynamicCompoundIndex(true)
+                val fileFinderFactory = CliVirtualFileFinderFactory(rootsIndex, false, null)
+                // VirtualFileFinderFactory and MetadataFinderFactory are already registered by
+                // StandaloneProjectFactory.registerServicesForProjectEnvironment with a separate
+                // static index, so we use replaceService to point them at our own custom
+                // rootsIndex. Replacing them here is safe because nothing queries or caches these
+                // services until analysis begins in execute().
+                replaceService(VirtualFileFinderFactory::class.java, fileFinderFactory)
+                replaceService(
+                    MetadataFinderFactory::class.java,
+                    CliMetadataFinderFactory(fileFinderFactory)
+                )
+                registerService(
+                    IncrementalJavaFileManager::class.java,
+                    IncrementalJavaFileManager(kotlinCoreProjectEnvironment, rootsIndex)
+                )
+            }
         }
     }
 
@@ -509,8 +533,10 @@ class KotlinSymbolProcessing(
 
             // Initializing environments
             val javaFileManager = if (kspConfig is KSPJvmConfig) {
-                IncrementalJavaFileManager(env)
-            } else null
+                project.getService(IncrementalJavaFileManager::class.java)
+            } else {
+                null
+            }
 
             val allKSFiles =
                 prepareAllKSFiles(env, modules, javaFileManager)
@@ -777,4 +803,12 @@ class NoOpCacheCleaner : KaFirCacheCleaner {
     override fun enterAnalysis() {}
     override fun exitAnalysis() {}
     override fun scheduleCleanup() {}
+}
+
+private fun <T : Any> MockProject.replaceService(
+    serviceInterface: Class<T>,
+    serviceImplementation: T,
+) {
+    picoContainer.unregisterComponent(serviceInterface.name)
+    registerService(serviceInterface, serviceImplementation)
 }
