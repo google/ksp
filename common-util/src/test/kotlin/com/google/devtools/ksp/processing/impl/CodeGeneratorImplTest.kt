@@ -3,6 +3,8 @@ package com.google.devtools.ksp.processing.impl
 import com.google.devtools.ksp.common.AnyChanges
 import com.google.devtools.ksp.common.impl.CodeGeneratorImpl
 import com.google.devtools.ksp.processing.Dependencies
+import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.symbol.KSNode
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
@@ -125,5 +127,37 @@ class CodeGeneratorImplTest {
         } catch (e: java.lang.IllegalStateException) {
             Assert.assertEquals(e.message, "requested path is outside the bounds of the required directory")
         }
+    }
+
+    @Test
+    fun testWarnOnEmptyNonAggregatingDependencies() {
+        val warnings = mutableListOf<String>()
+        val testLogger = object : KSPLogger {
+            override fun logging(message: String, symbol: KSNode?) {}
+            override fun info(message: String, symbol: KSNode?) {}
+            override fun warn(message: String, symbol: KSNode?) {
+                warnings.add(message)
+            }
+            override fun error(message: String, symbol: KSNode?) {}
+            override fun exception(e: Throwable) {}
+        }
+        val classesDir = File(baseDir, "classes")
+        val javaDir = File(baseDir, "java")
+        val kotlinDir = File(baseDir, "kotlin")
+        val resourcesDir = File(baseDir, "resources")
+        val generatorWithLogger = CodeGeneratorImpl(
+            classesDir,
+            { javaDir },
+            kotlinDir,
+            resourcesDir,
+            baseDir,
+            AnyChanges(baseDir),
+            emptyList(),
+            true,
+            testLogger
+        )
+        generatorWithLogger.createNewFile(Dependencies(false), "a.b.c", "WarnTest", "kt")
+        Assert.assertEquals(1, warnings.size)
+        Assert.assertTrue(warnings[0].contains("aggregating = false"))
     }
 }
