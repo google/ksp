@@ -242,7 +242,11 @@ abstract class IncrementalContextBase(
         if (!sourceToOutputsMap[anyChangesWildcard].isNullOrEmpty()) {
             return@closeReadOnlyCachesOnException false
         }
-        if (!sourceToOutputsMap[unassociatedOutputsKey].isNullOrEmpty()) {
+        // A missing key means the caches were written by an older KSP that didn't record outputs without sources
+        // (Dependencies(false)). We can't prove there are none, and they'd be lost if we exited early.
+        val unassociatedOutputs = sourceToOutputsMap[unassociatedOutputsKey]
+            ?: return@closeReadOnlyCachesOnException false
+        if (unassociatedOutputs.isNotEmpty()) {
             return@closeReadOnlyCachesOnException false
         }
         val hasDirtyNoSourceFiles = changedClasses.any { fqn ->
@@ -262,6 +266,19 @@ abstract class IncrementalContextBase(
                 symbolLookupCache[LookupSymbolWrapper(name, scope)].map { it.toRelativeFile() }
         }.toSet()
         if (dirtyFilesByCP.isNotEmpty()) {
+            return@closeReadOnlyCachesOnException false
+        }
+
+        val outRoot = kspOutputDir
+        val bakRoot = File(cachesDir, "backups")
+        fun File.abs() = File(baseDir, path)
+        fun File.bak() = File(bakRoot, abs().toRelativeString(outRoot))
+
+        val cleanOutputs = sourceToOutputsMap.keys.flatMapTo(mutableSetOf()) { sourceToOutputsMap[it]!! }
+        // If an output can't be restored (neither it nor its backup exists), let the normal path handle it. It
+        // invalidates caches.uptodate before restoring, so a failure there leads to a full rebuild on the next run
+        // instead of the same failure on every run.
+        if (cleanOutputs.any { !it.abs().exists() && !it.bak().exists() }) {
             return@closeReadOnlyCachesOnException false
         }
 
@@ -286,15 +303,6 @@ abstract class IncrementalContextBase(
             logBeforeCacheFlush(emptySet(), emptyMap())
         }
 
-        val outRoot = kspOutputDir
-        val bakRoot = File(cachesDir, "backups")
-        fun File.abs() = File(baseDir, path)
-        fun File.bak() = File(bakRoot, abs().toRelativeString(outRoot))
-
-        val cleanOutputs = mutableSetOf<File>()
-        sourceToOutputsMap.keys.forEach { source ->
-            cleanOutputs.addAll(sourceToOutputsMap[source]!!)
-        }
         cleanOutputs.forEach { dst ->
             val target = dst.abs()
             if (!target.exists()) {
@@ -407,6 +415,9 @@ abstract class IncrementalContextBase(
 
         if (unassociatedOutputsKey !in sourceToOutputs) {
             sourceToOutputsMap.removeRecursively(unassociatedOutputsKey)
+            // Always record the key (possibly empty), so that a missing key unambiguously means the caches were
+            // written by an older KSP that didn't track unassociated outputs. See tryEarlyExitIfClean.
+            sourceToOutputsMap[unassociatedOutputsKey] = emptyList()
         }
 
         removedOutputs.forEach {

@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.test
 
 import com.google.devtools.ksp.IncrementalContextLoggingOptions
+import com.google.devtools.ksp.common.FileToFilesMap
 import com.google.devtools.ksp.common.NoSourceFile
 import com.google.devtools.ksp.impl.CommandLineKSPLogger
 import com.google.devtools.ksp.impl.DualLookupTracker
@@ -52,6 +53,7 @@ import org.jetbrains.kotlin.incremental.components.Position
 import org.jetbrains.kotlin.incremental.components.ScopeKind
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -725,5 +727,129 @@ class IncrementalEarlyExitTest {
         assertEquals(2, providerInvocations, "Processor must run when unassociated outputs exist")
         assertTrue(unassocFile.exists(), "UnassociatedGen.kt must exist after Build 2")
         assertEquals("package p1\nclass UnassociatedGen\n", unassocFile.readText())
+    }
+
+    private fun newContext(
+        baseDir: File,
+        cachesDir: File,
+        outputDir: File,
+    ) = IncrementalContextAA(
+        isIncremental = true,
+        lookupTracker = DualLookupTracker(),
+        anyChangesWildcard = File(baseDir, "<any>").relativeTo(baseDir),
+        loggingOptions = IncrementalContextLoggingOptions(false, null),
+        baseDir = baseDir,
+        cachesDir = cachesDir,
+        kspOutputDir = outputDir,
+        knownModified = emptyList(),
+        knownRemoved = emptyList(),
+        changedClasses = emptyList(),
+    )
+
+    private fun isUnassociatedOutputsKey(f: File) =
+        f.path.startsWith("<This is a virtual key for unassociated outputs")
+
+    // Regression (F1): caches written by an older KSP have no unassociated-outputs key, because Dependencies(false)
+    // outputs were never recorded. A missing key must not be read as "no unassociated outputs": such outputs would be
+    // lost after the output directory is wiped.
+    @Test
+    fun testNoEarlyExitWhenUnassociatedOutputsKeyIsMissing(@TempDir tempDir: File) {
+        val baseDir = File(tempDir, "project").apply { mkdirs() }
+        val cachesDir = File(tempDir, "caches").apply { mkdirs() }
+        val outputDir = File(tempDir, "out").apply { mkdirs() }
+        val fileA = File(baseDir, "src/main/kotlin/p1/A.kt").apply {
+            parentFile.mkdirs()
+            writeText("package p1\nclass A")
+        }
+        val outA = File(outputDir, "kotlin/p1/AGen.kt").apply {
+            parentFile.mkdirs()
+            writeText("package p1\nclass AGen")
+        }
+        val ksA = FakeKSFile(fileA.absolutePath, "p1", listOf("A"))
+
+        // Build 1 produces no unassociated outputs; the key must still be recorded (as an empty list).
+        newContext(baseDir, cachesDir, outputDir).run {
+            val dirty = calcDirtyFiles(listOf(ksA))
+            val s2o = mapOf(fileA.relativeTo(baseDir) to setOf(outA.relativeTo(baseDir)))
+            updateCachesAndOutputs(dirty, setOf(outA), s2o)
+            closeFiles()
+        }
+        val sourceToOutputsFile = File(cachesDir, "sourceToOutputs")
+        FileToFilesMap(sourceToOutputsFile).let { map ->
+            val key = map.keys.singleOrNull(::isUnassociatedOutputsKey)
+            assertTrue(key != null, "unassociated-outputs key must always be written")
+            assertEquals(emptyList<File>(), map[key])
+        }
+
+        // With the (empty) key present, a clean run may exit early.
+        newContext(baseDir, cachesDir, outputDir).run {
+            assertTrue(tryEarlyExitIfClean(), "Should early-exit when the key is present and empty")
+        }
+
+        // Simulate caches written by an older KSP: drop the key.
+        FileToFilesMap(sourceToOutputsFile).apply {
+            keys.filter(::isUnassociatedOutputsKey).forEach { remove(it) }
+            flush()
+        }
+        outputDir.deleteRecursively()
+        newContext(baseDir, cachesDir, outputDir).run {
+            assertFalse(
+                tryEarlyExitIfClean(),
+                "Should NOT early-exit when caches predate unassociated-outputs tracking"
+            )
+            closeFiles()
+        }
+    }
+
+    // Regression (F2): if a recorded output and its backup are both missing, the early exit must not throw while
+    // caches.uptodate is still in place (that would fail every later run). It must fall back to the normal path,
+    // which invalidates the caches before failing, so the next run is a full rebuild, as in base KSP.
+    @Test
+    fun testNoEarlyExitWhenOutputAndBackupAreMissing(@TempDir tempDir: File) {
+        val baseDir = File(tempDir, "project").apply { mkdirs() }
+        val cachesDir = File(tempDir, "caches").apply { mkdirs() }
+        val outputDir = File(tempDir, "out").apply { mkdirs() }
+        val fileA = File(baseDir, "src/main/kotlin/p1/A.kt").apply {
+            parentFile.mkdirs()
+            writeText("package p1\nclass A")
+        }
+        val outA = File(outputDir, "kotlin/p1/AGen.kt").apply {
+            parentFile.mkdirs()
+            writeText("package p1\nclass AGen")
+        }
+        val ksA = FakeKSFile(fileA.absolutePath, "p1", listOf("A"))
+        val upToDate = File(cachesDir, "caches.uptodate")
+
+        newContext(baseDir, cachesDir, outputDir).run {
+            val dirty = calcDirtyFiles(listOf(ksA))
+            val s2o = mapOf(fileA.relativeTo(baseDir) to setOf(outA.relativeTo(baseDir)))
+            updateCachesAndOutputs(dirty, setOf(outA), s2o)
+            closeFiles()
+        }
+        assertTrue(upToDate.exists())
+
+        // Backups missing but the output itself still present: nothing needs restoring, so the early exit is fine.
+        File(cachesDir, "backups").deleteRecursively()
+        newContext(baseDir, cachesDir, outputDir).run {
+            assertTrue(tryEarlyExitIfClean(), "Should early-exit when outputs exist even if backups don't")
+        }
+        assertTrue(outA.exists())
+
+        // Both output and backup missing: no early exit, no exception, and caches left untouched.
+        outputDir.deleteRecursively()
+        newContext(baseDir, cachesDir, outputDir).run {
+            assertFalse(tryEarlyExitIfClean(), "Should NOT early-exit when an output can't be restored")
+            assertTrue(upToDate.exists(), "Declining the early exit must not touch caches.uptodate")
+            // The normal path then fails as in base KSP, but only after invalidating caches.uptodate.
+            val dirty = calcDirtyFiles(listOf(ksA))
+            assertThrows(Exception::class.java) { updateCachesAndOutputs(dirty, emptySet(), emptyMap()) }
+        }
+        assertFalse(upToDate.exists(), "Normal path must invalidate caches so the next run rebuilds")
+
+        // Next run is a full rebuild (no early exit) rather than the same failure again.
+        newContext(baseDir, cachesDir, outputDir).run {
+            assertFalse(tryEarlyExitIfClean(), "Should NOT early-exit after caches were invalidated")
+            closeFiles()
+        }
     }
 }

@@ -685,12 +685,18 @@ class KotlinSymbolProcessing(
             dropCaches()
             codeGenerator.closeFiles()
         } finally {
-            incrementalContext.closeReadOnlyCaches()
-            maybeRunInWriteAction {
-                (kotlinCoreProjectEnvironment?.environment?.jarFileSystem as? CoreJarFileSystem)?.clearHandlersCache()
-                Disposer.dispose(projectDisposable)
-                ResolverAAImpl.tearDown()
-                KSPCoreEnvironment.tearDown()
+            // Nested so that neither cleanup step can prevent the other from running: session teardown must
+            // happen even if closing the caches fails (and vice versa), or a reused daemon keeps stale state.
+            try {
+                maybeRunInWriteAction {
+                    (kotlinCoreProjectEnvironment?.environment?.jarFileSystem as? CoreJarFileSystem)
+                        ?.clearHandlersCache()
+                    Disposer.dispose(projectDisposable)
+                    ResolverAAImpl.tearDown()
+                    KSPCoreEnvironment.tearDown()
+                }
+            } finally {
+                incrementalContext.closeReadOnlyCaches()
             }
         }
 
