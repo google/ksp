@@ -93,6 +93,32 @@ class IncrementalAnnotationArgumentClassReferences(experimentalPsiResolution: Bo
         }
     }
 
+    @Test
+    fun testTransitiveJavaClasspathChange() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+        val downstreamProcessed = "$PROCESSOR_LABEL Processing DownstreamClass"
+        // 1. Clean build
+        gradleRunner.withArguments(CLEAN, ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            Assert.assertTrue(result.output.lines().contains(downstreamProcessed))
+            Assert.assertTrue(result.output.lines().contains("$PROCESSOR_LABEL Processing UpstreamChangesJava"))
+        }
+
+        // 2. Apply an ABI change to the upstream Java class that only the classpath refers to
+        val fileToChange = File(project.root, "upstream/src/main/java/com/example/upstream/UpstreamChangesJava.java")
+        fileToChange.writeText(
+            fileToChange.readText().replace("{", "{\n    public void addedMember() {\n    }\n")
+        )
+
+        // 3. Rebuild
+        gradleRunner.withArguments(ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            // Bug: the downstream sources are wrongly considered up to date and nothing is
+            // reprocessed, because invalidation stops at the class file path of the changed class.
+            Assert.assertFalse(result.output.lines().contains(downstreamProcessed))
+        }
+    }
+
     /**
      * Both `:upstream` and `:downstream` apply the same processor, so they resolve an identical
      * processor classpath. Without the cache each gets its own processor classloader; with the
