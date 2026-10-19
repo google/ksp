@@ -56,50 +56,25 @@ class AAConfiguredDefaultFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(
         enableBackingFields = false
         enableContextParameters = false
     }
-) {
-    @TestMetadata("backingFieldsSignatureMapper.kt")
-    @Test
-    override fun testBackingFieldsSignatureMapper() {
-        runKSPTest("backingFieldsSignatureMapper.kt")
-    }
-}
+)
 
 class AAConfiguredBackingFieldsUnitTestSuite : AAConfiguredUnitTestSuiteBase(
     buildApiFeatures {
         enableBackingFields = true
         enableContextParameters = false
     }
-) {
-    @TestMetadata("backingFieldsSignatureMapper.kt")
-    @Test
-    override fun testBackingFieldsSignatureMapper() {
-        runThrowingKSPTest("backingFieldsSignatureMapper.kt", NotImplementedError::class)
-    }
-}
+)
 
 class AAConfiguredContextParametersUnitTestSuite : AAConfiguredUnitTestSuiteBase(
     buildApiFeatures {
         enableBackingFields = false
         enableContextParameters = true
     }
-) {
-    @TestMetadata("backingFieldsSignatureMapper.kt")
-    @Test
-    override fun testBackingFieldsSignatureMapper() {
-        runKSPTest("backingFieldsSignatureMapper.kt")
-    }
-}
+)
 
 class AAConfiguredAllFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(
     buildApiFeatures {
         enableBackingFields = true
         enableContextParameters = true
     }
-) {
-    @TestMetadata("backingFieldsSignatureMapper.kt")
-    @Test
-    override fun testBackingFieldsSignatureMapper() {
-        runThrowingKSPTest("backingFieldsSignatureMapper.kt", NotImplementedError::class)
-    }
-}
-
+)
