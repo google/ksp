@@ -50,12 +50,6 @@ abstract class AAConfiguredUnitTestSuiteBase(
 }
 
 class AAConfiguredUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = false) {
-    @TestMetadata("backingFieldsSignatureMapper.kt")
-    @Test
-    override fun testBackingFieldsSignatureMapper() {
-        runTest("$AA_PATH/backingFieldsSignatureMapper.kt")
-    }
-
     @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
     @Test
     override fun testContextParameters() {
@@ -64,12 +58,6 @@ class AAConfiguredUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeature
 }
 
 class AAConfiguredNewFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = true) {
-    @TestMetadata("backingFieldsSignatureMapper.kt")
-    @Test
-    override fun testBackingFieldsSignatureMapper() {
-        runThrowingTest("$AA_PATH/backingFieldsSignatureMapper.kt", NotImplementedError::class)
-    }
-
     @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
     @Test
     override fun testContextParameters() {
