@@ -65,6 +65,7 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiTreeChangeAdapter
 import com.intellij.psi.PsiTreeChangeListener
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.search.ProjectScope
 import com.intellij.util.ui.EDT
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.KaIdeApi
@@ -106,6 +107,7 @@ import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreApplicationEnvironmentMod
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreProjectEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.setupIdeaStandaloneExecution
+import org.jetbrains.kotlin.cli.jvm.index.JavaRoot
 import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesDynamicCompoundIndex
 import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.config.JvmTarget
@@ -296,7 +298,7 @@ class KotlinSymbolProcessing(
             kotlinCoreProjectEnvironment,
             ktFiles,
             createPackagePartProvider,
-            libraryRoots.map { it.file }.distinct(),
+            libraryRoots,
         )
 
         CoreApplicationEnvironment.registerExtensionPoint(
@@ -333,7 +335,7 @@ class KotlinSymbolProcessing(
         kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment,
         ktFiles: List<KtFile>,
         packagePartProvider: (GlobalSearchScope) -> PackagePartProvider,
-        libraryRoots: List<VirtualFile> = emptyList(),
+        libraryRoots: List<JavaRoot> = emptyList(),
     ) {
         val project = kotlinCoreProjectEnvironment.project
         project.apply {
@@ -378,7 +380,7 @@ class KotlinSymbolProcessing(
             // declared in precompiled KLIBs (e.g. for Kotlin/Native and JS/Wasm targets).
             registerService(
                 KotlinPackageProviderFactory::class.java,
-                IncrementalKotlinPackageProviderFactory(project, libraryRoots)
+                IncrementalKotlinPackageProviderFactory(project, libraryRoots.map { it.file }.distinct())
             )
 
             registerService(
@@ -415,7 +417,12 @@ class KotlinSymbolProcessing(
                 replaceService(PackageIndex::class.java, JvmDependenciesPackageIndex(rootsIndex))
                 registerService(
                     IncrementalJavaFileManager::class.java,
-                    IncrementalJavaFileManager(kotlinCoreProjectEnvironment, rootsIndex)
+                    IncrementalJavaFileManager(
+                        kotlinCoreProjectEnvironment,
+                        rootsIndex,
+                        listOf(packagePartProvider(ProjectScope.getLibrariesScope(project))),
+                        libraryRoots,
+                    )
                 )
             }
         }
@@ -451,7 +458,7 @@ class KotlinSymbolProcessing(
             ) as IncrementalKotlinPackageProviderFactory
             ).update(ktFiles)
 
-        javaFileManager?.initialize(modules, javaFiles)
+        javaFileManager?.add(javaFiles)
 
         return ktFiles.map { analyze { KSFileImpl.getCached(it.symbol) } } +
             javaFiles.map { KSFileJavaImpl.getCached(it) }
