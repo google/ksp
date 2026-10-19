@@ -51,55 +51,30 @@ abstract class PsiConfiguredUnitTestSuiteBase(
     }
 }
 
-
 class PsiConfiguredDefaultFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(
     buildApiFeatures {
         enableBackingFields = false
         enableContextParameters = false
     }
-) {
-    @TestMetadata("backingFieldsSignatureMapper.kt")
-    @Test
-    override fun testBackingFieldsSignatureMapper() {
-        runKSPTest("backingFieldsSignatureMapper.kt")
-    }
-}
+)
 
 class PsiConfiguredBackingFieldsUnitTestSuite : PsiConfiguredUnitTestSuiteBase(
     buildApiFeatures {
         enableBackingFields = true
         enableContextParameters = false
     }
-) {
-    @TestMetadata("backingFieldsSignatureMapper.kt")
-    @Test
-    override fun testBackingFieldsSignatureMapper() {
-        runThrowingKSPTest("backingFieldsSignatureMapper.kt", NotImplementedError::class)
-    }
-}
+)
 
 class PsiConfiguredContextParametersUnitTestSuite : PsiConfiguredUnitTestSuiteBase(
     buildApiFeatures {
         enableBackingFields = false
         enableContextParameters = true
     }
-) {
-    @TestMetadata("backingFieldsSignatureMapper.kt")
-    @Test
-    override fun testBackingFieldsSignatureMapper() {
-        runKSPTest("backingFieldsSignatureMapper.kt")
-    }
-}
+)
 
 class PsiConfiguredAllFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(
     buildApiFeatures {
         enableBackingFields = true
         enableContextParameters = true
     }
-) {
-    @TestMetadata("backingFieldsSignatureMapper.kt")
-    @Test
-    override fun testBackingFieldsSignatureMapper() {
-        runThrowingKSPTest("backingFieldsSignatureMapper.kt", NotImplementedError::class)
-    }
-}
+)
