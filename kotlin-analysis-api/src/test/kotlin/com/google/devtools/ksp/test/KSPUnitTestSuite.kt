@@ -197,6 +197,10 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/backingFields.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/3222", BugState.OPEN)
+    @TestMetadata("backingFieldsSignatureMapper.kt")
+    abstract fun testBackingFieldsSignatureMapper()
+
     @TestMetadata("getSymbolsWithAnnotation/backingFieldsLateinit.kt")
     @Test
     @Bug(
