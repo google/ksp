@@ -65,6 +65,7 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiTreeChangeAdapter
 import com.intellij.psi.PsiTreeChangeListener
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.search.ProjectScope
 import com.intellij.util.ui.EDT
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.KaIdeApi
@@ -102,10 +103,12 @@ import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
 import org.jetbrains.kotlin.cli.jvm.compiler.CliMetadataFinderFactory
 import org.jetbrains.kotlin.cli.jvm.compiler.CliVirtualFileFinderFactory
+import org.jetbrains.kotlin.cli.jvm.compiler.JvmPackagePartProvider
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreApplicationEnvironmentMode
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreProjectEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.setupIdeaStandaloneExecution
+import org.jetbrains.kotlin.cli.jvm.index.JavaRoot
 import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesDynamicCompoundIndex
 import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.config.JvmTarget
@@ -117,7 +120,6 @@ import org.jetbrains.kotlin.diagnostics.KtRegisteredDiagnosticFactoriesStorage
 import org.jetbrains.kotlin.fir.declarations.SealedClassInheritorsProvider
 import org.jetbrains.kotlin.fir.session.registerResolveComponents
 import org.jetbrains.kotlin.load.kotlin.MetadataFinderFactory
-import org.jetbrains.kotlin.load.kotlin.PackagePartProvider
 import org.jetbrains.kotlin.load.kotlin.VirtualFileFinderFactory
 import org.jetbrains.kotlin.platform.CommonPlatforms
 import org.jetbrains.kotlin.platform.JsPlatform
@@ -296,7 +298,7 @@ class KotlinSymbolProcessing(
             kotlinCoreProjectEnvironment,
             ktFiles,
             createPackagePartProvider,
-            libraryRoots.map { it.file }.distinct(),
+            libraryRoots,
         )
 
         CoreApplicationEnvironment.registerExtensionPoint(
@@ -332,8 +334,8 @@ class KotlinSymbolProcessing(
     private fun registerProjectServices(
         kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment,
         ktFiles: List<KtFile>,
-        packagePartProvider: (GlobalSearchScope) -> PackagePartProvider,
-        libraryRoots: List<VirtualFile> = emptyList(),
+        packagePartProvider: (GlobalSearchScope) -> JvmPackagePartProvider,
+        libraryRoots: List<JavaRoot> = emptyList(),
     ) {
         val project = kotlinCoreProjectEnvironment.project
         project.apply {
@@ -378,7 +380,7 @@ class KotlinSymbolProcessing(
             // declared in precompiled KLIBs (e.g. for Kotlin/Native and JS/Wasm targets).
             registerService(
                 KotlinPackageProviderFactory::class.java,
-                IncrementalKotlinPackageProviderFactory(project, libraryRoots)
+                IncrementalKotlinPackageProviderFactory(project, libraryRoots.map { it.file }.distinct())
             )
 
             registerService(
@@ -415,7 +417,12 @@ class KotlinSymbolProcessing(
                 replaceService(PackageIndex::class.java, JvmDependenciesPackageIndex(rootsIndex))
                 registerService(
                     IncrementalJavaFileManager::class.java,
-                    IncrementalJavaFileManager(kotlinCoreProjectEnvironment, rootsIndex)
+                    IncrementalJavaFileManager(
+                        kotlinCoreProjectEnvironment,
+                        rootsIndex,
+                        listOf(packagePartProvider(ProjectScope.getLibrariesScope(project))),
+                        libraryRoots,
+                    )
                 )
             }
         }
@@ -451,7 +458,7 @@ class KotlinSymbolProcessing(
             ) as IncrementalKotlinPackageProviderFactory
             ).update(ktFiles)
 
-        javaFileManager?.initialize(modules, javaFiles)
+        javaFileManager?.add(javaFiles)
 
         return ktFiles.map { analyze { KSFileImpl.getCached(it.symbol) } } +
             javaFiles.map { KSFileJavaImpl.getCached(it) }
