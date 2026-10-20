@@ -87,7 +87,6 @@ import org.jetbrains.kotlin.analysis.api.projectStructure.KaModule
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaSourceModule
 import org.jetbrains.kotlin.analysis.api.resolve.extensions.KaResolveExtensionProvider
 import org.jetbrains.kotlin.analysis.api.standalone.KotlinStaticPackagePartProviderFactory
-import org.jetbrains.kotlin.analysis.api.standalone.StandaloneAnalysisAPISession
 import org.jetbrains.kotlin.analysis.api.standalone.base.KotlinStandalonePlatformSettings
 import org.jetbrains.kotlin.analysis.api.standalone.base.declarations.KotlinStandaloneAnnotationsResolverFactory
 import org.jetbrains.kotlin.analysis.api.standalone.base.declarations.KotlinStandaloneDeclarationProviderMerger
@@ -162,7 +161,7 @@ class KotlinSymbolProcessing(
     @OptIn(KaExperimentalApi::class, KaImplementationDetail::class, KaIdeApi::class)
     private fun createAASession(
         projectDisposable: Disposable,
-    ): Triple<StandaloneAnalysisAPISession, KotlinCoreProjectEnvironment, List<KaModule>> {
+    ): Triple<MockProject, KotlinCoreProjectEnvironment, List<KaModule>> {
         val kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment =
             StandaloneProjectFactory.createProjectEnvironment(
                 projectDisposable,
@@ -303,12 +302,7 @@ class KotlinSymbolProcessing(
             project.extensionArea, PsiTreeChangeListener.EP.name, PsiTreeChangeAdapter::class.java
         )
         return Triple(
-            StandaloneAnalysisAPISession(kotlinCoreProjectEnvironment) {
-                // This is only used by kapt4, which should query a provider, instead of have it passed here IMHO.
-                // kapt4's implementation is static, which may or may not work for us depending on future use cases.
-                // Let's implement it later if necessary.
-                TODO("Not implemented yet.")
-            },
+            kotlinCoreProjectEnvironment.project,
             kotlinCoreProjectEnvironment,
             modules
         )
@@ -521,12 +515,10 @@ class KotlinSymbolProcessing(
         var kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment? = null
 
         try {
-            val (analysisAPISession, env, modules) =
-                createAASession(projectDisposable)
+            val (project, env, modules) = createAASession(projectDisposable)
             kotlinCoreProjectEnvironment = env
-            val project = analysisAPISession.project
             // Initializes it
-            KSPCoreEnvironment(project as MockProject)
+            KSPCoreEnvironment(project)
 
             val psiManager = PsiManager.getInstance(project)
             val providers: List<SymbolProcessorProvider> = symbolProcessorProviders
@@ -712,11 +704,13 @@ class KotlinSymbolProcessing(
     }
 
     companion object {
-        fun List<KSFile>.toKtFiles(project: Project): List<KtFile> = getPsiFilesFromPaths<KtFile>(project, this.toPathSet())
+        fun List<KSFile>.toKtFiles(project: Project): List<KtFile> =
+            getPsiFilesFromPaths<KtFile>(project, this.toPathSet())
 
-        fun List<KSFile>.toPsiJavaFiles(project: Project): List<PsiJavaFile> = getPsiFilesFromPaths<PsiJavaFile>(project, this.toPathSet())
+        fun List<KSFile>.toPsiJavaFiles(project: Project): List<PsiJavaFile> =
+            getPsiFilesFromPaths<PsiJavaFile>(project, this.toPathSet())
 
-        fun List<KSFile>.toPathSet(): Set<Path> = this.map {File(it.filePath).toPath() }.toSet()
+        fun List<KSFile>.toPathSet(): Set<Path> = this.map { File(it.filePath).toPath() }.toSet()
 
         fun runTypeCheck(newKSFiles: List<KSFile>, project: Project, logger: KSPLogger) {
             val (kotlinKSFiles, javaKSFiles) = newKSFiles
