@@ -608,7 +608,6 @@ class KotlinSymbolProcessing(
                 maybeRunInWriteAction {
                     project.publishGlobalSourceModuleStateModificationEvent()
                     psiManager.dropPsiCaches()
-
                     KSObjectCacheManager.clear()
                 }
             }
@@ -700,6 +699,7 @@ class KotlinSymbolProcessing(
             dropCaches()
             codeGenerator.closeFiles()
         } finally {
+            KSObjectCacheManager.clear()
             maybeRunInWriteAction {
                 (kotlinCoreProjectEnvironment?.environment?.jarFileSystem as? CoreJarFileSystem)?.clearHandlersCache()
                 Disposer.dispose(projectDisposable)
