@@ -26,6 +26,7 @@ import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.Origin
 
 class TestProcessor(val environment: SymbolProcessorEnvironment) : SymbolProcessor {
     init {
@@ -38,7 +39,9 @@ class TestProcessor(val environment: SymbolProcessorEnvironment) : SymbolProcess
 
     private val createdFiles = mutableSetOf<String>()
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        resolver.getSymbolsWithAnnotation("ExampleReference")
+        sequenceOf("ExampleReference", "com.example.upstream.ExampleReferenceJava")
+            .flatMap { resolver.getSymbolsWithAnnotation(it) }
+            .filter { it.origin == Origin.KOTLIN }
             .filterIsInstance<KSClassDeclaration>().forEach { sym ->
                 // Follow dependencies to let KSP capture dependency graph
                 followSym(sym)
