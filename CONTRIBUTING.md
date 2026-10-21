@@ -75,6 +75,7 @@ Here are some [sample test processors](kotlin-analysis-api/src/test/kotlin/com/g
     Every `.kt` file under this folder corresponds to a test case.
     * Inside the test file:
         * [optional] Add `// WITH_RUNTIME` to the top if you need access to the standard library.
+        * [optional] Specify `// TARGET_BACKEND: <backend>` (e.g. `// TARGET_BACKEND: NATIVE`) and `// WITH_FIXED_TARGET: <target>` (e.g. `// WITH_FIXED_TARGET: linux_x64`) directives to ensure tests run on klib/native backends (as in [`packageDeclarations.kt`](kotlin-analysis-api/testData/native/packageDeclarations.kt)). These directives come from the Kotlin compiler test framework.
         * Add `// TEST PROCESSOR:<Your test processor name>` to provide the test processor for this test case. Processors can be reused if necessary.
         * [optional] Add `// PROCESSOR INPUT: <input/predicate>` to specify inputs or predicates for the test processor (e.g. `// PROCESSOR INPUT: Anno` or `// PROCESSOR INPUT: kotlin.annotation.Retention, kotlin.annotation.Target`, as in [`aliasedAnnotation.kt`](kotlin-analysis-api/testData/getSymbolsWithAnnotation/aliasedAnnotation.kt)).
           Note: for a processor to accept input, its constructor must have a single `List<String>` parameter.
