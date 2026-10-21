@@ -273,16 +273,13 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
         return if ((origin == Origin.JAVA || origin == Origin.JAVA_LIB) && classKind != ClassKind.ANNOTATION_CLASS) {
             decls.flatMap { decl ->
                 if (decl is KSPropertyDeclarationImpl && decl.ktPropertySymbol is KaSyntheticJavaPropertySymbol) {
-                    sequenceOf(decl.getter, decl.setter).mapNotNull { accessor ->
-                        KSFunctionDeclarationImpl.getCached(
-                            (accessor as? KSPropertyAccessorImpl)?.ktPropertyAccessorSymbol
-                                ?: return@mapNotNull null
-                        )
-                    }
+                    sequenceOf(decl.ktPropertySymbol.javaGetterSymbol, decl.ktPropertySymbol.javaSetterSymbol)
+                        .filterNotNull()
+                        .map { KSFunctionDeclarationImpl.getCached(it) }
                 } else {
                     sequenceOf(decl)
                 }
-            }
+            }.distinct()
         } else decls
     }
 

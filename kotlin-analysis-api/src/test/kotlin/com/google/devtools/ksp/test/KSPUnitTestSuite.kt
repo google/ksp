@@ -504,9 +504,12 @@ abstract class KSPUnitTestSuite(
         runKSPTest("functionKinds.kt")
     }
 
-    @Bug("https://github.com/google/ksp/issues/2496", BugState.OPEN)
+    @Bug("https://github.com/google/ksp/issues/2496", BugState.FIXED)
     @TestMetadata("functionKindsJavaInheritsKotlin.kt")
-    abstract fun testFunctionKindsJavaInheritsKotlin()
+    @Test
+    fun testFunctionKindsJavaInheritsKotlin() {
+        runKSPTest("functionKindsJavaInheritsKotlin.kt")
+    }
 
     @TestMetadata("getAnnotationByTypeWithInnerDefault.kt")
     @Test
@@ -638,9 +641,12 @@ abstract class KSPUnitTestSuite(
         runKSPTest("javaSubtype.kt")
     }
 
-    @Bug("https://github.com/google/ksp/issues/2925", BugState.OPEN)
+    @Bug("https://github.com/google/ksp/issues/2925", BugState.FIXED)
     @TestMetadata("javaSubtypeOfKotlinInterface.kt")
-    abstract fun testJavaSubtypeOfKotlinInterface()
+    @Test
+    fun testJavaSubtypeOfKotlinInterface() {
+        runKSPTest("javaSubtypeOfKotlinInterface.kt")
+    }
 
     @TestMetadata("javaToKotlinMapper.kt")
     @Test
@@ -840,11 +846,11 @@ abstract class KSPUnitTestSuite(
         runKSPTest("parameterTypes.kt")
     }
 
-    @Bug("https://github.com/google/ksp/issues/2498", BugState.OPEN)
+    @Bug("https://github.com/google/ksp/issues/2498", BugState.FIXED)
     @TestMetadata("parentOfJavaMethodOverridingKotlinProperty.kt")
     @Test
     fun testParentOfJavaMethodOverridingKotlinProperty() {
-        runFailingKSPTest("parentOfJavaMethodOverridingKotlinProperty.kt")
+        runKSPTest("parentOfJavaMethodOverridingKotlinProperty.kt")
     }
 
     @TestMetadata("parent.kt")
