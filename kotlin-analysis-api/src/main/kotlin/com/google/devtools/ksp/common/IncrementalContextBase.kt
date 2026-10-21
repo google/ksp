@@ -131,6 +131,7 @@ abstract class IncrementalContextBase(
     }
 
     private val removedOutputsKey = File("<This is a virtual key for removed outputs; DO NOT USE>")
+    private val unassociatedOutputsKey = File("<This is a virtual key for unassociated outputs; DO NOT USE>")
 
     private fun updateFromRemovedOutputs() {
         val removedOutputs = sourceToOutputsMap[removedOutputsKey] ?: return
@@ -225,6 +226,94 @@ abstract class IncrementalContextBase(
         }
     }
 
+    // Fast path for incremental builds where no source files were modified/removed and no classpath changes
+    // affect any source file or aggregating/synthetic output in this module.
+    fun tryEarlyExitIfClean(allSourceRoots: List<File> = emptyList()): Boolean = closeReadOnlyCachesOnException {
+        if (!isIncremental || rebuild) {
+            return@closeReadOnlyCachesOnException false
+        }
+        if (modified.isNotEmpty() || removed.isNotEmpty()) {
+            return@closeReadOnlyCachesOnException false
+        }
+        val removedOutputs = sourceToOutputsMap[removedOutputsKey] ?: emptyList()
+        if (removedOutputs.isNotEmpty()) {
+            return@closeReadOnlyCachesOnException false
+        }
+        if (!sourceToOutputsMap[anyChangesWildcard].isNullOrEmpty()) {
+            return@closeReadOnlyCachesOnException false
+        }
+        // A missing key means the caches were written by an older KSP that didn't record outputs without sources
+        // (Dependencies(false)). We can't prove there are none, and they'd be lost if we exited early.
+        val unassociatedOutputs = sourceToOutputsMap[unassociatedOutputsKey]
+            ?: return@closeReadOnlyCachesOnException false
+        if (unassociatedOutputs.isNotEmpty()) {
+            return@closeReadOnlyCachesOnException false
+        }
+        val hasDirtyNoSourceFiles = changedClasses.any { fqn ->
+            val noSourceFile = NoSourceFile(baseDir, fqn).filePath.toRelativeFile()
+            !sourceToOutputsMap[noSourceFile].isNullOrEmpty()
+        }
+        if (hasDirtyNoSourceFiles) {
+            return@closeReadOnlyCachesOnException false
+        }
+        val dirtyFilesBySealed = sealedMap.keys
+        if (dirtyFilesBySealed.isNotEmpty()) {
+            return@closeReadOnlyCachesOnException false
+        }
+        val dirtyFilesByCP = changedClasses.flatMap { fqn ->
+            val (scope, name) = separateQualifierAndName(fqn)
+            classLookupCache[LookupSymbolWrapper(name, scope)].map { it.toRelativeFile() } +
+                symbolLookupCache[LookupSymbolWrapper(name, scope)].map { it.toRelativeFile() }
+        }.toSet()
+        if (dirtyFilesByCP.isNotEmpty()) {
+            return@closeReadOnlyCachesOnException false
+        }
+
+        val outRoot = kspOutputDir
+        val bakRoot = File(cachesDir, "backups")
+        fun File.abs() = File(baseDir, path)
+        fun File.bak() = File(bakRoot, abs().toRelativeString(outRoot))
+
+        val cleanOutputs = sourceToOutputsMap.keys.flatMapTo(mutableSetOf()) { sourceToOutputsMap[it]!! }
+        // If an output can't be restored (neither it nor its backup exists), let the normal path handle it. It
+        // invalidates caches.uptodate before restoring, so a failure there leads to a full rebuild on the next run
+        // instead of the same failure on every run.
+        if (cleanOutputs.any { !it.abs().exists() && !it.bak().exists() }) {
+            return@closeReadOnlyCachesOnException false
+        }
+
+        if (loggingOptions.incrementalLoggingEnabled) {
+            val allRelativeFiles = allSourceRoots.flatMap { root ->
+                root.walkTopDown().filter { it.isFile && (it.extension == "kt" || it.extension == "java") }.toList()
+            }.map { it.toRelativeFile() }
+            mkLogFile("kspDirtySet.log").bufferedWriter().use { logFile ->
+                logFile.write("All Files\n")
+                allRelativeFiles.forEach { logFile.write("  $it\n") }
+                logFile.write("Modified\n")
+                logFile.write("Removed\n")
+                logFile.write("Disappeared Outputs\n")
+                logFile.write("Affected By CP\n")
+                logFile.write("Affected By new syms\n")
+                logFile.write("Affected By sealed\n")
+                logFile.write("CP changes\n")
+                changedClasses.forEach { logFile.write("  $it\n") }
+                logFile.write("Dirty:\n")
+                logFile.write("\nDirty / All: 0.00%\n\n")
+            }
+            logBeforeCacheFlush(emptySet(), emptyMap())
+        }
+
+        cleanOutputs.forEach { dst ->
+            val target = dst.abs()
+            if (!target.exists()) {
+                copyWithTimestamp(dst.bak(), target, true)
+            }
+        }
+
+        closeReadOnlyCaches()
+        return@closeReadOnlyCachesOnException true
+    }
+
     // Beware: no side-effects here; Caches should only be touched in updateCaches.
     fun calcDirtyFiles(ksFiles: List<KSFile>): Collection<KSFile> = closeFilesOnException {
         if (!isIncremental) {
@@ -282,7 +371,8 @@ abstract class IncrementalContextBase(
             symbolsMap,
             sourceToOutputsMap,
             anyChangesWildcard,
-            removedOutputsKey
+            removedOutputsKey,
+            unassociatedOutputsKey
         ).propagate(initialSet)
 
         updateFromRemovedOutputs()
@@ -321,6 +411,13 @@ abstract class IncrementalContextBase(
 
         dirtyFiles.filterNot { sourceToOutputs.containsKey(it) }.forEach {
             sourceToOutputsMap.removeRecursively(it)
+        }
+
+        if (unassociatedOutputsKey !in sourceToOutputs) {
+            sourceToOutputsMap.removeRecursively(unassociatedOutputsKey)
+            // Always record the key (possibly empty), so that a missing key unambiguously means the caches were
+            // written by an older KSP that didn't track unassociated outputs. See tryEarlyExitIfClean.
+            sourceToOutputsMap[unassociatedOutputsKey] = emptyList()
         }
 
         removedOutputs.forEach {
@@ -375,7 +472,10 @@ abstract class IncrementalContextBase(
         sourceToOutputs: Map<File, Set<File>>
     ) {
         // dirtyFiles may contain new files, which are unknown to sourceToOutputsMap.
-        val oldOutputs = dirtyFiles.flatMap { sourceToOutputsMap[it] ?: emptyList() }.distinct()
+        val oldOutputs = (
+            dirtyFiles.flatMap { sourceToOutputsMap[it] ?: emptyList() } +
+                (sourceToOutputsMap[unassociatedOutputsKey] ?: emptyList())
+            ).distinct()
         val removedOutputs = oldOutputs.filterNot { it in outputs }
         updateSourceToOutputs(dirtyFiles, outputs, sourceToOutputs, removedOutputs)
         updateLookupCache(dirtyFiles)
@@ -417,6 +517,22 @@ abstract class IncrementalContextBase(
             return@closeFilesOnException
 
         collectDefinedSymbols(newFiles)
+    }
+
+    private fun <T> closeReadOnlyCachesOnException(f: () -> T): T {
+        try {
+            return f()
+        } catch (e: Exception) {
+            closeReadOnlyCaches()
+            throw e
+        }
+    }
+
+    fun closeReadOnlyCaches() {
+        onDemandImportsCache.clear()
+        symbolLookupCache.close()
+        classLookupCache.close()
+        logFiles.forEach { it.close() }
     }
 
     fun <T> closeFilesOnException(f: () -> T): T {
@@ -474,7 +590,7 @@ abstract class IncrementalContextBase(
 
         fun isDirty(file: File) = file in dirties
 
-        val roots = mutableSetOf(anyChangesWildcard, removedOutputsKey)
+        val roots = mutableSetOf(anyChangesWildcard, removedOutputsKey, unassociatedOutputsKey)
         roots.addAll(dirtySources)
         // TODO: find a better way to identify NoSourceFile
         roots.addAll(
@@ -489,6 +605,9 @@ abstract class IncrementalContextBase(
 
         val dirtySourceToOutputs = sourceToOutputs.filter { (src, _) ->
             isDirty(src)
+        }.toMutableMap()
+        if (unassociated.isNotEmpty()) {
+            dirtySourceToOutputs[unassociatedOutputsKey] = unassociated
         }
         val dirtyOutputs = relativeOutputs.filter(::isDirty).toSet()
 
@@ -583,14 +702,15 @@ internal class DirtinessPropagator(
     private val symbolsMap: FileToSymbolsMap,
     private val sourceToOutputs: FileToFilesMap,
     private val anyChangesWildcard: File,
-    private val removedOutputsKey: File
+    private val removedOutputsKey: File,
+    private val unassociatedOutputsKey: File,
 ) {
     private val visitedFiles = mutableSetOf<File>()
     private val visitedSyms = mutableSetOf<LookupSymbolWrapper>()
 
     private val outputToSources = mutableMapOf<File, MutableSet<File>>().apply {
         sourceToOutputs.keys.forEach { source ->
-            if (source != anyChangesWildcard && source != removedOutputsKey) {
+            if (source != anyChangesWildcard && source != removedOutputsKey && source != unassociatedOutputsKey) {
                 sourceToOutputs[source]!!.forEach { output ->
                     getOrPut(output) { mutableSetOf() }.add(source)
                 }
