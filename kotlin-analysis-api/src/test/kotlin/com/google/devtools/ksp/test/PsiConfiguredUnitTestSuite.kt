@@ -30,12 +30,6 @@ abstract class PsiConfiguredUnitTestSuiteBase(
         runTest("$AA_PATH/getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     }
 
-    @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
-    @Test
-    override fun testContextParameters() {
-        runThrowingTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
-    }
-
     @TestMetadata("functionKindsJavaInheritsKotlin.kt")
     @Test
     override fun testFunctionKindsJavaInheritsKotlin() {

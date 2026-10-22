@@ -45,6 +45,7 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.AnnotationUseSiteTarget
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSBackingField
+import com.google.devtools.ksp.symbol.KSContextParameter
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -77,8 +78,10 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
+import org.jetbrains.kotlin.psi.KtContextReceiverList
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.psiUtil.parameterIndex
 import org.jetbrains.kotlin.utils.addToStdlib.flatGroupBy
@@ -502,17 +505,30 @@ class PsiResolutionStrategy(
         annotationEntry: KtAnnotationEntry,
         enableNewFeatures: Boolean
     ): Collection<KSAnnotated> {
+        // N.B.: Context parameters are filtered on PSI *before* resolution, since resolving them is only
+        // well-defined when they belong to a declaration.
+        if (this is KtParameter && this.isContextParameter) {
+            if (!enableNewFeatures) {
+                return emptyList()
+            }
+            // N.B.: Mirror AA implementation: A dangling `context(...)` modifier list (erroneous code that is not
+            // followed by a declaration) is not a declaration, so the AA strategy never visits its parameters.
+            val isMissingOwningDeclaration = (parent as? KtContextReceiverList)?.ownerDeclaration == null
+            if (isMissingOwningDeclaration) {
+                return emptyList()
+            }
+        }
         // TODO: This should perform case distinction instead of getTargetedSymbol
         val ksSym = analyze { symbol.toKSAnnotated() }
-        return when {
-            ksSym is KSPropertyDeclaration && enableNewFeatures -> targetFieldFix.resolveKSPropertyDeclaration(
+        return when (ksSym) {
+            is KSPropertyDeclaration if enableNewFeatures -> targetFieldFix.resolveKSPropertyDeclaration(
                 ksSym,
                 annotationEntry
             )
 
             // N.B.: Mirror AA implementation: Return the owning property of the backing field if the feature is disabled.
-            ksSym is KSBackingField && !enableNewFeatures -> listOf(ksSym.property)
-
+            is KSBackingField if !enableNewFeatures -> listOf(ksSym.property)
+            is KSContextParameter -> listOf(ksSym)
             else -> ksSym.findTargetedSymbol(annotationEntry.ksUseSiteTarget, enableNewFeatures)
         }
     }

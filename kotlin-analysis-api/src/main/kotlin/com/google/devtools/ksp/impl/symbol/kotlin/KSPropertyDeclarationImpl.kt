@@ -31,12 +31,10 @@ import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSAnnotationResolvedI
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.synthetic.KSSyntheticJavaBackingFieldImpl
 import com.google.devtools.ksp.impl.symbol.util.BinaryClassInfoCache
-import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSBackingField
-import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSContextParameter
 import com.google.devtools.ksp.symbol.KSExpectActual
-import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSName
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyGetter
@@ -56,6 +54,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KaPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolModality
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolVisibility
 import org.jetbrains.kotlin.analysis.api.symbols.KaSyntheticJavaPropertySymbol
+import org.jetbrains.kotlin.analysis.api.symbols.contextParameters
 import org.jetbrains.kotlin.analysis.api.symbols.receiverType
 import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
@@ -151,6 +150,21 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
                 )
             }
     }
+
+    /**
+     * Cache for [contextParameters] if new features are enabled.
+     */
+    @OptIn(KaExperimentalApi::class)
+    private val contextParametersCache: List<KSContextParameter> by lazy {
+        ktPropertySymbol.contextParameters.map { KSContextParameterImpl.getCached(it, this) }
+    }
+
+    override val contextParameters: List<KSContextParameter>
+        get() =
+            if (ResolverAAImpl.instance.shouldEnableNewFeatures())
+                contextParametersCache
+            else
+                emptyList()
 
     override val type: KSTypeReference by lazy {
         (ktPropertySymbol.psiIfSource() as? KtProperty)?.typeReference?.let { KSTypeReferenceImpl.getCached(it, this) }
