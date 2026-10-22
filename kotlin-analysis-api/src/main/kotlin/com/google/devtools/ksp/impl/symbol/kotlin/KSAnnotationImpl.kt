@@ -30,6 +30,7 @@ import com.intellij.psi.impl.compiled.ClsClassImpl
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotationValue
+import org.jetbrains.kotlin.analysis.api.annotations.KaNamedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaBaseNamedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.*
@@ -72,7 +73,41 @@ class KSAnnotationImpl private constructor(
         val presentArgs = annotationApplication.arguments.map {
             KSValueArgumentImpl.getCached(it, this, origin)
         }
-        presentArgs + getAbsentDefaultArguments(presentArgs)
+        presentArgs +
+            getAbsentDefaultArguments(presentArgs) +
+            listOfNotNull(findAbsentVarargs(annotationApplication.arguments))
+    }
+
+    private val annotationDeclaration: KSClassDeclaration? by lazy {
+        annotationType.resolve().declaration as? KSClassDeclaration
+    }
+
+    private fun findAbsentVarargs(presentArgs: List<KaNamedAnnotationValue>): KSValueArgument? {
+        // 0. Check for full application and do early return
+        val annotationParameters = annotationDeclaration?.primaryConstructor?.parameters
+        if (annotationParameters?.size == presentArgs.size) {
+            return null
+        }
+
+        // 1. Obtain a vararg parameter if it exists.
+        // If it has a default value, it has been returned by `getAbsentDefaultArgument` so do early return.
+        val varargParameter = annotationParameters?.find { it.isVararg && !it.hasDefault } ?: return null
+
+        // 2. Check if the vararg was in the present arguments. Early return if it is, since it's not absent.
+        val presentArgsVararg = presentArgs.find { varargParameter.name == KSNameImpl.getCached(it.name.asString()) }
+
+        if (presentArgsVararg != null) {
+            return null
+        }
+
+        // 3. The parameter is missing so return a singleton list containing empty list value.
+        return KSValueArgumentLiteImpl(
+            name = varargParameter.name,
+            value = emptyList<Any?>(),
+            parent = this,
+            origin = origin, // Synthetic?
+            location = location
+        )
     }
 
     override val defaultArguments: List<KSValueArgument> by lazy {

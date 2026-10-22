@@ -960,7 +960,7 @@ abstract class KSPUnitTestSuite(
     @TestMetadata("varargAnnotationApplication.kt")
     @Test
     fun testVarargAnnotationApplication() {
-        runFailingTest("$AA_PATH/varargAnnotationApplication.kt")
+        runTest("$AA_PATH/varargAnnotationApplication.kt")
     }
 
     @TestMetadata("varianceTypeCheck.kt")
