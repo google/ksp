@@ -58,7 +58,7 @@ The form of the test itself is flexible as long as the logic is covered.
 Here are some [sample test processors](kotlin-analysis-api/src/test/kotlin/com/google/devtools/ksp/processor) for your reference.
 
 #### Steps for writing a test
-* KSP needs to be built with JDK 11+, because of test dependencies.
+* KSP needs to be built with JDK 17 (`JavaLanguageVersion.of(17)` in `build.gradle.kts`).
 * Create a test processor under the sample processor folder.
 * Write your logic by overriding corresponding functions. 
     * Test is performed by running test processor and getting a collection of test results in the form of `List<String>`.
@@ -81,18 +81,18 @@ Here are some [sample test processors](kotlin-analysis-api/src/test/kotlin/com/g
           Note: for a processor to accept input, its constructor must have a single `List<String>` parameter.
           This is a handy way of writing a parametric test processor.
           The `List<String>` parameter list must come before the `enableNewFeatures` property.
-        * Immediately after the test processor line(s), start your expected result lines. Every line should start with `// ` (with a space after `//`).
+        * Add `// EXPECTED:` after the test processor line(s), followed by your expected result lines. Every line should start with `// ` (with a space after `//`). (If expected output differs when `enableNewFeatures` is toggled, use `// EXPECT CURRENT:` and `// EXPECT NEXT:` lines inside the expected block.)
         * Add `// END` to indicate the end of expected test results.
         * Then follows the virtual files section till the end of the test file.
         * You can use `// FILE: <file name>` to create files that will be available at runtime of the test.
             * E.g. `// FILE: a.kt` will result in a file named `a.kt` at runtime.
-* Add new test to [`KSPUnitTestSuite`](kotlin-analysis-api/src/test/kotlin/com/google/devtools/ksp/test/KSPUnitTestSuite.kt) in `kotlin-analysis-api`.
+* Add new test to [`KSPUnitTestSuite`](kotlin-analysis-api/src/test/kotlin/com/google/devtools/ksp/test/KSPUnitTestSuite.kt) in `kotlin-analysis-api` (or declare it `abstract` in `KSPUnitTestSuite` and override in [`AAConfiguredUnitTestSuite`](kotlin-analysis-api/src/test/kotlin/com/google/devtools/ksp/test/AAConfiguredUnitTestSuite.kt) and [`PsiConfiguredUnitTestSuite`](kotlin-analysis-api/src/test/kotlin/com/google/devtools/ksp/test/PsiConfiguredUnitTestSuite.kt) if behavior differs between resolution strategies).
     * Annotate the test with `@Bug` and `@BugState`.
     * The `@Bug` annotation requires a link to an open or existing GitHub issue (e.g., `@Bug("https://github.com/google/ksp/issues/<issue_number>", BugState.OPEN)`).
     * Use the `@Negative` marker annotation if applicable.
 * Run generated tests with the `:kotlin-analysis-api:test` gradle task.
-    * This will execute all tests in the KSP test suite. To run your test only, specify the test name with 
-    `--tests "com.google.devtools.ksp.test.KSPUnitTestSuite.<name of your test>"`
+    * This will execute all tests in the KSP test suite. Because `KSPUnitTestSuite` is an abstract base class, to run your test only across all concrete suite configurations, specify the test name with
+    `--tests "*.<name of your test>"` (or target a specific suite such as `--tests "com.google.devtools.ksp.test.AAConfiguredUnitTestSuite.<name of your test>"`).
     * Make sure your change is not breaking any existing test as well :).
 * [optional] You can run the `./gradlew check` task as well to run all tests.
     * This task runs all integration tests as well, so it might take a while to complete.
