@@ -85,7 +85,7 @@ object KspDiagnostics {
 class UnresolveReferenceCollector(
     private val messages: MutableSet<String>
 ) : JavaRecursiveElementWalkingVisitor() {
-    // Javadoc references are not resolved by the compiler, don't descend inot them.
+    // Javadoc references are not resolved by the compiler, don't descend into them.
     override fun visitDocComment(comment: PsiDocComment) = Unit
 
     override fun visitReferenceElement(reference: PsiJavaCodeReferenceElement) {
