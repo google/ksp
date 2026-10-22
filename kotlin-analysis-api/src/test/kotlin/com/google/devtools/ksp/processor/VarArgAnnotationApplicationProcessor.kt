@@ -34,25 +34,14 @@ class VarArgAnnotationApplicationProcessor(
         classNames.forEach { className ->
             val decl = resolver.getClassDeclarationByName(className)!!
             decl.annotations.forEach { anno ->
-                val args = anno.arguments.singleOrNull()
-                val value =
-                    when (val v = args?.value) {
-                        is Collection<*> -> v
-                        null -> null
-                        else -> listOf(v)
-                    }
-                results.add(
-                    buildString {
-                        append(decl.qualifiedName?.asString() ?: decl.simpleName.asString())
-                        append(": ")
-                        append(anno.shortName.asString())
-                        append(": ")
-                        append("args = ")
-                        append(args)
-                        append(", value = ")
-                        append(value)
-                    }
-                )
+                val res = buildString {
+                    append(decl.qualifiedName?.asString() ?: decl.simpleName.asString())
+                    append(": ")
+                    append(anno.shortName.asString())
+                    append(": ")
+                    append(anno.arguments)
+                }
+                results.add(res)
             }
         }
         return emptyList()
