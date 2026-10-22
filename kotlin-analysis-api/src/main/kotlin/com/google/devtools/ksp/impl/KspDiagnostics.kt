@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
-
 package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
