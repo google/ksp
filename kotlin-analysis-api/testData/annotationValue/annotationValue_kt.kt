@@ -19,6 +19,7 @@
 // TEST PROCESSOR: AnnotationArgumentProcessor
 // EXPECTED:
 // defaultInNested
+// []
 // SomeClass$WithDollarSign
 // Str
 // 42
