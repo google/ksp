@@ -18,9 +18,11 @@
 
 package com.google.devtools.ksp.impl
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.InternalKSPException
 import com.google.devtools.ksp.InternalKSPException.Companion.render
 import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.buildApiFeatures
 import com.google.devtools.ksp.closestClassDeclaration
 import com.google.devtools.ksp.common.JVM_DEFAULT_ANNOTATION_FQN
 import com.google.devtools.ksp.common.JVM_DEFAULT_WITHOUT_COMPATIBILITY_ANNOTATION_FQN
@@ -190,9 +192,19 @@ class ResolverAAImpl(
         }
     }
 
+    private val LEGACY_REGISTERED_API_FEATURES: ApiFeatures = buildApiFeatures {
+        enableBackingFields = true
+        enableContextParameters = false
+    }
+
     lateinit var currentProcessor: SymbolProcessor
 
-    internal fun shouldEnableNewFeatures(): Boolean = currentProcessor in processorsRegisteredForNewFeatures
+    internal val currentApiFeatures: ApiFeatures
+        get() = if (currentProcessor in processorsRegisteredForNewFeatures) {
+            LEGACY_REGISTERED_API_FEATURES
+        } else {
+            currentProcessor.apiFeatures
+        }
 
     lateinit var propertyAsMemberOfCache: MutableMap<Pair<KSPropertyDeclaration, KSType>, KSType>
     lateinit var functionAsMemberOfCache: MutableMap<Pair<KSFunctionDeclaration, KSType>, KSFunction>
@@ -725,7 +737,7 @@ class ResolverAAImpl(
         return resolutionStrategy.getSymbolsWithAnnotation(
             realAnnotationName,
             inDepth,
-            shouldEnableNewFeatures(),
+            currentApiFeatures
         )
     }
 
@@ -914,7 +926,7 @@ class ResolverAAImpl(
                 }
             }
 
-            is KSBackingField if shouldEnableNewFeatures() -> TODO("Backing fields are not yet supported in mapToJvmSignatureInternal")
+            is KSBackingField if currentApiFeatures.enableBackingFields -> TODO("Backing fields are not yet supported in mapToJvmSignatureInternal")
 
             else -> null
         }

@@ -20,7 +20,7 @@
 // EXPECTED:
 // MyClass
 // com.example.MyAnnotation
-// EXPECT NEXT: com.example.MyAnnotation.myValue.field
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: com.example.MyAnnotation.myValue.field
 // com.example.MyAnnotation.myValue
 // <init>
 // END

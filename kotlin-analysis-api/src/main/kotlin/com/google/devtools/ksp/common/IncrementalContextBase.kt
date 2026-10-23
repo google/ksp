@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.common
 
 import com.google.devtools.ksp.IncrementalContextLoggingOptions
+import com.google.devtools.ksp.buildApiFeatures
 import com.google.devtools.ksp.impl.symbol.kotlin.separateQualifierAndName
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
@@ -35,7 +36,12 @@ import java.io.File
 import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
 
-object SymbolCollector : KSDefaultVisitor<(LookupSymbolWrapper) -> Unit, Unit>(enableNewFeatures = true) {
+object SymbolCollector : KSDefaultVisitor<(LookupSymbolWrapper) -> Unit, Unit>(
+    buildApiFeatures {
+        enableBackingFields = true
+        enableContextParameters = true
+    }
+) {
     override fun defaultHandler(node: KSNode, data: (LookupSymbolWrapper) -> Unit) = Unit
 
     override fun visitDeclaration(declaration: KSDeclaration, data: (LookupSymbolWrapper) -> Unit) {

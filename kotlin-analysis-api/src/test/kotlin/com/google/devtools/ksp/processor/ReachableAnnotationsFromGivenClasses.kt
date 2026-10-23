@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
@@ -10,7 +11,7 @@ import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
 class ReachableAnnotationsFromGivenClasses(
     val classNames: List<String>,
-    override val enableNewFeatures: Boolean
+    override val apiFeatures: ApiFeatures
 ) : AbstractTestProcessor() {
 
     private val results = mutableListOf<String>()
@@ -31,7 +32,7 @@ class ReachableAnnotationsFromGivenClasses(
     }
 
     inner class DeclarationVisitor(val seen: MutableSet<KSNode>) :
-        KSTopDownVisitor<MutableSet<String>, Unit>(enableNewFeatures) {
+        KSTopDownVisitor<MutableSet<String>, Unit>(apiFeatures) {
         override fun defaultHandler(
             node: KSNode,
             data: MutableSet<String>

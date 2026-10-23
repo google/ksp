@@ -21,9 +21,9 @@
 // main.KotlinClass ->
 // class main.KotlinClass : annotations.ClassTarget{[value = onClass]}
 // class main.KotlinClass : annotations.NoTargetAnnotation{[value = onClass]}
-// EXPECT NEXT: field of property prop : annotations.AllTarget{[value = all:]}
-// EXPECT NEXT: field of property prop : annotations.FieldTarget2{[value = field:]}
-// EXPECT NEXT: field of property prop : annotations.FieldTarget{[value = onProp]}
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: field of property prop : annotations.AllTarget{[value = all:]}
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: field of property prop : annotations.FieldTarget2{[value = field:]}
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: field of property prop : annotations.FieldTarget{[value = onProp]}
 // function myFun : annotations.FunctionTarget{[value = onMyFun]}
 // function myFun : annotations.NoTargetAnnotation{[value = onMyFun]}
 // getter of property prop : annotations.AllTarget{[value = all:]}
@@ -35,18 +35,18 @@
 // parameter value : annotations.AllTarget{[value = all:]}
 // parameter value : annotations.ValueParameterTarget{[value = onProp]}
 // property prop : annotations.AllTarget{[value = all:]}
-// EXPECT CURRENT: property prop : annotations.AllTarget{[value = all:]}
-// EXPECT CURRENT: property prop : annotations.FieldTarget2{[value = field:]}
-// EXPECT CURRENT: property prop : annotations.FieldTarget{[value = onProp]}
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: property prop : annotations.AllTarget{[value = all:]}
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: property prop : annotations.FieldTarget2{[value = field:]}
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: property prop : annotations.FieldTarget{[value = onProp]}
 // property prop : annotations.NoTargetAnnotation{[value = onProp]}
 // property prop : annotations.PropertyTarget{[value = onProp]}
 // setter of property prop : annotations.PropertySetterTarget{[value = set:]}
 // lib.KotlinClass ->
 // class lib.KotlinClass : annotations.ClassTarget{[value = onClass]}
 // class lib.KotlinClass : annotations.NoTargetAnnotation{[value = onClass]}
-// EXPECT NEXT: field of property prop : annotations.AllTarget{[value = all:]}
-// EXPECT NEXT: field of property prop : annotations.FieldTarget2{[value = field:]}
-// EXPECT NEXT: field of property prop : annotations.FieldTarget{[value = onProp]}
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: field of property prop : annotations.AllTarget{[value = all:]}
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: field of property prop : annotations.FieldTarget2{[value = field:]}
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: field of property prop : annotations.FieldTarget{[value = onProp]}
 // function myFun : annotations.FunctionTarget{[value = onMyFun]}
 // function myFun : annotations.NoTargetAnnotation{[value = onMyFun]}
 // getter of property prop : annotations.AllTarget{[value = all:]}
@@ -58,19 +58,19 @@
 // parameter propInConstructor : annotations.ValueParameterTarget{[value = propInConstructor]}
 // parameter value : annotations.AllTarget{[value = all:]}
 // property prop : annotations.AllTarget{[value = all:]}
-// EXPECT CURRENT: property prop : annotations.AllTarget{[value = all:]}
-// EXPECT CURRENT: property prop : annotations.FieldTarget2{[value = field:]}
-// EXPECT CURRENT: property prop : annotations.FieldTarget{[value = onProp]}
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: property prop : annotations.AllTarget{[value = all:]}
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: property prop : annotations.FieldTarget2{[value = field:]}
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: property prop : annotations.FieldTarget{[value = onProp]}
 // property prop : annotations.NoTargetAnnotation{[value = onProp]}
 // property prop : annotations.PropertyTarget{[value = onProp]}
 // setter of property prop : annotations.PropertySetterTarget{[value = set:]}
 // main.DataClass ->
 // class main.DataClass : annotations.ClassTarget{[value = onDataClass]}
 // class main.DataClass : annotations.NoTargetAnnotation{[value = onDataClass]}
-// EXPECT NEXT: field of property constructorParam : annotations.AllTarget{[value = all:]}
-// EXPECT NEXT: field of property constructorParam : annotations.FieldTarget2{[value = field:]}
-// EXPECT NEXT: field of property constructorParam : annotations.FieldTarget{[value = onConstructorParam]}
-// EXPECT NEXT: field of property constructorParam : annotations.ValueParameterAndFieldTarget{[value = valueParameterAndField]}
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: field of property constructorParam : annotations.AllTarget{[value = all:]}
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: field of property constructorParam : annotations.FieldTarget2{[value = field:]}
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: field of property constructorParam : annotations.FieldTarget{[value = onConstructorParam]}
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: field of property constructorParam : annotations.ValueParameterAndFieldTarget{[value = valueParameterAndField]}
 // getter of property constructorParam : annotations.AllTarget{[value = all:]}
 // getter of property constructorParam : annotations.PropertyGetterTarget{[value = get:]}
 // parameter constructorParam : annotations.AllTarget{[value = all:]}
@@ -79,28 +79,28 @@
 // parameter value : annotations.AllTarget{[value = all:]}
 // parameter value : annotations.ValueParameterTarget{[value = onConstructorParam]}
 // property constructorParam : annotations.AllTarget{[value = all:]}
-// EXPECT CURRENT: property constructorParam : annotations.AllTarget{[value = all:]}
-// EXPECT CURRENT: property constructorParam : annotations.FieldTarget2{[value = field:]}
-// EXPECT CURRENT: property constructorParam : annotations.FieldTarget{[value = onConstructorParam]}
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: property constructorParam : annotations.AllTarget{[value = all:]}
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: property constructorParam : annotations.FieldTarget2{[value = field:]}
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: property constructorParam : annotations.FieldTarget{[value = onConstructorParam]}
 // property constructorParam : annotations.NoTargetAnnotation{[value = onConstructorParam]}
 // property constructorParam : annotations.PropertyTarget{[value = onConstructorParam]}
-// EXPECT CURRENT: property constructorParam : annotations.ValueParameterAndFieldTarget{[value = valueParameterAndField]}
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: property constructorParam : annotations.ValueParameterAndFieldTarget{[value = valueParameterAndField]}
 // setter of property constructorParam : annotations.PropertySetterTarget{[value = set:]}
 // lib.DataClass ->
 // class lib.DataClass : annotations.ClassTarget{[value = onDataClass]}
 // class lib.DataClass : annotations.NoTargetAnnotation{[value = onDataClass]}
-// EXPECT NEXT: field of property constructorParam : annotations.AllTarget{[value = all:]}
-// EXPECT NEXT: field of property constructorParam : annotations.FieldTarget2{[value = field:]}
-// EXPECT NEXT: field of property constructorParam : annotations.FieldTarget{[value = onConstructorParam]}
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: field of property constructorParam : annotations.AllTarget{[value = all:]}
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: field of property constructorParam : annotations.FieldTarget2{[value = field:]}
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: field of property constructorParam : annotations.FieldTarget{[value = onConstructorParam]}
 // getter of property constructorParam : annotations.AllTarget{[value = all:]}
 // getter of property constructorParam : annotations.PropertyGetterTarget{[value = get:]}
 // parameter constructorParam : annotations.AllTarget{[value = all:]}
 // parameter constructorParam : annotations.NoTargetAnnotation{[value = onConstructorParam]}
 // parameter value : annotations.AllTarget{[value = all:]}
 // property constructorParam : annotations.AllTarget{[value = all:]}
-// EXPECT CURRENT: property constructorParam : annotations.AllTarget{[value = all:]}
-// EXPECT CURRENT: property constructorParam : annotations.FieldTarget2{[value = field:]}
-// EXPECT CURRENT: property constructorParam : annotations.FieldTarget{[value = onConstructorParam]}
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: property constructorParam : annotations.AllTarget{[value = all:]}
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: property constructorParam : annotations.FieldTarget2{[value = field:]}
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: property constructorParam : annotations.FieldTarget{[value = onConstructorParam]}
 // property constructorParam : annotations.NoTargetAnnotation{[value = onConstructorParam]}
 // property constructorParam : annotations.PropertyTarget{[value = onConstructorParam]}
 // setter of property constructorParam : annotations.PropertySetterTarget{[value = set:]}

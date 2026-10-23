@@ -1,11 +1,12 @@
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 
-class NestedClassTypeProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+class NestedClassTypeProcessor(override val apiFeatures: ApiFeatures): AbstractTestProcessor() {
     val result = mutableListOf<String>()
 
     override fun toResult(): List<String> {

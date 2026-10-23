@@ -17,10 +17,11 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
-class HelloProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+class HelloProcessor(override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
     val results = mutableListOf<String>()
     val visitor = HelloVisitor()
 
@@ -35,7 +36,7 @@ class HelloProcessor(override val enableNewFeatures: Boolean): AbstractTestProce
         return results.sorted()
     }
 
-    inner class HelloVisitor : KSVisitorVoid(enableNewFeatures) {
+    inner class HelloVisitor : KSVisitorVoid(apiFeatures) {
         override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
             results.add(classDeclaration.qualifiedName?.asString() ?: "<error>")
         }

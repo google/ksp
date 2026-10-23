@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.isConstructor
@@ -7,7 +8,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
 @Suppress("unused") // used by generated tests
-class AsMemberOfProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+class AsMemberOfProcessor(override val apiFeatures: ApiFeatures): AbstractTestProcessor() {
     val results = mutableListOf<String>()
     // keep a list of all signatures we generate and ensure equals work as expected
     private val functionsBySignature = mutableMapOf<String, MutableSet<KSFunction>>()

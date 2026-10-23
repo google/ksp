@@ -21,13 +21,13 @@
 // EXPECTED:
 // Anno: MyClass.annotatedProperty
 // Anno: MyClass.annotatedPropertyAndFieldViaUseSiteTargets
-// EXPECT CURRENT: Anno: MyClass.annotatedPropertyWithFieldTarget
-// EXPECT CURRENT: Anno: MyClass.propertyWhereFieldIsDirectlyAnnotated
-// EXPECT NEXT: Anno: MyClass.annotatedPropertyAndFieldViaUseSiteTargets.field
-// EXPECT NEXT: Anno: MyClass.annotatedPropertyWithFieldTarget.field
-// EXPECT NEXT: Anno: MyClass.propertyWhereFieldIsDirectlyAnnotated.field
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: Anno: MyClass.annotatedPropertyWithFieldTarget
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: Anno: MyClass.propertyWhereFieldIsDirectlyAnnotated
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Anno: MyClass.annotatedPropertyAndFieldViaUseSiteTargets.field
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Anno: MyClass.annotatedPropertyWithFieldTarget.field
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Anno: MyClass.propertyWhereFieldIsDirectlyAnnotated.field
 // Anno: MyClass.propertyWithAllTarget
-// EXPECT NEXT: Anno: MyClass.propertyWithAllTarget.field
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Anno: MyClass.propertyWithAllTarget.field
 // Anno: MyClass.propertyWithAllTarget.propertyWithAllTarget.getter()
 // END
 

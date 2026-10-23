@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.processing.Resolver
@@ -24,7 +25,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import kotlin.reflect.KClass
 
 @KspExperimental
-class AnnotationNestedClassValueProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+class AnnotationNestedClassValueProcessor(override val apiFeatures: ApiFeatures): AbstractTestProcessor() {
     val result = mutableListOf<String>()
 
     override fun toResult(): List<String> {

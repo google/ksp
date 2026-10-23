@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -28,7 +29,7 @@ import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.symbol.Variance
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-class ResolveJavaTypeProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
+class ResolveJavaTypeProcessor(override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
     val results = mutableListOf<String>()
     val visitor = ResolveJavaTypeVisitor()
 
@@ -49,7 +50,7 @@ class ResolveJavaTypeProcessor(override val enableNewFeatures: Boolean) : Abstra
         return emptyList()
     }
 
-    inner class ResolveJavaTypeVisitor : KSTopDownVisitor<Unit, Unit>(enableNewFeatures) {
+    inner class ResolveJavaTypeVisitor : KSTopDownVisitor<Unit, Unit>(apiFeatures) {
         override fun defaultHandler(node: KSNode, data: Unit) {
         }
 

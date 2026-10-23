@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
@@ -8,8 +9,8 @@ import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-class LateinitPropertiesProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
-    private val visitor = Visitor(enableNewFeatures)
+class LateinitPropertiesProcessor(override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
+    private val visitor = Visitor(apiFeatures)
 
     override fun toResult(): List<String> {
         return visitor.lateinitPropertiesNames.sorted()
@@ -24,7 +25,7 @@ class LateinitPropertiesProcessor(override val enableNewFeatures: Boolean) : Abs
         return emptyList()
     }
 
-    private class Visitor(enableNewFeatures: Boolean) : KSTopDownVisitor<Unit, Unit>(enableNewFeatures) {
+    private class Visitor(apiFeatures: ApiFeatures) : KSTopDownVisitor<Unit, Unit>(apiFeatures) {
         val lateinitPropertiesNames = arrayListOf<String>()
 
         override fun defaultHandler(node: KSNode, data: Unit) {

@@ -1,12 +1,13 @@
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 
-class PackageAnnotationProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+class PackageAnnotationProcessor(override val apiFeatures: ApiFeatures): AbstractTestProcessor() {
     val result = mutableListOf<String>()
     override fun toResult(): List<String> {
         return result
@@ -16,7 +17,7 @@ class PackageAnnotationProcessor(override val enableNewFeatures: Boolean): Abstr
     override fun process(resolver: Resolver): List<KSAnnotated> {
         resolver.getAllFiles().forEach {
             it.accept(
-                object : KSVisitorVoid(enableNewFeatures) {
+                object : KSVisitorVoid(apiFeatures) {
                     override fun visitFile(file: KSFile, data: Unit) {
                         result.add(
                             "${file.fileName}:${resolver.getPackageAnnotations(file.packageName.asString())

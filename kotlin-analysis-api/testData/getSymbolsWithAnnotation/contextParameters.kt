@@ -19,15 +19,15 @@
 // PROCESSOR INPUT: Anno
 // EXPECTED:
 // Anno: MyClass.myImmProp
-// EXPECT NEXT: Anno: MyClass.myImmProp.ctxParam1
+// EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: Anno: MyClass.myImmProp.ctxParam1
 // Anno: MyClass.myMutProp
-// EXPECT NEXT: Anno: MyClass.myMutProp.ctxParam1
-// EXPECT NEXT: Anno: MyClass.myMutProp.ctxParam2
-// EXPECT NEXT: Anno: MyClass.onlyOneCtxParamAnnotated.ctxParam2
-// EXPECT NEXT: Anno: bar.ctxParam1
-// EXPECT NEXT: Anno: bar.ctxParam2
+// EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: Anno: MyClass.myMutProp.ctxParam1
+// EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: Anno: MyClass.myMutProp.ctxParam2
+// EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: Anno: MyClass.onlyOneCtxParamAnnotated.ctxParam2
+// EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: Anno: bar.ctxParam1
+// EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: Anno: bar.ctxParam2
 // Anno: bar.str
-// EXPECT NEXT: Anno: foo.ctxParam1
+// EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: Anno: foo.ctxParam1
 // END
 
 // FILE: Main.kt

@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.processing.Resolver
@@ -17,7 +18,7 @@ annotation class KotlinAnnotationWithInnerDefaults(
     }
 }
 
-class GetAnnotationByTypeProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+class GetAnnotationByTypeProcessor(override val apiFeatures: ApiFeatures): AbstractTestProcessor() {
     val results = mutableListOf<String>()
     private val annotationKClass = KotlinAnnotationWithInnerDefaults::class
 

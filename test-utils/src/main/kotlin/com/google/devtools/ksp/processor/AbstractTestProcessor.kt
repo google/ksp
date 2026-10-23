@@ -22,13 +22,9 @@ import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 
 abstract class AbstractTestProcessor : SymbolProcessor, SymbolProcessorProvider {
-    abstract val enableNewFeatures: Boolean
     abstract fun toResult(): List<String>
 
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
-        if (enableNewFeatures) {
-            environment.registerProcessorForNewFeatures(this)
-        }
         return this
     }
 }

@@ -1,11 +1,12 @@
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-class RawTypesProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+class RawTypesProcessor(override val apiFeatures: ApiFeatures): AbstractTestProcessor() {
     private val rawTypedEntityNames = arrayListOf<String>()
 
     override fun toResult(): List<String> {
@@ -14,7 +15,7 @@ class RawTypesProcessor(override val enableNewFeatures: Boolean): AbstractTestPr
 
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val visitor = object : KSTopDownVisitor<Unit, Unit>(enableNewFeatures) {
+        val visitor = object : KSTopDownVisitor<Unit, Unit>(apiFeatures) {
             private val KSType.isRawType
                 get() = resolver.isJavaRawType(this)
 
