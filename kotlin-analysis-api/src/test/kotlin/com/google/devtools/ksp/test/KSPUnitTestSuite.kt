@@ -956,7 +956,7 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/valueParameter.kt")
     }
 
-    @Bug("https://github.com/google/ksp/issues/3271", BugState.OPEN)
+    @Bug("https://github.com/google/ksp/issues/3271", BugState.FIXED)
     @TestMetadata("varargAnnotationApplication.kt")
     @Test
     fun testVarargAnnotationApplication() {
