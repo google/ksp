@@ -18,6 +18,7 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: ReplaceWithErrorTypeArgsProcessor
 // EXPECTED:
+// KSP FAILED WITH EXIT CODE: PROCESSING_ERROR
 // KS.star.replace([INVARIANT Int, INVARIANT String]): KS<Int, String>
 // KS.star.replace([INVARIANT NotExist1, INVARIANT NotExist2]): KS<<ERROR TYPE: NotExist1>, <ERROR TYPE: NotExist2>>
 // KS.asType([INVARIANT Int, INVARIANT String]): KS<Int, String>

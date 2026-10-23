@@ -18,6 +18,7 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: ErrorTypeProcessor
 // EXPECTED:
+// KSP FAILED WITH EXIT CODE: PROCESSING_ERROR
 // kotlin.collections.MutableMap
 // kotlin.collections.Map
 // kotlin.String

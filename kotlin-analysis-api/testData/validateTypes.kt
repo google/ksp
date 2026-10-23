@@ -18,6 +18,7 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: ValidateProcessor
 // EXPECTED:
+// KSP FAILED WITH EXIT CODE: PROCESSING_ERROR
 // ErrorInMember invalid
 // goodProp valid
 // badProp invalid
