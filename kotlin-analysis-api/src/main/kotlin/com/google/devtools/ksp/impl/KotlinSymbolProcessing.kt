@@ -612,6 +612,22 @@ class KotlinSymbolProcessing(
                 }
             }
 
+            val restoredCleanOutputs = incrementalContext.restoreCleanOutputsBeforeProcessing()
+            if (restoredCleanOutputs.isNotEmpty()) {
+                val dirtyPointers = allDirtyKSFiles.filterIsInstance<Deferrable>().map { it.defer() }
+                dropCaches()
+                // Register clean cached sources for resolution, but do not offer their annotations
+                // as new/dirty processing candidates or count them as newly generated outputs.
+                prepareNewKSFiles(
+                    env,
+                    javaFileManager,
+                    restoredCleanOutputs.filter { it.extension.equals("kt", ignoreCase = true) },
+                    restoredCleanOutputs.filter { it.extension.equals("java", ignoreCase = true) },
+                )
+                allDirtyKSFiles = dirtyPointers.map { it!!.restore() as KSFile }
+                newKSFiles = allDirtyKSFiles
+            }
+
             // Run processors until either
             // 1) there is an error
             // 2) there is no more new files.
@@ -667,8 +683,8 @@ class KotlinSymbolProcessing(
                 newKSFiles = prepareNewKSFiles(
                     env,
                     javaFileManager,
-                    codeGenerator.generatedFile.filter { it.extension.lowercase() == "kt" },
-                    codeGenerator.generatedFile.filter { it.extension.lowercase() == "java" },
+                    codeGenerator.generatedFile.filter { it.extension.equals("kt", ignoreCase = true) },
+                    codeGenerator.generatedFile.filter { it.extension.equals("java", ignoreCase = true) },
                 )
                 // Now that caches are dropped, KtSymbols and KS* are invalid. They need to be restored from deferred.
                 // Do not replace `!!` with `?.`. Implementations of KSFile in KSP2 must implement Deferrable and
