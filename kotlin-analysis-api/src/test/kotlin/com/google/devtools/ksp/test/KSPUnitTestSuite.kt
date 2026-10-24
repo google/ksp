@@ -409,6 +409,18 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/explicitBackingFieldsSubtyping.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/2833", BugState.OPEN)
+    @TestMetadata("inheritedPropertyAnnotation.kt")
+    @Test
+    fun testInheritedPropertyAnnotation() {
+        // New features expose field-targeted annotations on backing fields, not properties.
+        if (enableNewFeatures) {
+            runTest("$AA_PATH/inheritedPropertyAnnotation.kt")
+        } else {
+            runFailingTest("$AA_PATH/inheritedPropertyAnnotation.kt")
+        }
+    }
+
     @TestMetadata("functionTypeAlias.kt")
     @Test
     fun testFunctionTypeAlias() {
