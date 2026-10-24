@@ -35,18 +35,6 @@ abstract class AAConfiguredUnitTestSuiteBase(
     override fun testGroupedAnnotationsWithUseSiteTargets() {
         runTest("$AA_PATH/getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
     }
-
-    @TestMetadata("functionKindsJavaInheritsKotlin.kt")
-    @Test
-    override fun testFunctionKindsJavaInheritsKotlin() {
-        runThrowingTest("$AA_PATH/functionKindsJavaInheritsKotlin.kt")
-    }
-
-    @TestMetadata("javaSubtypeOfKotlinInterface.kt")
-    @Test
-    override fun testJavaSubtypeOfKotlinInterface() {
-        runTest("$AA_PATH/javaSubtypeOfKotlinInterface.kt")
-    }
 }
 
 class AAConfiguredUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = false) {
