@@ -674,6 +674,13 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/multipleModules.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/2617", BugState.FIXED)
+    @TestMetadata("nestedAnnotationDeclarationOrder.kt")
+    @Test
+    fun testNestedAnnotationDeclarationOrder() {
+        runTest("$AA_PATH/nestedAnnotationDeclarationOrder.kt")
+    }
+
     @TestMetadata("nestedAnnotations.kt")
     @Test
     fun testNestedAnnotations() {
