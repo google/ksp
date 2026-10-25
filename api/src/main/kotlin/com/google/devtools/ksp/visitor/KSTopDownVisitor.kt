@@ -56,6 +56,7 @@ abstract class KSTopDownVisitor<D, R>(enableNewFeatures: Boolean) : KSDefaultVis
         property.getter?.accept(data)
         property.setter?.accept(data)
         if (enableNewFeatures) {
+            property.contextParameters.accept(data)
             property.backingField?.accept(data)
         }
         return super.visitPropertyDeclaration(property, data)
@@ -91,6 +92,9 @@ abstract class KSTopDownVisitor<D, R>(enableNewFeatures: Boolean) : KSDefaultVis
         function.extensionReceiver?.accept(data)
         function.parameters.accept(data)
         function.returnType?.accept(data)
+        if (enableNewFeatures) {
+            function.contextParameters.accept(data)
+        }
         return super.visitFunctionDeclaration(function, data)
     }
 

@@ -466,7 +466,6 @@ internal fun getCPChanges(
 internal fun Configuration.markResolvable(): Configuration = apply {
     isCanBeResolved = true
     isCanBeConsumed = false
-    isVisible = false
 }
 
 /**

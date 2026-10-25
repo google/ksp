@@ -1,12 +1,13 @@
+@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 package com.google.devtools.ksp.standalone
 
 import com.intellij.core.CorePackageIndex
-import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.openapi.roots.PackageIndex
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.impl.file.impl.JavaFileManager
 import com.intellij.psi.search.ProjectScope
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaModule
+import org.jetbrains.kotlin.analysis.api.standalone.base.declarations.KotlinStandaloneJvmDependenciesIndex
 import org.jetbrains.kotlin.analysis.api.standalone.base.projectStructure.StandaloneProjectFactory
 import org.jetbrains.kotlin.cli.create
 import org.jetbrains.kotlin.cli.jvm.compiler.JvmPackagePartProvider
@@ -16,7 +17,6 @@ import org.jetbrains.kotlin.cli.jvm.compiler.computeDefaultRootModules
 import org.jetbrains.kotlin.cli.jvm.compiler.getJavaModuleRoots
 import org.jetbrains.kotlin.cli.jvm.index.JavaRoot
 import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesDynamicCompoundIndex
-import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesIndexImpl
 import org.jetbrains.kotlin.cli.jvm.index.SingleJavaFileRootsIndex
 import org.jetbrains.kotlin.cli.jvm.modules.CliJavaModuleFinder
 import org.jetbrains.kotlin.cli.jvm.modules.JavaModuleGraph
@@ -25,8 +25,10 @@ import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.LanguageVersion
 import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 
-class IncrementalJavaFileManager(val environment: KotlinCoreProjectEnvironment) {
-    lateinit var rootsIndex: JvmDependenciesDynamicCompoundIndex
+class IncrementalJavaFileManager(
+    val environment: KotlinCoreProjectEnvironment,
+    val rootsIndex: JvmDependenciesDynamicCompoundIndex,
+) {
     lateinit var packagePartProviders: List<JvmPackagePartProvider>
     val singleJavaFileRoots = mutableListOf<JavaRoot>()
 
@@ -39,24 +41,30 @@ class IncrementalJavaFileManager(val environment: KotlinCoreProjectEnvironment) 
         val compilerConfiguration = CompilerConfiguration.create()
         val javaModuleFinder = CliJavaModuleFinder(null, compilerConfiguration, javaFileManager, project, null)
         val javaModuleGraph = JavaModuleGraph(javaModuleFinder)
-        val allSourceFileRoots = sourceFiles.map { JavaRoot(it.virtualFile, JavaRoot.RootType.SOURCE) }
+        // StandaloneProjectFactory.findJvmRootsForJavaFiles resolves the package root directories
+        // for each PsiJavaFile (e.g., `/src/main/java` for `package com.example;` in
+        // `/src/main/java/com/example/Foo.java`) so that JvmDependenciesIndex, JavaFileManager,
+        // and PackageIndex can resolve Java packages and package-info.java annotations for source
+        // files.
+        val allSourceFileRoots =
+            StandaloneProjectFactory.findJvmRootsForJavaFiles(sourceFiles.toList()).map {
+                JavaRoot(it.virtualFile, JavaRoot.RootType.SOURCE)
+            }
         val jdkRoots = getDefaultJdkModuleRoots(javaModuleFinder, javaModuleGraph)
         val libraryRoots = StandaloneProjectFactory.getAllBinaryRoots(modules, environment.environment)
 
-        val rootsWithSingleJavaFileRoots = buildList {
+        val roots = buildList {
             addAll(libraryRoots)
             addAll(allSourceFileRoots)
             addAll(jdkRoots)
         }
 
-        val (roots, newSingleJavaFileRoots) = rootsWithSingleJavaFileRoots.partition { (file) ->
-            file.isDirectory || file.extension != JavaFileType.DEFAULT_EXTENSION
-        }
+        singleJavaFileRoots.addAll(
+            sourceFiles.map { JavaRoot(it.virtualFile, JavaRoot.RootType.SOURCE) }
+        )
 
-        singleJavaFileRoots.addAll(newSingleJavaFileRoots)
-
-        rootsIndex = JvmDependenciesDynamicCompoundIndex(true).apply {
-            addIndex(JvmDependenciesIndexImpl(roots))
+        rootsIndex.apply {
+            addIndex(KotlinStandaloneJvmDependenciesIndex(roots))
         }
 
         val corePackageIndex = project.getService(PackageIndex::class.java) as CorePackageIndex
@@ -97,16 +105,22 @@ class IncrementalJavaFileManager(val environment: KotlinCoreProjectEnvironment) 
     fun add(sourceFiles: Set<PsiJavaFile>) {
         val project = environment.project
         val javaFileManager = project.getService(JavaFileManager::class.java) as KotlinCliJavaFileManagerImpl
-        val allSourceFileRoots = sourceFiles.map { JavaRoot(it.virtualFile, JavaRoot.RootType.SOURCE) }
+        // StandaloneProjectFactory.findJvmRootsForJavaFiles resolves the package root directories
+        // for each PsiJavaFile (e.g., `/src/main/java` for `package com.example;` in
+        // `/src/main/java/com/example/Foo.java`) so that JvmDependenciesIndex, JavaFileManager,
+        // and PackageIndex can resolve Java packages and package-info.java annotations for source
+        // files.
+        val roots =
+            StandaloneProjectFactory.findJvmRootsForJavaFiles(sourceFiles.toList()).map {
+                JavaRoot(it.virtualFile, JavaRoot.RootType.SOURCE)
+            }
 
-        val (roots, newSingleJavaFileRoots) = allSourceFileRoots.partition { (file) ->
-            file.isDirectory || file.extension != JavaFileType.DEFAULT_EXTENSION
-        }
-
-        singleJavaFileRoots.addAll(newSingleJavaFileRoots)
+        singleJavaFileRoots.addAll(
+            sourceFiles.map { JavaRoot(it.virtualFile, JavaRoot.RootType.SOURCE) }
+        )
 
         rootsIndex.apply {
-            addIndex(JvmDependenciesIndexImpl(roots))
+            addIndex(KotlinStandaloneJvmDependenciesIndex(roots))
         }
 
         val corePackageIndex = project.getService(PackageIndex::class.java) as CorePackageIndex

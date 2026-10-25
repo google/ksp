@@ -23,6 +23,7 @@ import com.google.devtools.ksp.gradle.utils.canUseGeneratedKotlinApi
 import com.google.devtools.ksp.gradle.utils.enableProjectIsolationCompatibleCodepath
 import com.google.devtools.ksp.gradle.utils.isAgpBuiltInKotlinUsed
 import com.google.devtools.ksp.gradle.utils.isLegacyKaptPluginApplied
+import com.google.devtools.ksp.gradle.utils.kotlinSourceSetsObservable
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
 import com.google.devtools.ksp.processing.ExitCode
 import com.google.devtools.ksp.processing.KSPCommonConfig
@@ -230,7 +231,19 @@ abstract class KspAATask @Inject constructor(
                     val filteredTasks = if (kspExtension.excludedSources.isEmpty.not()) {
                         kspExtension.excludedSources.buildDependencies.getDependencies(null).map { it.name }
                     } else emptyList()
-                    kotlinCompilation.allKotlinSourceSetsObservable.forAll { sourceSet ->
+                    // Opt-in: metadata compilations process only their own source sets, matching the
+                    // compiler; upstream stays resolvable via its klib on `cfg.libraries`. Without it,
+                    // an intermediate compilation regenerates its upstream's output (#2814).
+                    val ownSourcesOnly = project.providers
+                        .gradleProperty("ksp.experimental.metadata.own.sources.only")
+                        .map { it.toBoolean() }
+                        .getOrElse(false)
+                    val sourceSetsToProcess = if (ownSourcesOnly && kotlinCompilation is KotlinCommonCompilation) {
+                        kotlinCompilation.kotlinSourceSetsObservable
+                    } else {
+                        kotlinCompilation.allKotlinSourceSetsObservable
+                    }
+                    sourceSetsToProcess.forAll { sourceSet ->
                         val filtered = kotlinOutputDir.zip(javaOutputDir) { kotlinOut, javaOut ->
                             sourceSet.kotlin.srcDirs.filter {
                                 !kotlinOut.asFile.isParentOf(it) && !javaOut.asFile.isParentOf(it) &&
@@ -246,6 +259,10 @@ abstract class KspAATask @Inject constructor(
                         }
                         cfg.sourceRoots.from(filtered)
                         cfg.javaSourceRoots.from(filtered)
+                    }
+                    // Dependencies span the full closure even when only a subset is processed:
+                    // upstream must be compiled first so its klib exists.
+                    kotlinCompilation.allKotlinSourceSetsObservable.forAll { sourceSet ->
                         if (project.canUseGeneratedKotlinApi() && project.enableProjectIsolationCompatibleCodepath()) {
                             kspAATask.dependsOn(sourceSet.kotlin.buildDependencies)
                         } else {
