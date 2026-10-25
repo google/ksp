@@ -45,6 +45,15 @@ annotation class KotlinAnnotation(val args: Array<KotlinNestedAnnotation>)
 
 annotation class KotlinNestedAnnotation(val value: String)
 
+enum class TestMode { FIRST }
+
+annotation class TypedAnnotation(
+    val number: Int,
+    val mode: TestMode,
+    val klass: kotlin.reflect.KClass<*>,
+)
+
 @JavaAnnotation(args = [NestedAnnotation(value = "one"), NestedAnnotation(value = "two")])
 @KotlinAnnotation(args = [KotlinNestedAnnotation(value = "one"), KotlinNestedAnnotation(value = "two")])
+@TypedAnnotation(number = 7, mode = TestMode.FIRST, klass = String::class)
 class KotlinAnnotated
