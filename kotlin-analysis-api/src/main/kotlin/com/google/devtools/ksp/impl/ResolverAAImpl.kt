@@ -914,7 +914,8 @@ class ResolverAAImpl(
                 }
             }
 
-            is KSBackingField if shouldEnableNewFeatures() -> TODO("Backing fields are not yet supported in mapToJvmSignatureInternal")
+            is KSBackingField if shouldEnableNewFeatures() ->
+                ksAnnotated.type.resolve().toSignature()
 
             else -> null
         }

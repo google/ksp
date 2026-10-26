@@ -55,18 +55,6 @@ abstract class PsiConfiguredUnitTestSuiteBase(
     }
 }
 
-class PsiConfiguredUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = false) {
-    @TestMetadata("backingFieldsSignatureMapper.kt")
-    @Test
-    override fun testBackingFieldsSignatureMapper() {
-        runTest("$AA_PATH/backingFieldsSignatureMapper.kt")
-    }
-}
+class PsiConfiguredUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = false)
 
-class PsiConfiguredNewFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = true) {
-    @TestMetadata("backingFieldsSignatureMapper.kt")
-    @Test
-    override fun testBackingFieldsSignatureMapper() {
-        runThrowingTest("$AA_PATH/backingFieldsSignatureMapper.kt", NotImplementedError::class)
-    }
-}
+class PsiConfiguredNewFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = true)
