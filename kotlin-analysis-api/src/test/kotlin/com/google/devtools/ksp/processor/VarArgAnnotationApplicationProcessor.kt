@@ -20,6 +20,8 @@ package com.google.devtools.ksp.processor
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSValueArgument
 
 class VarArgAnnotationApplicationProcessor(
     val classNames: List<String>,
@@ -34,16 +36,56 @@ class VarArgAnnotationApplicationProcessor(
         classNames.forEach { className ->
             val decl = resolver.getClassDeclarationByName(className)!!
             decl.annotations.forEach { anno ->
-                val res = buildString {
-                    append(decl.qualifiedName?.asString() ?: decl.simpleName.asString())
-                    append(": ")
-                    append(anno.shortName.asString())
-                    append(": ")
-                    append(anno.arguments)
-                }
-                results.add(res)
+                val sb = StringBuilder()
+                sb.append(decl.qualifiedName?.asString() ?: decl.simpleName.asString())
+                sb.append(": ")
+                visitAnnotation(anno, sb)
+                results.add(sb.toString())
             }
         }
         return emptyList()
+    }
+
+    private fun visitAnnotation(annotation: KSAnnotation, sb: StringBuilder): StringBuilder {
+        sb.append("@")
+        sb.append(annotation.shortName.asString())
+        sb.append('[')
+        annotation.arguments.forEachIndexed { index, argument ->
+            visitAnnotationArgument(argument, sb)
+            commaSeparate(index, annotation.arguments.size, sb)
+
+        }
+        sb.append(']')
+        return sb
+    }
+
+    private fun visitAnnotationArgument(annotationArgument: KSValueArgument, sb: StringBuilder): StringBuilder {
+        sb.append(annotationArgument.name?.asString())
+        sb.append(':')
+        return when (val argumentValue = annotationArgument.value) {
+            is KSAnnotation -> visitAnnotation(argumentValue, sb)
+            is Collection<*> -> {
+                sb.append('[')
+                argumentValue.forEachIndexed { index, value ->
+                    visitAny(value, sb)
+                    commaSeparate(index, argumentValue.size, sb)
+                }
+                sb.append(']')
+            }
+
+            else -> sb.append(argumentValue)
+        }
+    }
+
+    private fun visitAny(value: Any?, sb: StringBuilder): StringBuilder = when (value) {
+        is KSAnnotation -> visitAnnotation(value, sb)
+        else -> sb.append(value)
+    }
+
+    private fun commaSeparate(index: Int, size: Int, sb: StringBuilder): StringBuilder {
+        if (index < size - 1) {
+            sb.append(", ")
+        }
+        return sb
     }
 }
