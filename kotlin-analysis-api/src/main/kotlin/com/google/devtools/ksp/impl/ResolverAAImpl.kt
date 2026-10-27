@@ -78,6 +78,7 @@ import com.google.devtools.ksp.impl.symbol.util.BinaryClassInfoCache
 import com.google.devtools.ksp.impl.symbol.util.DeclarationOrdering
 import com.google.devtools.ksp.impl.symbol.util.extractThrowsFromClassFile
 import com.google.devtools.ksp.impl.symbol.util.getFileContent
+import com.google.devtools.ksp.impl.symbol.util.getOwnClassFile
 import com.google.devtools.ksp.impl.symbol.util.getVirtualFile
 import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.isConstructor
@@ -470,7 +471,7 @@ class ResolverAAImpl(
         }
 
         val classId = parentClass.ktClassOrObjectSymbol.classId ?: return container.declarations
-        val virtualFile = classId.getVirtualFile(fileManager) ?: return container.declarations
+        val virtualFile = classId.getOwnClassFile(fileManager) ?: return container.declarations
         val kotlinClass = classBinaryCache.getKotlinBinaryClass(virtualFile) ?: return container.declarations
         val declarationOrdering = DeclarationOrdering(kotlinClass)
 
