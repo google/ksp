@@ -316,6 +316,13 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/declarationOrder.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/2617", BugState.OPEN)
+    @TestMetadata("declarationSourceOrder.kt")
+    @Test
+    fun testDeclarationSourceOrder() {
+        runFailingTest("$AA_PATH/declarationSourceOrder.kt")
+    }
+
     @TestMetadata("declarationUtil.kt")
     @Test
     fun testDeclarationUtil() {
