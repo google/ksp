@@ -18,7 +18,9 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.impl.recordClassReferenceLookup
 import com.google.devtools.ksp.impl.symbol.java.KSValueArgumentLiteImpl
+import com.google.devtools.ksp.impl.symbol.java.calcValue
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSValueArgument
 import com.google.devtools.ksp.symbol.Origin
@@ -26,8 +28,11 @@ import com.intellij.psi.PsiAnnotationMethod
 import com.intellij.psi.PsiArrayType
 import com.intellij.psi.PsiClass
 import com.intellij.psi.impl.compiled.ClsClassImpl
+import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.KaSession
+import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotationValue
 import org.jetbrains.kotlin.analysis.api.annotations.KaNamedAnnotationValue
+import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaBaseNamedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
 import org.jetbrains.kotlin.name.ClassId
@@ -156,4 +161,73 @@ internal object KSAnnotationOps {
         symbol.origin == KaSymbolOrigin.JAVA_SOURCE && symbol.psi != null &&
             symbol.psi !is ClsClassImpl && symbol.psi is PsiClass
 
+    /**
+     * Returns any default arguments defined by the annotation that were not explicitly supplied at the call site.
+     *
+     * @param presentArgs The list of arguments explicitly provided at the call site.
+     * @return A list of [KSValueArgument]s representing default values for all parameters omitted from [presentArgs].
+     */
+    @JvmStatic
+    fun KSAnnotation.getAbsentDefaultArguments(
+        presentArgs: List<KSValueArgument>
+    ): List<KSValueArgument> {
+        val presentNames = presentArgs.mapNotNull { it.name?.asString() }
+        return defaultArguments.filter { arg ->
+            arg.name?.asString() !in presentNames
+        }
+    }
+
+    /**
+     * Resolves and returns all default argument values defined on an annotation declaration.
+     *
+     * For Java source annotations ([PsiClass]), default values are extracted from [PsiAnnotationMethod.defaultValue].
+     * For Kotlin annotations, default values are retrieved from the primary constructor value parameters,
+     * and class reference lookups are recorded for incremental processing when default values contain class literals.
+     *
+     * @param classId The [ClassId] of the annotation class declaration, or `null`.
+     * @return A list of [KSValueArgument]s representing all default arguments defined by the annotation.
+     */
+    @OptIn(KaImplementationDetail::class)
+    @JvmStatic
+    fun KSAnnotation.getDefaultArguments(classId: ClassId?): List<KSValueArgument> {
+        if (classId == null) return emptyList()
+        return analyze {
+            classId.toKtClassSymbol()?.let { symbol ->
+                if (isJavaSource(symbol)) {
+                    (symbol.psi as PsiClass).allMethods.filterIsInstance<PsiAnnotationMethod>()
+                        .mapNotNull { annoMethod ->
+                            annoMethod.defaultValue?.let { value ->
+                                KSValueArgumentLiteImpl(
+                                    KSNameImpl.getCached(annoMethod.name),
+                                    calcValue(value, this@getDefaultArguments),
+                                    this@getDefaultArguments,
+                                    Origin.SYNTHETIC,
+                                    value.toLocation()
+                                )
+                            }
+                        }
+                } else {
+                    symbol.memberScope.constructors.singleOrNull()?.let {
+                        it.valueParameters.mapNotNull { valueParameterSymbol ->
+                            if (!valueParameterSymbol.hasDefaultValue) return@mapNotNull null
+                            val constantValue = valueParameterSymbol.getDefaultValue() ?: return@mapNotNull null
+                            if (constantValue is KaAnnotationValue.ClassLiteralValue) {
+                                this@getDefaultArguments.findParentDeclaration()?.let { decl ->
+                                    recordClassReferenceLookup(constantValue.type, decl)
+                                }
+                            }
+                            KSValueArgumentImpl.getCached(
+                                KaBaseNamedAnnotationValue(
+                                    valueParameterSymbol.name,
+                                    constantValue
+                                ),
+                                this@getDefaultArguments,
+                                Origin.SYNTHETIC
+                            )
+                        }
+                    }
+                }
+            } ?: emptyList()
+        }
+    }
 }

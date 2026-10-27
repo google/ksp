@@ -5,13 +5,13 @@ import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.recordClassReferenceLookup
+import com.google.devtools.ksp.impl.symbol.kotlin.KSAnnotationOps.getAbsentDefaultArguments
+import com.google.devtools.ksp.impl.symbol.kotlin.KSAnnotationOps.getDefaultArguments
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationEnumEntryImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSErrorType
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.impl.symbol.kotlin.classifierSymbol
 import com.google.devtools.ksp.impl.symbol.kotlin.findParentDeclaration
-import com.google.devtools.ksp.impl.symbol.kotlin.getAbsentDefaultArguments
-import com.google.devtools.ksp.impl.symbol.kotlin.getDefaultArguments
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.toKaType
 import com.google.devtools.ksp.impl.symbol.kotlin.toLocation
