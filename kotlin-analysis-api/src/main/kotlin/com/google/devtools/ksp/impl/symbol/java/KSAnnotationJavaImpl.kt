@@ -90,12 +90,12 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
                     it.toLocation()
                 )
             }
-            presentArgs + getAbsentDefaultArguments(presentArgs)
+            presentArgs + getAbsentDefaultArguments(this@KSAnnotationJavaImpl, presentArgs)
         }
     }
 
     override val defaultArguments: List<KSValueArgument> by lazy {
-        getDefaultArguments(classId)
+        getDefaultArguments(this@KSAnnotationJavaImpl, classId)
     }
 
     override val shortName: KSName by lazy {

@@ -64,7 +64,7 @@ class KSAnnotationImpl private constructor(
             KSValueArgumentImpl.getCached(it, this, origin)
         }
         presentArgs +
-            getAbsentDefaultArguments(presentArgs) +
+            getAbsentDefaultArguments(this, presentArgs) +
             listOfNotNull(
                 KSAnnotationOps.findAbsentVararg(
                     this,
@@ -75,7 +75,7 @@ class KSAnnotationImpl private constructor(
     }
 
     override val defaultArguments: List<KSValueArgument> by lazy {
-        getDefaultArguments(annotationApplication.classId)
+        getDefaultArguments(this, annotationApplication.classId)
     }
 
     override val shortName: KSName by lazy {
