@@ -20,10 +20,10 @@ import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSAnnotationOps
+import com.google.devtools.ksp.impl.symbol.kotlin.KSAnnotationOps.getAbsentDefaultArguments
+import com.google.devtools.ksp.impl.symbol.kotlin.KSAnnotationOps.getDefaultArguments
 import com.google.devtools.ksp.impl.symbol.kotlin.KSValueArgumentImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
-import com.google.devtools.ksp.impl.symbol.kotlin.getAbsentDefaultArguments
-import com.google.devtools.ksp.impl.symbol.kotlin.getDefaultArguments
 import com.google.devtools.ksp.symbol.AnnotationUseSiteTarget
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSName
