@@ -35,16 +35,7 @@ import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.NonExistLocation
 import com.google.devtools.ksp.symbol.Origin
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
-import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.ALL
-import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.CONSTRUCTOR_PARAMETER
-import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.FIELD
-import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.FILE
-import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.PROPERTY
-import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.PROPERTY_DELEGATE_FIELD
-import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.PROPERTY_GETTER
-import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.PROPERTY_SETTER
-import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.RECEIVER
-import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.SETTER_PARAMETER
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget as KaAnnotationUseSiteTarget
 import org.jetbrains.kotlin.psi.KtFile
 
 /**
@@ -132,16 +123,16 @@ class KSAnnotationResolvedImpl private constructor(
 
         when (annotationApplication.useSiteTarget) {
             null -> null
-            FILE -> AnnotationUseSiteTarget.FILE
-            PROPERTY -> AnnotationUseSiteTarget.PROPERTY
-            FIELD -> AnnotationUseSiteTarget.FIELD
-            PROPERTY_GETTER -> AnnotationUseSiteTarget.GET
-            PROPERTY_SETTER -> AnnotationUseSiteTarget.SET
-            RECEIVER -> AnnotationUseSiteTarget.RECEIVER
-            CONSTRUCTOR_PARAMETER -> AnnotationUseSiteTarget.PARAM
-            SETTER_PARAMETER -> AnnotationUseSiteTarget.SETPARAM
-            PROPERTY_DELEGATE_FIELD -> AnnotationUseSiteTarget.DELEGATE
-            ALL -> AnnotationUseSiteTarget.ALL
+            KaAnnotationUseSiteTarget.FILE -> AnnotationUseSiteTarget.FILE
+            KaAnnotationUseSiteTarget.PROPERTY -> AnnotationUseSiteTarget.PROPERTY
+            KaAnnotationUseSiteTarget.FIELD -> AnnotationUseSiteTarget.FIELD
+            KaAnnotationUseSiteTarget.PROPERTY_GETTER -> AnnotationUseSiteTarget.GET
+            KaAnnotationUseSiteTarget.PROPERTY_SETTER -> AnnotationUseSiteTarget.SET
+            KaAnnotationUseSiteTarget.RECEIVER -> AnnotationUseSiteTarget.RECEIVER
+            KaAnnotationUseSiteTarget.CONSTRUCTOR_PARAMETER -> AnnotationUseSiteTarget.PARAM
+            KaAnnotationUseSiteTarget.SETTER_PARAMETER -> AnnotationUseSiteTarget.SETPARAM
+            KaAnnotationUseSiteTarget.PROPERTY_DELEGATE_FIELD -> AnnotationUseSiteTarget.DELEGATE
+            KaAnnotationUseSiteTarget.ALL -> AnnotationUseSiteTarget.ALL
         }
     }
 

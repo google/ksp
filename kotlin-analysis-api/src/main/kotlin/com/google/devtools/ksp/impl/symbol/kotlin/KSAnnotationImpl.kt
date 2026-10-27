@@ -33,7 +33,7 @@ import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.NonExistLocation
 import com.google.devtools.ksp.symbol.Origin
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
-import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.*
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget as KaAnnotationUseSiteTarget
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 
 // TODO: implement a psi based version of annotation application.
@@ -94,16 +94,16 @@ class KSAnnotationImpl private constructor(
     override val useSiteTarget: AnnotationUseSiteTarget? by lazy {
         when (ktAnnotationEntry.useSiteTarget?.getAnnotationUseSiteTarget()) {
             null -> null
-            FILE -> AnnotationUseSiteTarget.FILE
-            PROPERTY -> AnnotationUseSiteTarget.PROPERTY
-            FIELD -> AnnotationUseSiteTarget.FIELD
-            PROPERTY_GETTER -> AnnotationUseSiteTarget.GET
-            PROPERTY_SETTER -> AnnotationUseSiteTarget.SET
-            RECEIVER -> AnnotationUseSiteTarget.RECEIVER
-            CONSTRUCTOR_PARAMETER -> AnnotationUseSiteTarget.PARAM
-            SETTER_PARAMETER -> AnnotationUseSiteTarget.SETPARAM
-            PROPERTY_DELEGATE_FIELD -> AnnotationUseSiteTarget.DELEGATE
-            ALL -> AnnotationUseSiteTarget.ALL
+            KaAnnotationUseSiteTarget.FILE -> AnnotationUseSiteTarget.FILE
+            KaAnnotationUseSiteTarget.PROPERTY -> AnnotationUseSiteTarget.PROPERTY
+            KaAnnotationUseSiteTarget.FIELD -> AnnotationUseSiteTarget.FIELD
+            KaAnnotationUseSiteTarget.PROPERTY_GETTER -> AnnotationUseSiteTarget.GET
+            KaAnnotationUseSiteTarget.PROPERTY_SETTER -> AnnotationUseSiteTarget.SET
+            KaAnnotationUseSiteTarget.RECEIVER -> AnnotationUseSiteTarget.RECEIVER
+            KaAnnotationUseSiteTarget.CONSTRUCTOR_PARAMETER -> AnnotationUseSiteTarget.PARAM
+            KaAnnotationUseSiteTarget.SETTER_PARAMETER -> AnnotationUseSiteTarget.SETPARAM
+            KaAnnotationUseSiteTarget.PROPERTY_DELEGATE_FIELD -> AnnotationUseSiteTarget.DELEGATE
+            KaAnnotationUseSiteTarget.ALL -> AnnotationUseSiteTarget.ALL
         }
     }
 
