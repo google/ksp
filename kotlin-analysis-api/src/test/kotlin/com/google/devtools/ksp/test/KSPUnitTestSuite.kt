@@ -621,6 +621,12 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/diamondInheritance.kt")
     }
 
+    @TestMetadata("diamondInheritanceRepeatable.kt")
+    @Test
+    fun testDiamondInheritanceRepeatable() {
+        runTest("$AA_PATH/diamondInheritanceRepeatable.kt")
+    }
+
     @TestMetadata("lateinitProperties.kt")
     @Test
     fun testLateinitProperties() {
