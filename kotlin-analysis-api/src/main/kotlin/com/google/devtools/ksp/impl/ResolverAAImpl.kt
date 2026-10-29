@@ -22,6 +22,7 @@ import com.google.devtools.ksp.InternalKSPException
 import com.google.devtools.ksp.InternalKSPException.Companion.render
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.closestClassDeclaration
+import com.google.devtools.ksp.common.IncrementalContext
 import com.google.devtools.ksp.common.JVM_DEFAULT_ANNOTATION_FQN
 import com.google.devtools.ksp.common.JVM_DEFAULT_WITHOUT_COMPATIBILITY_ANNOTATION_FQN
 import com.google.devtools.ksp.common.JVM_STATIC_ANNOTATION_FQN
@@ -157,7 +158,7 @@ import org.jetbrains.org.objectweb.asm.Opcodes
 class ResolverAAImpl(
     val allKSFiles: List<KSFile>,
     val project: Project,
-    val incrementalContext: IncrementalContextAA,
+    val incrementalContext: IncrementalContext,
     val resolutionStrategy: AnnotationResolutionStrategy,
     val processorsRegisteredForNewFeatures: Set<SymbolProcessor>,
 ) : Resolver {
