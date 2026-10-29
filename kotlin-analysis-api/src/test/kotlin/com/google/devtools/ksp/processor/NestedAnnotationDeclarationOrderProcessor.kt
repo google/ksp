@@ -25,12 +25,13 @@ import com.google.devtools.ksp.symbol.KSDeclaration
 
 @OptIn(KspExperimental::class)
 class NestedAnnotationDeclarationOrderProcessor(
+    private val classNames: List<String>,
     override val enableNewFeatures: Boolean,
 ) : AbstractTestProcessor() {
     private val results = mutableListOf<String>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        listOf("MyAnnotation", "MyObject.MyNestedAnnotation").forEach { name ->
+        classNames.forEach { name ->
             val declaration = checkNotNull(resolver.getClassDeclarationByName(name))
             results += "${declaration.simpleName.asString()} direct: ${declaration.declarations.names()}"
             results += "${declaration.simpleName.asString()} source: " +

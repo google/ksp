@@ -1036,6 +1036,13 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/typeAnnotationClassReference.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/2617", BugState.FIXED)
+    @TestMetadata("native/nestedAnnotationDeclarationOrder.kt")
+    @Test
+    fun testNativeNestedAnnotationDeclarationOrder() {
+        runTest("$AA_PATH/native/nestedAnnotationDeclarationOrder.kt")
+    }
+
     @TestMetadata("native/nativeTest.kt")
     @Test
     fun testNativeTest() {
