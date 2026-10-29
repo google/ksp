@@ -20,18 +20,20 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.impl.recordClassReferenceLookup
 import com.google.devtools.ksp.impl.symbol.java.KSValueArgumentLiteImpl
 import com.google.devtools.ksp.impl.symbol.java.calcValue
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiAnnotationMethod
-import com.intellij.psi.PsiArrayInitializerMemberValue
 import com.intellij.psi.PsiClass
 import com.intellij.psi.impl.compiled.ClsClassImpl
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
+import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotationValue
 import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaBaseNamedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.*
+import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 
 // TODO: implement a psi based version of annotation application.
@@ -70,57 +72,11 @@ class KSAnnotationImpl private constructor(
         val presentArgs = annotationApplication.arguments.map {
             KSValueArgumentImpl.getCached(it, this, origin)
         }
-        val presentNames = presentArgs.mapNotNull { it.name?.asString() }
-        val absentArgs = defaultArguments.filter {
-            it.name?.asString() !in presentNames
-        }
-        presentArgs + absentArgs
+        presentArgs + getAbsentDefaultArguments(presentArgs)
     }
 
-    @OptIn(KaImplementationDetail::class)
     override val defaultArguments: List<KSValueArgument> by lazy {
-        analyze {
-            annotationApplication.classId?.toKtClassSymbol()?.let { symbol ->
-                if (
-                    symbol.origin == KaSymbolOrigin.JAVA_SOURCE && symbol.psi != null &&
-                    symbol.psi !is ClsClassImpl && symbol.psi is PsiClass
-                ) {
-                    (symbol.psi as PsiClass).allMethods.filterIsInstance<PsiAnnotationMethod>()
-                        .mapNotNull { annoMethod ->
-                            annoMethod.defaultValue?.let { value ->
-                                val calculatedValue: Any? = if (value is PsiArrayInitializerMemberValue) {
-                                    value.initializers.map {
-                                        calcValue(it, this@KSAnnotationImpl)
-                                    }
-                                } else {
-                                    calcValue(value, this@KSAnnotationImpl)
-                                }
-                                KSValueArgumentLiteImpl(
-                                    KSNameImpl.getCached(annoMethod.name),
-                                    calculatedValue,
-                                    this@KSAnnotationImpl,
-                                    Origin.SYNTHETIC,
-                                    value.toLocation()
-                                )
-                            }
-                        }
-                } else {
-                    symbol.memberScope.constructors.singleOrNull()?.let {
-                        it.valueParameters.mapNotNull { valueParameterSymbol ->
-                            val constantValue = valueParameterSymbol.getDefaultValue() ?: return@mapNotNull null
-                            KSValueArgumentImpl.getCached(
-                                KaBaseNamedAnnotationValue(
-                                    valueParameterSymbol.name,
-                                    constantValue
-                                ),
-                                this@KSAnnotationImpl,
-                                Origin.SYNTHETIC
-                            )
-                        }
-                    }
-                }
-            } ?: emptyList()
-        }
+        getDefaultArguments(annotationApplication.classId)
     }
 
     override val shortName: KSName by lazy {
@@ -155,5 +111,60 @@ class KSAnnotationImpl private constructor(
 
     override fun toString(): String {
         return "@${shortName.asString()}"
+    }
+}
+
+internal fun KSAnnotation.getAbsentDefaultArguments(
+    presentArgs: List<KSValueArgument>
+): List<KSValueArgument> {
+    val presentNames = presentArgs.mapNotNull { it.name?.asString() }
+    return defaultArguments.filter { arg ->
+        arg.name?.asString() !in presentNames
+    }
+}
+
+@OptIn(KaImplementationDetail::class)
+internal fun KSAnnotation.getDefaultArguments(classId: ClassId?): List<KSValueArgument> {
+    if (classId == null) return emptyList()
+    return analyze {
+        classId.toKtClassSymbol()?.let { symbol ->
+            if (
+                symbol.origin == KaSymbolOrigin.JAVA_SOURCE && symbol.psi != null &&
+                symbol.psi !is ClsClassImpl && symbol.psi is PsiClass
+            ) {
+                (symbol.psi as PsiClass).allMethods.filterIsInstance<PsiAnnotationMethod>()
+                    .mapNotNull { annoMethod ->
+                        annoMethod.defaultValue?.let { value ->
+                            KSValueArgumentLiteImpl(
+                                KSNameImpl.getCached(annoMethod.name),
+                                calcValue(value, this@getDefaultArguments),
+                                this@getDefaultArguments,
+                                Origin.SYNTHETIC,
+                                value.toLocation()
+                            )
+                        }
+                    }
+            } else {
+                symbol.memberScope.constructors.singleOrNull()?.let {
+                    it.valueParameters.mapNotNull { valueParameterSymbol ->
+                        if (!valueParameterSymbol.hasDefaultValue) return@mapNotNull null
+                        val constantValue = valueParameterSymbol.getDefaultValue() ?: return@mapNotNull null
+                        if (constantValue is KaAnnotationValue.ClassLiteralValue) {
+                            this@getDefaultArguments.findParentDeclaration()?.let { decl ->
+                                recordClassReferenceLookup(constantValue.type, decl)
+                            }
+                        }
+                        KSValueArgumentImpl.getCached(
+                            KaBaseNamedAnnotationValue(
+                                valueParameterSymbol.name,
+                                constantValue
+                            ),
+                            this@getDefaultArguments,
+                            Origin.SYNTHETIC
+                        )
+                    }
+                }
+            }
+        } ?: emptyList()
     }
 }

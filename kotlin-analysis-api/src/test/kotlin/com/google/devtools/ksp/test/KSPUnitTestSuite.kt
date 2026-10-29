@@ -197,6 +197,10 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/backingFields.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/3222", BugState.OPEN)
+    @TestMetadata("backingFieldsSignatureMapper.kt")
+    abstract fun testBackingFieldsSignatureMapper()
+
     @TestMetadata("getSymbolsWithAnnotation/backingFieldsLateinit.kt")
     @Test
     @Bug(
@@ -963,6 +967,13 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/valueParameter.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/3271", BugState.OPEN)
+    @TestMetadata("varargAnnotationApplication.kt")
+    @Test
+    fun testVarargAnnotationApplication() {
+        runFailingTest("$AA_PATH/varargAnnotationApplication.kt")
+    }
+
     @TestMetadata("varianceTypeCheck.kt")
     @Test
     fun testVarianceTypeCheck() {
@@ -1034,6 +1045,13 @@ abstract class KSPUnitTestSuite(
     )
     fun testTypeAnnotationClassReference() {
         runTest("$AA_PATH/typeAnnotationClassReference.kt")
+    }
+
+    @Bug("https://github.com/google/ksp/issues/3242", BugState.OPEN)
+    @TestMetadata("typeParameterBoundTypeAlias.kt")
+    @Test
+    fun testTypeParameterBoundTypeAlias() {
+        runFailingTest("$AA_PATH/typeParameterBoundTypeAlias.kt")
     }
 
     @Bug("https://github.com/google/ksp/issues/2617", BugState.FIXED)
