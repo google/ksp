@@ -127,7 +127,7 @@ class IncrementalContextAA(
     override val classLookupCache = LookupStorageWrapperImpl(LookupStorage(classLookupCacheDir, icContext))
 
     // Debugging and testing only.
-    fun dumpLookupRecords(): Map<String, List<String>> {
+    override fun dumpLookupRecords(): Map<String, List<String>> {
         val map = mutableMapOf<String, List<String>>()
         symbolLookupTracker.lookups.entrySet().forEach { e ->
             val key = "${e.key.scope}.${e.key.name}"
@@ -175,7 +175,7 @@ class IncrementalContextAA(
         }
     }
 
-    fun recordLookup(type: KaType, context: KSNode?) {
+    override fun recordLookup(type: KaType, context: KSNode?) {
         if (!isIncremental)
             return
 
@@ -191,7 +191,7 @@ class IncrementalContextAA(
      * @param declaration the closest enclosing declaration where the reference occurs.
      *                    Callers can use [KSNode.findParentDeclaration] to obtain the enclosing declaration.
      */
-    fun recordClassReferenceLookup(type: KaType, declaration: KSDeclaration) {
+    override fun recordClassReferenceLookup(type: KaType, declaration: KSDeclaration) {
         if (!isIncremental) {
             return
         }
@@ -210,7 +210,7 @@ class IncrementalContextAA(
      * @param declaration the closest enclosing declaration where the reference occurs.
      *                    Callers can use [KSNode.findParentDeclaration] to obtain the enclosing declaration.
      */
-    fun recordClassReferenceLookup(fqn: String, declaration: KSDeclaration) {
+    override fun recordClassReferenceLookup(fqn: String, declaration: KSDeclaration) {
         if (!isIncremental) {
             return
         }
@@ -260,7 +260,7 @@ class IncrementalContextAA(
         }
     }
 
-    fun recordLookupForPropertyOrMethod(declaration: KSDeclaration) {
+    override fun recordLookupForPropertyOrMethod(declaration: KSDeclaration) {
         if (!isIncremental)
             return
 
@@ -275,7 +275,7 @@ class IncrementalContextAA(
         recordLookupForDeclaration(symbol, file)
     }
 
-    internal fun recordLookupForGetAll(supers: List<KaType>, predicate: (KaSymbol) -> Boolean) {
+    override fun recordLookupForGetAll(supers: List<KaType>, predicate: (KaSymbol) -> Boolean) {
         if (!isIncremental)
             return
 
@@ -314,7 +314,11 @@ class IncrementalContextAA(
             }
         }
 
-    fun recordLookupWithSupertypes(ktType: KaType, visited: MutableSet<KaType>, extra: (KaType, PsiJavaFile) -> Unit) {
+    override fun recordLookupWithSupertypes(
+        ktType: KaType,
+        visited: MutableSet<KaType>,
+        extra: (KaType, PsiJavaFile) -> Unit,
+    ) {
         if (!isIncremental)
             return
 

@@ -76,7 +76,7 @@ abstract class IncrementalContextBase(
     protected val knownModified: List<File>,
     protected val knownRemoved: List<File>,
     protected val changedClasses: List<String>,
-) {
+) : IncrementalContext {
     // Symbols defined in changed files. This is used to update symbolsMap in the end.
     protected val updatedSymbols = MultiMap.createSet<File, LookupSymbolWrapper>()
 
@@ -246,7 +246,7 @@ abstract class IncrementalContextBase(
      *
      * [allSourceFiles] is only used for logging and is only called when incremental logging is enabled.
      */
-    fun tryEarlyExitIfClean(allSourceFiles: () -> Collection<File>): Boolean = closeFilesOnException {
+    override fun tryEarlyExitIfClean(allSourceFiles: () -> Collection<File>): Boolean = closeFilesOnException {
         if (!canSkipProcessing()) {
             return@closeFilesOnException false
         }
@@ -311,7 +311,7 @@ abstract class IncrementalContextBase(
     }
 
     // Beware: no side-effects here; Caches should only be touched in updateCaches.
-    fun calcDirtyFiles(ksFiles: List<KSFile>): Collection<KSFile> = closeFilesOnException {
+    override fun calcDirtyFiles(ksFiles: List<KSFile>): Collection<KSFile> = closeFilesOnException {
         if (!isIncremental) {
             return@closeFilesOnException ksFiles
         }
@@ -487,14 +487,14 @@ abstract class IncrementalContextBase(
         sealedMap.flush()
     }
 
-    fun registerGeneratedFiles(newFiles: Collection<KSFile>) = closeFilesOnException {
+    override fun registerGeneratedFiles(newFiles: Collection<KSFile>) = closeFilesOnException {
         if (!isIncremental)
             return@closeFilesOnException
 
         collectDefinedSymbols(newFiles)
     }
 
-    fun <T> closeFilesOnException(f: () -> T): T {
+    override fun <T> closeFilesOnException(f: () -> T): T {
         try {
             return f()
         } catch (e: Exception) {
@@ -505,7 +505,7 @@ abstract class IncrementalContextBase(
 
     // Doesn't flush the caches: they are only written by updateCachesAndOutputs. Called on errors, where writing
     // half-updated caches while caches.uptodate is still present would corrupt the next incremental run.
-    fun closeFiles() {
+    override fun closeFiles() {
         onDemandImportsCache.clear()
         symbolLookupCache.close()
         classLookupCache.close()
@@ -513,7 +513,7 @@ abstract class IncrementalContextBase(
     }
 
     // TODO: add a wildcard for outputs with no source and get rid of the outputs parameter.
-    fun updateCachesAndOutputs(
+    override fun updateCachesAndOutputs(
         dirtyFiles: Collection<KSFile>,
         outputs: Set<File>,
         sourceToOutputs: Map<File, Set<File>>,
@@ -593,7 +593,7 @@ abstract class IncrementalContextBase(
      * - If `sym` is an on-demand import, then `sym` may invalidate the file.
      * - If `sym` is an implicit import, i.e., from the same package, then `sym` may invalidate the file.
      */
-    fun recordLookup(psiFile: PsiJavaFile, fqn: String) {
+    override fun recordLookup(psiFile: PsiJavaFile, fqn: String) {
         if (!isIncremental)
             return
 
@@ -629,7 +629,7 @@ abstract class IncrementalContextBase(
             ?.filter { it.isOnDemand }
             ?: emptyList()
 
-    fun recordGetSealedSubclasses(classDeclaration: KSClassDeclaration) {
+    override fun recordGetSealedSubclasses(classDeclaration: KSClassDeclaration) {
         if (!isIncremental)
             return
 
