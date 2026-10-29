@@ -16,6 +16,7 @@
  */
 
 // TEST PROCESSOR: NestedAnnotationDeclarationOrderProcessor
+// PROCESSOR INPUT: MyAnnotation, MyObject.MyNestedAnnotation
 // EXPECTED:
 // MyAnnotation direct: [a, b, c, <init>]
 // MyAnnotation source: [a, b, c, <init>]
