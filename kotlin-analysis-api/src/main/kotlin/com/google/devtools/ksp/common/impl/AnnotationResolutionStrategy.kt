@@ -43,8 +43,9 @@ interface AnnotationResolutionStrategy {
      *
      * @param annotationName is the fully qualified name of the fully expanded type (i.e. no type alias); using '.' as separator.
      * @param inDepth whether to check symbols in depth, i.e. check symbols from local declarations. Operation can be expensive if true.
+     * @param enableNewFeatures whether to return backing fields and context parameter symbols or operate in existing mode.
      * @return Elements annotated with the specified annotation.
      *
      */
-    fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean): Sequence<KSAnnotated>
+    fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean, enableNewFeatures: Boolean): Sequence<KSAnnotated>
 }

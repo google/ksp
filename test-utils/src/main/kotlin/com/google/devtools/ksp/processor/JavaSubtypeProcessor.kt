@@ -8,7 +8,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.Variance
 
-class JavaSubtypeProcessor : AbstractTestProcessor() {
+class JavaSubtypeProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     var isOk = true
     override fun toResult(): List<String> {
         return listOf(isOk.toString())

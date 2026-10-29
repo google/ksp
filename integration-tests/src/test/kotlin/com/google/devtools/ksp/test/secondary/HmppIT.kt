@@ -47,33 +47,30 @@ class HmppIT(experimentalPsiResolution: Boolean) {
         }
     }
 
-    val taskToFilesHmpp = mapOf(
-        ":workload:kspCommonMainKotlinMetadata" to setOf(
-            "w: [ksp] EchoProcessor: CommonMain",
-        ),
-        ":workload:kspJvmJsKotlinMetadata" to setOf(
-            "w: [ksp] EchoProcessor: CommonMain",
-            "w: [ksp] EchoProcessor: (CommonMain)_JvmJs",
-        ),
-        ":workload:kspJvmLinuxX64KotlinMetadata" to setOf(
-            "w: [ksp] EchoProcessor: CommonMain",
-            "w: [ksp] EchoProcessor: (CommonMain)_JvmLinuxX64",
-        ),
-        ":workload:kspKotlinJvm" to setOf(
-            "w: [ksp] EchoProcessor: CommonMain",
-            "w: [ksp] EchoProcessor: (CommonMain)_JvmJs",
-            "w: [ksp] EchoProcessor: (CommonMain)_JvmLinuxX64",
-            "w: [ksp] EchoProcessor: ((CommonMain)_JvmJs)_((CommonMain)_JvmLinuxX64)_(CommonMain)_JvmMain_JvmOnly",
-        ),
-        ":workload:kspKotlinJs" to setOf(
-            "w: [ksp] EchoProcessor: CommonMain",
-            "w: [ksp] EchoProcessor: (CommonMain)_JvmJs",
-            "w: [ksp] EchoProcessor: ((CommonMain)_JvmJs)_(CommonMain)_JsMain",
-        ),
-        ":workload:kspKotlinLinuxX64" to setOf(
-            "w: [ksp] EchoProcessor: CommonMain",
-            "w: [ksp] EchoProcessor: (CommonMain)_JvmLinuxX64",
-            "w: [ksp] EchoProcessor: ((CommonMain)_JvmLinuxX64)_(CommonMain)_LinuxX64Main",
-        ),
+    // With ksp.experimental.metadata.own.sources.only, intermediate metadata tasks process only
+    // their own source set; upstream stays resolvable via its klib. Platform tasks are unchanged.
+    val taskToFilesOwnSourcesOnly = mapOf(
+        ":workload:kspCommonMainKotlinMetadata" to "w: [ksp] EchoProcessor: CommonMain",
+        ":workload:kspJvmJsKotlinMetadata" to "w: [ksp] EchoProcessor: JvmJs",
+        ":workload:kspJvmLinuxX64KotlinMetadata" to "w: [ksp] EchoProcessor: JvmLinuxX64",
+        ":workload:kspKotlinJvm" to "w: [ksp] EchoProcessor: CommonMain_JvmJs_JvmLinuxX64_JvmMain_JvmOnly",
+        ":workload:kspKotlinJs" to "w: [ksp] EchoProcessor: CommonMain_JsMain_JvmJs",
+        ":workload:kspKotlinLinuxX64" to "w: [ksp] EchoProcessor: CommonMain_JvmLinuxX64_LinuxX64Main",
     )
+
+    @Test
+    fun testOwnSourcesOnly() {
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        taskToFilesOwnSourcesOnly.forEach { (task, expected) ->
+            gradleRunner.withArguments(
+                "--configuration-cache-problems=warn",
+                "-Pksp.experimental.metadata.own.sources.only=true",
+                task,
+            ).build().let { result ->
+                val logs = result.output.lines().filter { it.startsWith("w: [ksp] EchoProcessor: ") }.toSet()
+                Assert.assertTrue("$task: expected '$expected' in $logs", expected in logs)
+            }
+        }
+    }
 }

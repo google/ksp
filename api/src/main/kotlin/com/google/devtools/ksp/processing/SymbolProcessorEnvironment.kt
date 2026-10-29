@@ -45,7 +45,43 @@ class SymbolProcessorEnvironment(
 
     /** KSP version */
     val kspVersion: KotlinVersion,
+
+    /**
+     * Processors may call this lambda to opt in to upcoming features:
+     * backing fields and context parameters.
+     *
+     * NOTE: This lambda should only be called ONCE and immediately upon creation, i.e., in the
+     * [SymbolProcessorProvider] immediately after creating the processor.
+     * Once a processor has called this lambda, it cannot unregister again.
+     */
+    val registerProcessorForNewFeatures: (SymbolProcessor) -> Unit
 ) {
+
+    /**
+     * Secondary constructor for binary compatibility that assigns
+     * [registerProcessorForNewFeatures] a lambda without effect.
+     */
+    constructor(
+        options: Map<String, String>,
+        kotlinVersion: KotlinVersion,
+        codeGenerator: CodeGenerator,
+        logger: KSPLogger,
+        apiVersion: KotlinVersion,
+        compilerVersion: KotlinVersion,
+        platforms: List<PlatformInfo>,
+        kspVersion: KotlinVersion,
+    ) : this(
+        options,
+        kotlinVersion,
+        codeGenerator,
+        logger,
+        apiVersion,
+        compilerVersion,
+        platforms,
+        kspVersion,
+        registerProcessorForNewFeatures = { }
+    )
+
     // For compatibility with KSP 1.0.2 and earlier
     constructor(
         options: Map<String, String>,

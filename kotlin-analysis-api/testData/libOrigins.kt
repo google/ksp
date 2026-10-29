@@ -42,6 +42,7 @@
 // Exception: [File: JavaSrc.java, JavaAnno1, value, String]: SYNTHETIC
 // Exception: [File: JavaSrc.java, JavaAnno1, value, value.getter(), String]: SYNTHETIC
 // Exception: [File: JavaSrc.java, JavaAnno1, value, value.getter()]: SYNTHETIC
+// EXPECT NEXT: Exception: [File: JavaSrc.java, JavaAnno1, value, field]: SYNTHETIC
 // Exception: [File: JavaSrc.java, JavaAnno1, value]: SYNTHETIC
 // Exception: [File: JavaSrc.java, JavaAnno1, synthetic constructor for JavaAnno1, JavaAnno1]: SYNTHETIC
 // Exception: [File: JavaSrc.java, JavaAnno1, synthetic constructor for JavaAnno1]: SYNTHETIC

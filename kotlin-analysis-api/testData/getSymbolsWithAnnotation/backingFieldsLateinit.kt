@@ -18,7 +18,8 @@
 // TEST PROCESSOR: GetSymbolsWithAnnotationProcessor
 // PROCESSOR INPUT: kspjavax.Inject
 // EXPECTED:
-// kspjavax.Inject: MainActivity.a.field
+// EXPECT CURRENT: kspjavax.Inject: MainActivity.a
+// EXPECT NEXT: kspjavax.Inject: MainActivity.a.field
 // END
 
 // FILE: Inject.java

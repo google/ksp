@@ -22,7 +22,7 @@ import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 
-class TypeArgumentVarianceProcessor : AbstractTestProcessor() {
+class TypeArgumentVarianceProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val result = mutableListOf<String>()
     override fun toResult(): List<String> {
         return result

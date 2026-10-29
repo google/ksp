@@ -26,7 +26,7 @@ import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 import kotlin.reflect.KClass
 
-class AnnotatedUtilProcessor : AbstractTestProcessor() {
+class AnnotatedUtilProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val results = mutableListOf<String>()
     private val annotationKClasses = listOf(
         ParametersTestAnnotation::class,
@@ -34,7 +34,7 @@ class AnnotatedUtilProcessor : AbstractTestProcessor() {
         ParametersTestWithNegativeDefaultsAnnotation::class,
         OuterAnnotation::class
     )
-    private val visitors = listOf(IsAnnotationPresentVisitor(), GetAnnotationsByTypeVisitor())
+    private val visitors = listOf(IsAnnotationPresentVisitor(enableNewFeatures), GetAnnotationsByTypeVisitor(enableNewFeatures))
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         resolver.getSymbolsWithAnnotation("com.google.devtools.ksp.processor.Test", true).forEach {
@@ -48,7 +48,7 @@ class AnnotatedUtilProcessor : AbstractTestProcessor() {
         return results
     }
 
-    inner class IsAnnotationPresentVisitor : KSTopDownVisitor<MutableCollection<String>, Unit>() {
+    inner class IsAnnotationPresentVisitor(enableNewFeatures: Boolean)  : KSTopDownVisitor<MutableCollection<String>, Unit>(enableNewFeatures) {
         @OptIn(KspExperimental::class)
         override fun visitAnnotated(annotated: KSAnnotated, data: MutableCollection<String>) {
             annotationKClasses.forEach { clazz ->
@@ -62,7 +62,7 @@ class AnnotatedUtilProcessor : AbstractTestProcessor() {
         }
     }
 
-    inner class GetAnnotationsByTypeVisitor : KSTopDownVisitor<MutableCollection<String>, Unit>() {
+    inner class GetAnnotationsByTypeVisitor(enableNewFeatures: Boolean)  : KSTopDownVisitor<MutableCollection<String>, Unit>(enableNewFeatures) {
         @OptIn(KspExperimental::class)
         override fun visitAnnotated(annotated: KSAnnotated, data: MutableCollection<String>) {
             annotationKClasses.forEach { clazz ->

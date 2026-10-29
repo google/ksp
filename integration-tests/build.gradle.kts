@@ -12,7 +12,7 @@ dependencies {
     testImplementation(project(":api"))
     testImplementation(project(":gradle-plugin"))
     testImplementation(libs.kotlinx.serialization.json)
-    testImplementation(libs.kotlinx.coroutines.core.jvm)
+    testImplementation(libs.kotlinx.coroutines.coreJvm)
 }
 
 fun Test.configureCommonSettings() {

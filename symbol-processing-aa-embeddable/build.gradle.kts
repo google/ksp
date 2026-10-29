@@ -25,7 +25,7 @@ val packedJars by configurations.creating
 
 dependencies {
     packedJars(project(":kotlin-analysis-api", "shadow")) { isTransitive = false }
-    packedJars(libs.kotlinx.coroutines.core.jvm) { isTransitive = false }
+    packedJars(libs.kotlinx.coroutines.coreJvm) { isTransitive = false }
 }
 
 tasks.withType(Jar::class.java).configureEach {

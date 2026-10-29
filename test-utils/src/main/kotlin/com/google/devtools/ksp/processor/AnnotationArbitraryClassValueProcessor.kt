@@ -30,7 +30,7 @@ import com.google.devtools.ksp.symbol.KSType
 import kotlin.reflect.KClass
 
 @KspExperimental
-class AnnotationArbitraryClassValueProcessor : AbstractTestProcessor() {
+class AnnotationArbitraryClassValueProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val result = mutableListOf<String>()
 
     override fun toResult(): List<String> {

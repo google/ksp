@@ -4,7 +4,7 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 
-class DeclaredProcessor : AbstractTestProcessor() {
+class DeclaredProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val result = mutableListOf<String>()
     override fun toResult(): List<String> {
         return result

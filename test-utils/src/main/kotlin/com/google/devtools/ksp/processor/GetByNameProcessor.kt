@@ -6,7 +6,7 @@ import com.google.devtools.ksp.getPropertyDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 
-class GetByNameProcessor : AbstractTestProcessor() {
+class GetByNameProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun toResult(): List<String> {

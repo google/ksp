@@ -23,11 +23,11 @@ repositories {
 
 plugins {
     kotlin("jvm")
-    id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
+    alias(libs.plugins.nexus.publish)
     // Adding plugins used in multiple places to the classpath for centralized version control
-    id("com.gradleup.shadow") version "8.3.9" apply false
-    id("org.jetbrains.dokka") version "1.9.20" apply false
-    id("com.android.lint") version "8.13.0" apply false
+    alias(libs.plugins.shadow) apply false
+    alias(libs.plugins.dokka) apply false
+    alias(libs.plugins.android.lint) apply false
 }
 
 nexusPublishing {

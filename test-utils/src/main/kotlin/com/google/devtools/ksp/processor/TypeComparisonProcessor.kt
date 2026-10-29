@@ -21,9 +21,9 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-open class TypeComparisonProcessor : AbstractTestProcessor() {
+open class TypeComparisonProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val results = mutableListOf<String>()
-    val typeCollector = TypeCollector()
+    val typeCollector = TypeCollector(enableNewFeatures)
     val types = mutableSetOf<KSType>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -60,7 +60,7 @@ open class TypeComparisonProcessor : AbstractTestProcessor() {
     }
 }
 
-class TypeCollectorNoAccessor : TypeCollector() {
+class TypeCollectorNoAccessor(enableNewFeatures: Boolean) : TypeCollector(enableNewFeatures) {
     override fun visitPropertyGetter(getter: KSPropertyGetter, data: MutableCollection<KSType>) {
     }
 
@@ -68,7 +68,7 @@ class TypeCollectorNoAccessor : TypeCollector() {
     }
 }
 
-open class TypeCollector : KSTopDownVisitor<MutableCollection<KSType>, Unit>() {
+open class TypeCollector(enableNewFeatures: Boolean) : KSTopDownVisitor<MutableCollection<KSType>, Unit>(enableNewFeatures) {
     override fun defaultHandler(node: KSNode, data: MutableCollection<KSType>) = Unit
 
     override fun visitTypeReference(typeReference: KSTypeReference, data: MutableCollection<KSType>) {

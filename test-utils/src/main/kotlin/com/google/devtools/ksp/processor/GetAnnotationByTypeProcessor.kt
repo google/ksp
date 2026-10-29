@@ -17,7 +17,7 @@ annotation class KotlinAnnotationWithInnerDefaults(
     }
 }
 
-class GetAnnotationByTypeProcessor : AbstractTestProcessor() {
+class GetAnnotationByTypeProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val results = mutableListOf<String>()
     private val annotationKClass = KotlinAnnotationWithInnerDefaults::class
 

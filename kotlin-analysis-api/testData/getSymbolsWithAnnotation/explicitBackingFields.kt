@@ -15,16 +15,19 @@
  * limitations under the License.
  */
 
+// WITH_STDLIB
 // TEST PROCESSOR: GetSymbolsWithAnnotationProcessor
 // PROCESSOR INPUT: Anno
 // EXPECTED:
 // Anno: MyClass.annotatedProperty
 // Anno: MyClass.annotatedPropertyAndFieldViaUseSiteTargets
-// Anno: MyClass.annotatedPropertyAndFieldViaUseSiteTargets.field
-// Anno: MyClass.annotatedPropertyWithFieldTarget.field
-// Anno: MyClass.propertyWhereFieldIsDirectlyAnnotated.field
+// EXPECT CURRENT: Anno: MyClass.annotatedPropertyWithFieldTarget
+// EXPECT CURRENT: Anno: MyClass.propertyWhereFieldIsDirectlyAnnotated
+// EXPECT NEXT: Anno: MyClass.annotatedPropertyAndFieldViaUseSiteTargets.field
+// EXPECT NEXT: Anno: MyClass.annotatedPropertyWithFieldTarget.field
+// EXPECT NEXT: Anno: MyClass.propertyWhereFieldIsDirectlyAnnotated.field
 // Anno: MyClass.propertyWithAllTarget
-// Anno: MyClass.propertyWithAllTarget.field
+// EXPECT NEXT: Anno: MyClass.propertyWithAllTarget.field
 // Anno: MyClass.propertyWithAllTarget.propertyWithAllTarget.getter()
 // END
 
@@ -35,21 +38,21 @@ annotation class Anno
 class MyClass {
     @Anno // Should just pick the property
     val annotatedProperty: List<String>
-        field = MutableList<String>
+        field = mutableListOf<String>()
 
     val propertyWhereFieldIsDirectlyAnnotated: List<String>
-        @Anno field = MutableList<String>
+        @Anno field = mutableListOf<String>()
 
     @field:Anno
     val annotatedPropertyWithFieldTarget: List<String>
-        field = MutableList<String>
+        field = mutableListOf<String>()
 
     @field:Anno
     @property:Anno
     val annotatedPropertyAndFieldViaUseSiteTargets: List<String>
-        field = MutableList<String>
+        field = mutableListOf<String>()
 
     @all:Anno
     val propertyWithAllTarget: List<Int>
-        field = MutableList<Int>
+        field = mutableListOf<Int>()
 }

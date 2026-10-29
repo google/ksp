@@ -8,7 +8,10 @@ on:
   pull_request:
     branches: [ main, '[0-9]+.[0-9]+.[0-9]+-release*' ]
   workflow_dispatch:
-    branches: [ main, '[0-9]+.[0-9]+.[0-9]+-release*' ]
+  merge_group:
+    types: [ checks_requested ]
+
+permissions: { }
 
 jobs:
   test:
@@ -46,29 +49,37 @@ jobs:
         df -h
 
     - name: Setup Java 17
-      uses: actions/setup-java@v5
+      uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
       with:
         java-version: '17'
         distribution: 'zulu'
 
     # Checkout
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+    - name: Check valid Gradle wrapper jar
+      run: sha256sum --check gradle-wrapper.jar.sha256sum
+      working-directory: ./gradle/wrapper
 
     # Build cache
     - name: Cache Gradle Cache
-      uses: actions/cache@v5
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
       with:
         path: ~/.gradle/caches
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}-${{ hashFiles('**/gradle.properties') }}
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}-${{ hashFiles('**/gradle.properties') }}-${{ hashFiles('**/libs.versions.toml') }}
         # An ordered list of keys to use for restoring the cache if no cache hit occurred for key
         restore-keys: |
           ${{ runner.os }}-gradle-
 
     - name: Cache gradle wrapper
-      uses: actions/cache@v5
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
       with:
         path: ~/.gradle/wrapper
         key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+
+    - name: Check valid Gradle wrapper jar
+      run: sha256sum --check gradle-wrapper.jar.sha256sum
+      working-directory: ./gradle/wrapper
 
     - name: API compatibility check
       if: matrix.os == 'ubuntu-latest' && matrix.test-suite == 'api-check'
@@ -100,7 +111,7 @@ jobs:
 
     - name: Upload test results
       if: always()
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
       with:
         name: test-reports-${{ matrix.test-suite }}-${{ matrix.os }}
         path: |
@@ -108,3 +119,19 @@ jobs:
           gradle-plugin/build/reports
           common-util/build/reports
           kotlin-analysis-api/build/reports
+
+  all-checks-passed:
+    name: all-checks-passed
+    needs: test
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+    - name: Verify test results
+      env:
+        TEST_RESULT: ${{ needs.test.result }}
+      run: |
+        if [ "$TEST_RESULT" != "success" ]; then
+          echo "One or more required test suites (api-check, unit-test, integration-test-primary, gradle-check) failed. Result: $TEST_RESULT"
+          exit 1
+        fi
+        echo "All required test suites (api-check, unit-test, integration-test-primary, gradle-check) passed successfully."

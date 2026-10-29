@@ -6,8 +6,8 @@ import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-class AbstractFunctionsProcessor : AbstractTestProcessor() {
-    private val visitor = Visitor()
+class AbstractFunctionsProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
+    private val visitor = Visitor(enableNewFeatures)
 
     override fun toResult(): List<String> {
         return visitor.abstractFunctionNames.sorted()
@@ -18,7 +18,7 @@ class AbstractFunctionsProcessor : AbstractTestProcessor() {
         return emptyList()
     }
 
-    private class Visitor : KSTopDownVisitor<Unit, Unit>() {
+    private class Visitor(enableNewFeatures: Boolean) : KSTopDownVisitor<Unit, Unit>(enableNewFeatures) {
         val abstractFunctionNames = arrayListOf<String>()
 
         override fun defaultHandler(node: KSNode, data: Unit) {

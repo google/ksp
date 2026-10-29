@@ -33,7 +33,7 @@ dependencies {
     testImplementation(libs.google.truth)
     testImplementation(gradleTestKit())
 
-    lintChecks("androidx.lint:lint-gradle:1.0.0-alpha05")
+    lintChecks(libs.androidx.lintGradle)
 }
 
 kotlin {

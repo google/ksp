@@ -24,7 +24,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 
-class ClassWithCompanionProcessor : AbstractTestProcessor() {
+class ClassWithCompanionProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
     val results = mutableListOf<String>()
     val visitor = CompanionVisitor()
 
@@ -38,7 +38,7 @@ class ClassWithCompanionProcessor : AbstractTestProcessor() {
         return results
     }
 
-    inner class CompanionVisitor : KSVisitorVoid() {
+    inner class CompanionVisitor : KSVisitorVoid(enableNewFeatures) {
         override fun visitFile(file: KSFile, data: Unit) {
             file.declarations.forEach { it.accept(this, Unit) }
         }

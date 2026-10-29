@@ -25,7 +25,7 @@ import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 
-class DeclarationsInClassProcessor : AbstractTestProcessor() {
+class DeclarationsInClassProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val result = mutableListOf<String>()
     override fun toResult(): List<String> {
         return result.sorted()

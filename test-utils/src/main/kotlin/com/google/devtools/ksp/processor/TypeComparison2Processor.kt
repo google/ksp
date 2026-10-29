@@ -21,7 +21,7 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
-open class TypeComparison2Processor : AbstractTestProcessor() {
+open class TypeComparison2Processor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {

@@ -19,27 +19,39 @@ package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSBackingField
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-class DocStringProcessor : AbstractTestProcessor() {
+class DocStringProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
     private val result = mutableListOf<String>()
 
     override fun toResult(): List<String> {
         return result
     }
 
-    private class DeclarationCollector : KSTopDownVisitor<MutableCollection<String>, Unit>() {
+    private class DeclarationCollector(enableNewFeatures: Boolean) :
+        KSTopDownVisitor<MutableCollection<String>, Unit>(enableNewFeatures) {
         override fun defaultHandler(node: KSNode, data: MutableCollection<String>) = Unit
 
         override fun visitDeclaration(declaration: KSDeclaration, data: MutableCollection<String>) {
-            data.add("${declaration.simpleName.asString()}: ${declaration.docString?.lines()?.joinToString("\\n")}")
+            data.add("${declaration.simpleName.asString()}: ${declaration.renderDocString()}")
         }
+
+        override fun visitBackingField(backingField: KSBackingField, data: MutableCollection<String>) {
+            // Override this method to also render parent property's name
+            data.add(
+                "${backingField.property.simpleName.asString()}.${backingField.simpleName.asString()}: " +
+                    "${backingField.renderDocString()}"
+            )
+        }
+
+        private fun KSDeclaration.renderDocString(): String? = this.docString?.lines()?.joinToString("\\n")
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val visitor = DeclarationCollector()
+        val visitor = DeclarationCollector(enableNewFeatures)
         resolver.getNewFiles().forEach { it.accept(visitor, result) }
         result.sort()
         return emptyList()

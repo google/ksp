@@ -16,14 +16,30 @@
  */
 package com.google.devtools.ksp.visitor
 
+import com.google.devtools.ksp.errors.InternalKSPException
 import com.google.devtools.ksp.symbol.*
 
 /**
  * Visit all elements recursively.
  *
  * For subclasses overriding a function, remember to call the corresponding super method.
+ *
+ * @param enableNewFeatures A boolean flag toggling on or off new features: Backing fields and context parameters.
  */
-abstract class KSTopDownVisitor<D, R> : KSDefaultVisitor<D, R>() {
+abstract class KSTopDownVisitor<D, R>(enableNewFeatures: Boolean) : KSDefaultVisitor<D, R>(enableNewFeatures) {
+
+    // For binary compatibility
+    @Deprecated(
+        message = "KSTopDownVisitor is deprecated in favor of KSTopDownVisitor(enableNewFeatures = true) which supports backing fields.\n" +
+            "In an upcoming KSP version, KSVisitorNext will be deprecated and implementations should move back to KSVisitor.\n" +
+            "This is done to preserve binary compatibility and to avoid breaking changes for users\n" +
+            "while giving library / processor authors time to support the new features.",
+        replaceWith = ReplaceWith(
+            expression = "KSTopDownVisitor(enableNewFeatures = true)",
+        ),
+    )
+    constructor() : this(enableNewFeatures = false)
+
     private fun Sequence<KSNode>.accept(data: D) {
         forEach { it.accept(this@KSTopDownVisitor, data) }
     }
@@ -39,7 +55,10 @@ abstract class KSTopDownVisitor<D, R> : KSDefaultVisitor<D, R>() {
         property.extensionReceiver?.accept(data)
         property.getter?.accept(data)
         property.setter?.accept(data)
-        property.backingField?.accept(data)
+        if (enableNewFeatures) {
+            property.contextParameters.accept(data)
+            property.backingField?.accept(data)
+        }
         return super.visitPropertyDeclaration(property, data)
     }
 
@@ -73,6 +92,9 @@ abstract class KSTopDownVisitor<D, R> : KSDefaultVisitor<D, R>() {
         function.extensionReceiver?.accept(data)
         function.parameters.accept(data)
         function.returnType?.accept(data)
+        if (enableNewFeatures) {
+            function.contextParameters.accept(data)
+        }
         return super.visitFunctionDeclaration(function, data)
     }
 
@@ -99,8 +121,27 @@ abstract class KSTopDownVisitor<D, R> : KSDefaultVisitor<D, R>() {
     }
 
     override fun visitBackingField(backingField: KSBackingField, data: D): R {
+        if (!enableNewFeatures) {
+            throw InternalKSPException(
+                "Unexpected call to visitBackingField in ${javaClass.simpleName} with enabledNewFeatures = false",
+                backingField.location,
+                javaClass
+            )
+        }
         backingField.type.accept(data)
         return super.visitBackingField(backingField, data)
+    }
+
+    override fun visitContextParameter(contextParameter: KSContextParameter, data: D): R {
+        if (!enableNewFeatures) {
+            throw InternalKSPException(
+                "Unexpected call to visitContextParameter in ${javaClass.simpleName} with enabledNewFeatures = false",
+                contextParameter.location,
+                javaClass
+            )
+        }
+        contextParameter.type.accept(data)
+        return super.visitContextParameter(contextParameter, data)
     }
 
     override fun visitReferenceElement(element: KSReferenceElement, data: D): R {

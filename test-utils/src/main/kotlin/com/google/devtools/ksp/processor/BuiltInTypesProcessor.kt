@@ -20,9 +20,9 @@ package com.google.devtools.ksp.processor
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
-open class BuiltInTypesProcessor : AbstractTestProcessor() {
+open class BuiltInTypesProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val results = mutableListOf<String>()
-    val typeCollector = TypeCollectorNoAccessor()
+    val typeCollector = TypeCollectorNoAccessor(enableNewFeatures)
     val types = mutableSetOf<KSType>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {

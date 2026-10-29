@@ -6,7 +6,7 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSAnnotated
 
-class DeferredSymbolsProcessor : AbstractTestProcessor() {
+class DeferredSymbolsProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
     val result = mutableListOf<String>()
     override fun toResult(): List<String> {
         return result.sorted()
@@ -34,6 +34,6 @@ class DeferredSymbolsProcessor : AbstractTestProcessor() {
 
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
         env = environment
-        return this
+        return super.create(environment)
     }
 }

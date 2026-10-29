@@ -17,15 +17,13 @@ description = "Kotlin Symbol Processing implementation using Kotlin Analysis API
 val signingKey: String? by project
 val signingPassword: String? by project
 
-val kotlinBaseVersion: String by project
-val kotlinxSerializationVersion: String by project
+val kotlinBaseVersion = libs.versions.kotlin.base.get()
 val libsForTesting: Configuration by configurations.creating
 val libsForTestingCommon: Configuration by configurations.creating
 
-val aaKotlinBaseVersion: String by project
-val aaIntellijVersion: String by project
-val aaFastutilVersion: String by project
-val aaCoroutinesVersion: String by project
+val aaKotlinBaseVersion = libs.versions.aa.kotlin.base.get()
+val aaIntellijVersion = libs.versions.aa.intellij.get()
+val aaCoroutinesVersion = libs.versions.aa.coroutines.get()
 
 plugins {
     kotlin("jvm")
@@ -159,8 +157,8 @@ dependencies {
             depSourceJars("$it:$aaKotlinBaseVersion:sources") { isTransitive = false }
         }
 
-    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.4")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
+    implementation(libs.aa.collectionsImmutable)
+    implementation(libs.kotlinx.serialization.json)
     compileOnly(kotlin("stdlib", aaKotlinBaseVersion))
 
     implementation(libs.aa.guava)
@@ -168,27 +166,25 @@ dependencies {
     implementation(libs.aa.asm)
     implementation(libs.aa.stax2) { isTransitive = false }
     implementation(libs.aa.aalto.xml) { isTransitive = false }
-    implementation("com.github.ben-manes.caffeine:caffeine:2.9.3")
-    implementation("org.jetbrains.intellij.deps.jna:jna:5.9.0.26") { isTransitive = false }
-    implementation("org.jetbrains.intellij.deps.jna:jna-platform:5.9.0.26") { isTransitive = false }
-    implementation("org.jetbrains.intellij.deps:trove4j:1.0.20200330") { isTransitive = false }
-    originalLog4j("org.jetbrains.intellij.deps:log4j:1.2.17.2") { isTransitive = false }
+    implementation(libs.aa.caffeine)
+    implementation(libs.aa.jna) { isTransitive = false }
+    implementation(libs.aa.jnaPlatform) { isTransitive = false }
+    implementation(libs.aa.trove4j) { isTransitive = false }
+    originalLog4j(libs.aa.log4j) { isTransitive = false }
     implementation(files(filteredLog4j))
-    implementation("org.jetbrains.intellij.deps:jdom:2.0.6") { isTransitive = false }
-    implementation("io.javaslang:javaslang:2.0.6")
-    implementation("javax.inject:javax.inject:1")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.10")
-    implementation("org.lz4:lz4-java:1.7.1") { isTransitive = false }
-    compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
-    compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:$aaCoroutinesVersion")
+    implementation(libs.aa.jdom) { isTransitive = false }
+    implementation(libs.aa.javaxInject)
+    implementation(libs.aa.lz4) { isTransitive = false }
+    compileOnly(libs.kotlinx.coroutines.coreJvm)
+    compileOnly(libs.kotlinx.coroutines.core)
     implementation(
-        "org.jetbrains.intellij.deps.fastutil:intellij-deps-fastutil:$aaFastutilVersion"
+        libs.aa.fastutil
     ) {
         isTransitive = false
     }
-    implementation("org.jetbrains:annotations:24.1.0")
+    implementation(libs.aa.annotations)
 
-    implementation("io.opentelemetry:opentelemetry-api:1.34.1") { isTransitive = false }
+    implementation(libs.aa.opentelemetry) { isTransitive = false }
 
     compileOnly(project(":common-deps"))
 
@@ -208,8 +204,8 @@ dependencies {
     testImplementation(project(":common-deps"))
     testImplementation(project(":test-utils"))
     testImplementation("org.jetbrains.kotlin:analysis-api-test-framework:$aaKotlinBaseVersion")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$aaCoroutinesVersion")
+    testImplementation(libs.kotlinx.coroutines.coreJvm)
+    testImplementation(libs.kotlinx.coroutines.core)
 
     // See AbstractKSPTest's init block if you change any of the `libsForTesting` or
     // `libsForTestingCommon` dependencies.
