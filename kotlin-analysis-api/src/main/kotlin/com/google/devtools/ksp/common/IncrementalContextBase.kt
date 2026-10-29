@@ -70,7 +70,7 @@ abstract class IncrementalContextBase(
     protected val knownModified: List<File>,
     protected val knownRemoved: List<File>,
     protected val changedClasses: List<String>,
-) {
+) : IncrementalContext {
     // Symbols defined in changed files. This is used to update symbolsMap in the end.
     protected val updatedSymbols = MultiMap.createSet<File, LookupSymbolWrapper>()
 
@@ -226,7 +226,7 @@ abstract class IncrementalContextBase(
     }
 
     // Beware: no side-effects here; Caches should only be touched in updateCaches.
-    fun calcDirtyFiles(ksFiles: List<KSFile>): Collection<KSFile> = closeFilesOnException {
+    override fun calcDirtyFiles(ksFiles: List<KSFile>): Collection<KSFile> = closeFilesOnException {
         if (!isIncremental) {
             return@closeFilesOnException ksFiles
         }
@@ -412,14 +412,14 @@ abstract class IncrementalContextBase(
         sealedMap.flush()
     }
 
-    fun registerGeneratedFiles(newFiles: Collection<KSFile>) = closeFilesOnException {
+    override fun registerGeneratedFiles(newFiles: Collection<KSFile>) = closeFilesOnException {
         if (!isIncremental)
             return@closeFilesOnException
 
         collectDefinedSymbols(newFiles)
     }
 
-    fun <T> closeFilesOnException(f: () -> T): T {
+    override fun <T> closeFilesOnException(f: () -> T): T {
         try {
             return f()
         } catch (e: Exception) {
@@ -428,7 +428,7 @@ abstract class IncrementalContextBase(
         }
     }
 
-    fun closeFiles() {
+    override fun closeFiles() {
         symbolsMap.flush()
         onDemandImportsCache.clear()
         sealedMap.flush()
@@ -439,7 +439,7 @@ abstract class IncrementalContextBase(
     }
 
     // TODO: add a wildcard for outputs with no source and get rid of the outputs parameter.
-    fun updateCachesAndOutputs(
+    override fun updateCachesAndOutputs(
         dirtyFiles: Collection<KSFile>,
         outputs: Set<File>,
         sourceToOutputs: Map<File, Set<File>>,
@@ -516,7 +516,7 @@ abstract class IncrementalContextBase(
      * - If `sym` is an on-demand import, then `sym` may invalidate the file.
      * - If `sym` is an implicit import, i.e., from the same package, then `sym` may invalidate the file.
      */
-    fun recordLookup(psiFile: PsiJavaFile, fqn: String) {
+    override fun recordLookup(psiFile: PsiJavaFile, fqn: String) {
         if (!isIncremental)
             return
 
@@ -552,7 +552,7 @@ abstract class IncrementalContextBase(
             ?.filter { it.isOnDemand }
             ?: emptyList()
 
-    fun recordGetSealedSubclasses(classDeclaration: KSClassDeclaration) {
+    override fun recordGetSealedSubclasses(classDeclaration: KSClassDeclaration) {
         if (!isIncremental)
             return
 

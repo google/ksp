@@ -20,6 +20,7 @@
 package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.common.AnyChanges
+import com.google.devtools.ksp.common.IncrementalContext
 import com.google.devtools.ksp.common.KSObjectCacheManager
 import com.google.devtools.ksp.common.impl.AAResolutionStrategy
 import com.google.devtools.ksp.common.impl.CodeGeneratorImpl
@@ -556,7 +557,7 @@ class KotlinSymbolProcessing(
             )
 
             val dualLookupTracker = DualLookupTracker()
-            val incrementalContext = IncrementalContextAA(
+            val incrementalContext: IncrementalContext = IncrementalContextAA(
                 kspConfig.incremental,
                 dualLookupTracker,
                 File(anyChangesWildcard.filePath).relativeTo(kspConfig.projectBaseDir),
