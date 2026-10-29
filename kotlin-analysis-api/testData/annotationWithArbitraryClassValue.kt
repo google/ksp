@@ -16,6 +16,11 @@
  */
 // TEST PROCESSOR: AnnotationArbitraryClassValueProcessor
 // EXPECTED:
+// com.google.devtools.ksp.processor.User
+// kotlin.String, com.google.devtools.ksp.processor.Company, kotlin.IntArray, kotlin.Array<com.google.devtools.ksp.processor.User>
+// true
+// 0
+// false
 // User
 // String, Company, IntArray, Array<User>
 // END
