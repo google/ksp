@@ -8,28 +8,30 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import java.io.File
 
 @RunWith(Parameterized::class)
 class AGPVersionBuiltInKotlinIT(
-    private val agpVersion: String,
-    private val kotlinVersion: String,
-    private val gradleVersion: String,
-    experimentalPsiResolution: String
+    private val agpVersion: String?,
+    private val kotlinVersion: String?,
+    private val gradleVersion: String?,
+    experimentalPsiResolution: String?
 ) {
     @Rule
     @JvmField
     val project: TemporaryTestProject = TemporaryTestProject(
         "playground-android-builtinkotlin",
         "playground",
-        experimentalPsiResolution.toBoolean()
+        experimentalPsiResolution!!.toBoolean()
     )
 
     companion object {
         @JvmStatic
         @Parameterized.Parameters(name = "AGP: {0}, KGP: {1}, Gradle: {2}, experimentalPsiResolution: {3}")
-        fun data(): Collection<Array<String>> {
-            return listOf(
+        fun data(): Collection<Array<String?>> {
+            return listOf<Array<String?>>(
+                // Latest
+                arrayOf(null, null, null),
+
                 arrayOf("9.0.0-alpha14", "2.3.0-RC", "9.1.0"),
                 arrayOf("9.0.0-alpha14", "2.4.0", "9.1.0"),
                 arrayOf("9.0.0-beta01", "2.3.0-RC", "9.1.0"),
@@ -45,29 +47,13 @@ class AGPVersionBuiltInKotlinIT(
         val gradleRunner = GradleRunner.create()
             .withProjectDir(project.root)
             .withArguments(":workload:compileDebugKotlin")
-        gradleVersion.let { gradleRunner.withGradleVersion(it) }
+        gradleVersion?.let { gradleRunner.withGradleVersion(it) }
 
-        agpVersion.let { project.setAgpVersion(it) }
-        kotlinVersion.let {
-            project.setKotlinVersion(it)
-            setKotlinInBuildClasspath(it)
-        }
+        agpVersion?.let { project.setAgpVersion(it) }
+        kotlinVersion?.let { project.setKotlinVersion(it) }
 
         gradleRunner.build().let { result ->
             Assert.assertEquals(TaskOutcome.SUCCESS, result.task(":workload:kspDebugKotlin")?.outcome)
         }
-    }
-
-    private fun setKotlinInBuildClasspath(version: String) {
-        // override AGPs bundled kotlin gradle plugin version
-        File(project.root, "workload/build.gradle.kts").appendText(
-            """
-                buildscript {
-                    dependencies {
-                        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$version")
-                    }
-                }
-            """.trimIndent()
-        )
     }
 }
