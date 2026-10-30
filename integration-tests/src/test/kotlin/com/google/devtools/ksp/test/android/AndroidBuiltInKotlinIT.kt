@@ -146,17 +146,6 @@ class AndroidBuiltInKotlinIT(experimentalPsiResolution: Boolean) {
         File(project.root, "gradle.properties").appendText("\nkotlinVersion=2.3.0-Beta2")
         File(project.root, "gradle.properties").appendText("\nksp.project.isolation.enabled=true")
 
-        // override AGP's bundled kotlin gradle plugin version
-        File(project.root, "workload/build.gradle.kts").appendText(
-            """
-                buildscript {
-                    dependencies {
-                        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.0-Beta2")
-                    }
-                }
-            """.trimIndent()
-        )
-
         gradleRunner.withArguments(
             "clean", "build", "minifyReleaseWithR8", "--configuration-cache", "--info", "--stacktrace",
             "-Dorg.gradle.unsafe.isolated-projects=true"
@@ -326,8 +315,6 @@ class AndroidBuiltInKotlinIT(experimentalPsiResolution: Boolean) {
                 }
             """.trimIndent()
         )
-
-        File(project.root, "gradle.properties").appendText("\nagpVersion=9.0.0-beta05")
 
         gradleRunner.withArguments(":workload:assembleDebug", "--stacktrace").build().let { result ->
             Assert.assertEquals(

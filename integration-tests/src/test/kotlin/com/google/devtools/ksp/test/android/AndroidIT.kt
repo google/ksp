@@ -63,8 +63,14 @@ class AndroidIT(experimentalPsiResolution: Boolean) {
             assertMergedConfigurationOutput(project, "-keep class com.example.BClassBuilder { *; }")
 
             val outputs = result.output.lines()
-            assert("w: [ksp] [workload_debug] Mangled name for internalFun: internalFun\$workload_debug" in outputs)
-            assert("w: [ksp] [workload_release] Mangled name for internalFun: internalFun\$workload_release" in outputs)
+            assert(
+                "w: [ksp] [playground:workload_debug] Mangled name for internalFun: " +
+                    "internalFun\$playground_workload_debug" in outputs
+            )
+            assert(
+                "w: [ksp] [playground:workload_release] Mangled name for internalFun: " +
+                    "internalFun\$playground_workload_release" in outputs
+            )
         }
     }
 }
