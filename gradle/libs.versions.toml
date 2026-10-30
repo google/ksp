@@ -65,4 +65,4 @@ androidx-lintGradle = { module = "androidx.lint:lint-gradle", version.ref = "and
 nexus-publish = { id = "io.github.gradle-nexus.publish-plugin", version = "2.0.0" }
 shadow = { id = "com.gradleup.shadow", version = "8.3.9" }
 dokka = { id = "org.jetbrains.dokka", version = "1.9.20" }
-android-lint = { id = "com.android.lint", version = "8.13.0" }
+android-lint = { id = "com.android.lint", version.ref = "agp-base" }
