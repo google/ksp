@@ -20,8 +20,8 @@ import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSAnnotationOps
-import com.google.devtools.ksp.impl.symbol.kotlin.KSAnnotationOps.getAbsentDefaultArguments
-import com.google.devtools.ksp.impl.symbol.kotlin.KSAnnotationOps.getDefaultArguments
+import com.google.devtools.ksp.impl.symbol.kotlin.KSAnnotationOps.findAbsentDefaultArguments
+import com.google.devtools.ksp.impl.symbol.kotlin.KSAnnotationOps.findDefaultArguments
 import com.google.devtools.ksp.impl.symbol.kotlin.KSValueArgumentImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.symbol.AnnotationUseSiteTarget
@@ -106,7 +106,7 @@ class KSAnnotationResolvedImpl private constructor(
             KSValueArgumentImpl.getCached(arg, this, argOrigin)
         }
         presentArgs +
-            getAbsentDefaultArguments(this, presentArgs) +
+            findAbsentDefaultArguments(this, presentArgs) +
             listOfNotNull(
                 KSAnnotationOps.findAbsentVararg(
                     this,
@@ -117,7 +117,7 @@ class KSAnnotationResolvedImpl private constructor(
     }
 
     override val defaultArguments: List<KSValueArgument> by lazy {
-        getDefaultArguments(this, annotationApplication.classId)
+        findDefaultArguments(this, annotationApplication.classId)
     }
 
     override val shortName: KSName by lazy {
