@@ -169,7 +169,7 @@ internal object KSAnnotationOps {
      * @return A list of [KSValueArgument]s representing default values for all parameters omitted from [presentArgs].
      */
     @JvmStatic
-    fun getAbsentDefaultArguments(
+    fun findAbsentDefaultArguments(
         ksAnnotation: KSAnnotation,
         presentArgs: List<KSValueArgument>
     ): List<KSValueArgument> {
@@ -192,7 +192,7 @@ internal object KSAnnotationOps {
      */
     @OptIn(KaImplementationDetail::class)
     @JvmStatic
-    fun getDefaultArguments(ksAnnotation: KSAnnotation, classId: ClassId?): List<KSValueArgument> {
+    fun findDefaultArguments(ksAnnotation: KSAnnotation, classId: ClassId?): List<KSValueArgument> {
         if (classId == null) return emptyList()
         return analyze {
             classId.toKtClassSymbol()?.let { symbol ->
