@@ -43,8 +43,8 @@ class TemporaryTestProject(
             appendProperty("org.gradle.parallel=false")
         }
 
-        appendProperty("org.gradle.jvmargs=-Xmx1024m -XX:MaxMetaspaceSize=2048m")
-        appendProperty("kotlin.daemon.jvmargs=-Xmx1024m -XX:MaxMetaspaceSize=2048m")
+        appendProperty("org.gradle.jvmargs=-Xmx1024m -XX:MaxMetaspaceSize=4096m")
+        appendProperty("kotlin.daemon.jvmargs=-Xmx1024m -XX:MaxMetaspaceSize=4096m")
 
         // To debug compiler and compiler plugin:
         // 1. s/kotlin-compiler/kotlin-compiler-embeddable in integration-tests/build.gradle.kts, and
