@@ -83,12 +83,17 @@ inline fun KtModuleProviderBuilder.buildKspLibraryModule(init: KspLibraryModuleB
 }
 
 internal class LibraryRootsSearchScope(roots: List<VirtualFile>) : GlobalSearchScope() {
-    private val rootFiles: Set<VirtualFile> = roots.toSet()
+    // VirtualFile instances for jar entries are not stable: KSP clears the shared
+    // CoreJarFileSystem handler cache between executions, which recreates them even though the
+    // paths are unchanged. Compare stable URLs so a scope created before the cache is cleared
+    // still contains files from the same library.
+    // See https://github.com/google/ksp/issues/3286.
+    private val rootUrls: Set<String> = roots.mapTo(HashSet()) { it.url }
 
     override fun contains(file: VirtualFile): Boolean {
         var current: VirtualFile? = file
         while (current != null) {
-            if (rootFiles.contains(current)) {
+            if (current.url in rootUrls) {
                 return true
             }
             current = current.parent
