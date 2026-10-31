@@ -51,7 +51,7 @@ abstract class PsiConfiguredUnitTestSuiteBase(
     @TestMetadata("functionKindsJavaInheritsKotlin.kt")
     @Test
     override fun testFunctionKindsJavaInheritsKotlin() {
-        runFailingTest("$AA_PATH/functionKindsJavaInheritsKotlin.kt")
+        runTest("$AA_PATH/functionKindsJavaInheritsKotlin.kt")
     }
 
     @TestMetadata("javaSubtypeOfKotlinInterface.kt")

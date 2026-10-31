@@ -39,7 +39,7 @@ import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunction
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSName
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSValueParameter
@@ -173,6 +173,27 @@ sealed class KSFunctionDeclarationImpl : KSFunctionDeclaration, AbstractKSDeclar
         ktFunctionSymbol.valueParameters.map { KSValueParameterImpl.getCached(it, this) }
     }
 
+    /**
+     * A Java method that overrides a Kotlin property is modeled by the Analysis API as a synthetic
+     * property accessor whose containing symbol is the synthetic property, not the Java class.
+     * Since such a declaration is a Java method, its parent must be the class that declares it.
+     * See https://github.com/google/ksp/issues/2498.
+     */
+    override val parent: KSNode? by lazy {
+        val syntheticAccessorParent = analyze {
+            val containingSymbol = ktFunctionSymbol.containingSymbol
+            if (
+                ktFunctionSymbol.origin == KaSymbolOrigin.JAVA_SYNTHETIC_PROPERTY &&
+                containingSymbol is KaPropertySymbol
+            ) {
+                containingSymbol.getContainingKSSymbol()
+            } else {
+                null
+            }
+        }
+        syntheticAccessorParent ?: super.parent
+    }
+
     override fun findOverridee(): KSDeclaration? {
         closestClassDeclaration()?.asStarProjectedType()?.let {
             recordLookupWithSupertypes((it as KSTypeImpl).type)
@@ -180,7 +201,7 @@ sealed class KSFunctionDeclarationImpl : KSFunctionDeclaration, AbstractKSDeclar
         recordLookupForPropertyOrMethod(this)
         return analyze {
             if (ktFunctionSymbol is KaPropertyAccessorSymbol) {
-                (parentDeclaration as? KSPropertyDeclarationImpl)?.ktPropertySymbol
+                ktFunctionSymbol.containingSymbol as? KaPropertySymbol
             } else {
                 ktFunctionSymbol
             }?.directlyOverriddenSymbols?.firstOrNull()?.fakeOverrideOriginal?.toKSDeclaration()
@@ -343,11 +364,12 @@ private class KSFunctionDeclarationPsiImpl(
     }
 
     override val origin: Origin by lazy {
-        when (parent) {
-            // If our lazy parent resolution determined that this method belongs to a Kotlin property,
-            // it means FIR considers it a synthetic property accessor.
-            is KSPropertyDeclaration -> Origin.SYNTHETIC
-            else -> parentClass.origin
+        // FIR models a Java method that overrides a Kotlin property as a synthetic property
+        // accessor. Such declarations are synthetic even though their parent is the Java class.
+        if (ktFunctionSymbol.origin == KaSymbolOrigin.JAVA_SYNTHETIC_PROPERTY) {
+            Origin.SYNTHETIC
+        } else {
+            parentClass.origin
         }
     }
 
