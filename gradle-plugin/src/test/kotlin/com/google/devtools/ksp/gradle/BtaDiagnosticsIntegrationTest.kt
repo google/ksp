@@ -17,21 +17,11 @@
 package com.google.devtools.ksp.gradle
 
 import com.google.common.truth.Truth.assertThat
-import com.google.devtools.ksp.gradle.testing.TestConfig
-import groovy.json.JsonSlurper
-import java.io.File
 import org.gradle.testkit.runner.BuildResult
-import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TemporaryFolder
 
-class BtaDiagnosticsIntegrationTest {
-    @Rule @JvmField val tmpDir = TemporaryFolder()
-
-    private val config = TestConfig.read()
-
+class BtaDiagnosticsIntegrationTest : DiagnosticsIntegrationTestFixture() {
     @Test
     fun compiler24UsesTheIsolatedListenerAndCompilesGeneratedSources() {
         setup("2.4.0", "2.4.0")
@@ -87,7 +77,7 @@ class BtaDiagnosticsIntegrationTest {
         assertThat(result.task(":app:kspKotlin")!!.outcome).isEqualTo(TaskOutcome.FAILED)
         assertThat(result.output.lineSequence().filter { "[ksp]" in it }.toList())
             .containsExactly("e: [ksp] No providers found in processor classpath.")
-        assertNoKspProblems()
+        assertThat(kspProblems()).hasSize(1)
     }
 
     @Test
@@ -135,6 +125,7 @@ class BtaDiagnosticsIntegrationTest {
         val buildFile = tmpDir.root.resolve("app/build.gradle.kts")
         val original = buildFile.readText()
         buildFile.writeText(original.replace("\"2.4.0\"", "\"2.3.20\""))
+        tmpDir.root.resolve("build/reports/problems/problems-report.html").delete()
         val disabled = cached.build()
         assertCompilerVersion(disabled, "2.3.20")
         assertThat(disabled.output).contains("DIAGNOSTICS_BTA_ENABLED=false")
@@ -205,7 +196,7 @@ class BtaDiagnosticsIntegrationTest {
     @Test
     fun configurationCacheReusesTheListenerAndQuietErrorsRemainVisible() {
         setup("2.4.0", "2.4.0")
-        val cached = runner().withArguments(":app:classes", "--console=plain", "--configuration-cache",
+        val cached = runner().withArguments(":app:classes", "--console=plain", "--warning-mode=none", "--configuration-cache",
             "--configuration-cache-problems=fail", "--rerun-tasks")
         assertDiagnostics(cached.build())
         val reused = cached.build()
@@ -218,7 +209,8 @@ class BtaDiagnosticsIntegrationTest {
         assertFailure(failed)
         val quietOutput = failed.output.lineSequence().filter { "[ksp]" in it }.toList()
         assertThat(quietOutput).contains("e: [ksp] ${tmpDir.root.resolve("app/src/main/java/test/ErrorTrigger.java").canonicalFile.invariantSeparatorsPath}:1: quiet-cache error")
-        assertNoKspProblems()
+        assertThat(kspProblems()).hasSize(7)
+        tmpDir.root.resolve("build/reports/problems/problems-report.html").delete()
         val fallbackArguments = cached.arguments.filterNot { it == "--quiet" } +
             "-Pkotlin.compiler.runViaBuildToolsApi=false"
         assertListener(cached.withArguments(fallbackArguments).buildAndFail(), false)
@@ -247,7 +239,7 @@ class BtaDiagnosticsIntegrationTest {
     fun kspDiagnosticsOptOutSupportsCommandLineOverridesAndConfigurationCacheReuse() {
         setup("2.4.0", "2.4.0")
         tmpDir.root.resolve("gradle.properties").appendText("\nksp.diagnostics.useBuildToolsApi=false\n")
-        val arguments = listOf(":app:classes", "--console=plain", "--configuration-cache",
+        val arguments = listOf(":app:classes", "--console=plain", "--warning-mode=none", "--configuration-cache",
             "--configuration-cache-problems=fail", "--rerun-tasks")
         val cached = runner().withArguments(arguments + "-Pksp.diagnostics.useBuildToolsApi=true")
         assertListener(cached.build(), true)
@@ -255,6 +247,7 @@ class BtaDiagnosticsIntegrationTest {
         assertThat(enabledReuse.output).contains("Reusing configuration cache.")
         assertListener(enabledReuse, true)
         assertDiagnostics(enabledReuse)
+        tmpDir.root.resolve("build/reports/problems/problems-report.html").delete()
         val disabled = cached.withArguments(arguments).build()
         assertListener(disabled, false)
         assertCompilerVersion(disabled, "2.4.0")
@@ -295,7 +288,7 @@ class BtaDiagnosticsIntegrationTest {
     }
 
     private fun assertListener(result: BuildResult, enabled: Boolean) {
-        assertThat(result.output).contains("ENGINE_DIAGNOSTIC_LISTENER=${if (enabled) "BtaKspDiagnosticReporter" else "null"}")
+        assertThat(result.output).contains("ENGINE_DIAGNOSTIC_LISTENER=${if (enabled) "ProblemsKspDiagnosticReporter" else "null"}")
         if (enabled) assertThat(result.output).contains("ENGINE_LOGGER_ISOLATED=true")
     }
 
@@ -312,211 +305,14 @@ class BtaDiagnosticsIntegrationTest {
             (if (failed) listOf("e: [ksp] Symbols.kt:3: Unresolved reference 'Generated'.") else emptyList())
         assertThat(result.output.lineSequence().filter { "[ksp]" in it }.toList())
             .containsExactlyElementsIn(expected)
-        assertNoKspProblems()
+        if ("ENGINE_DIAGNOSTIC_LISTENER=ProblemsKspDiagnosticReporter" in result.output) {
+            assertThat(kspProblems().map { it["contextualLabel"] }).containsExactlyElementsIn(expected.map { it.substring(3) })
+        } else {
+            assertNoKspProblems()
+        }
     }
 
     private fun assertNoKspProblems() {
         assertThat(problems().filter { it["contextualLabel"].toString().contains("[ksp]") }).isEmpty()
-    }
-
-    private fun problems(): List<Map<String, Any?>> {
-        val report = tmpDir.root.resolve("build/reports/problems/problems-report.html")
-        if (!report.isFile) return emptyList()
-        val json =
-            report
-                .readText()
-                .substringAfter("// begin-report-data\n")
-                .substringBefore("\n// end-report-data")
-        @Suppress("UNCHECKED_CAST")
-        return (JsonSlurper().parseText(json) as Map<String, Any?>)["diagnostics"]
-            as List<Map<String, Any?>>
-    }
-
-    private fun sourceFile(name: String) =
-        tmpDir.root
-            .resolve(
-                if (name.startsWith("Kotlin")) "app/src/main/kotlin/test/Symbols.kt"
-                else "app/src/main/java/test/Symbols.java"
-            )
-            .canonicalFile
-
-    private fun runner() =
-        GradleRunner.create()
-            .withProjectDir(tmpDir.root)
-            .withArguments(":app:classes", "--warning-mode=all", "--console=plain", "--stacktrace")
-
-    private fun setup(kgpVersion: String, compilerVersion: String, errors: Boolean = false) {
-        write(
-            "settings.gradle.kts",
-            """
-            pluginManagement {
-                repositories {
-                    maven("${config.mavenRepoPath}")
-                    gradlePluginPortal()
-                    mavenCentral()
-                }
-            }
-            rootProject.name = "bta-diagnostics"
-            include(":app", ":processor")
-        """,
-        )
-        write(
-            "build.gradle.kts",
-            """
-            plugins {
-                id("org.jetbrains.kotlin.jvm") version "$kgpVersion" apply false
-                id("com.google.devtools.ksp") version "${config.kspVersion}" apply false
-            }
-            println("FIXTURE_CONFIGURED")
-            subprojects {
-                repositories {
-                    maven("${config.mavenRepoPath}")
-                    mavenCentral()
-                }
-            }
-        """,
-        )
-        write(
-            "gradle.properties",
-            """
-            kotlin.jvm.target.validation.mode=warning
-            org.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=768m
-            kotlin.compiler.execution.strategy=in-process
-        """,
-        )
-        write(
-            "processor/build.gradle.kts",
-            """
-            plugins { kotlin("jvm") }
-            dependencies {
-                implementation("com.google.devtools.ksp:symbol-processing-api:${config.kspVersion}")
-            }
-        """,
-        )
-        write(
-            "processor/src/main/resources/META-INF/services/com.google.devtools.ksp.processing.SymbolProcessorProvider",
-            "test.DiagnosticProcessorProvider",
-        )
-        write(
-            "processor/src/main/kotlin/test/DiagnosticProcessorProvider.kt",
-            """
-            package test
-            import com.google.devtools.ksp.processing.*
-            import com.google.devtools.ksp.symbol.*
-
-            @OptIn(com.google.devtools.ksp.KspExperimental::class)
-            class DiagnosticProcessorProvider : SymbolProcessorProvider {
-                override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
-                    val delegate = environment.logger.javaClass.declaredFields.first {
-                        KSPLogger::class.java.isAssignableFrom(it.type)
-                    }
-                    delegate.isAccessible = true
-                    val logger = delegate.get(environment.logger) as KSPLogger
-                    val listenerField = logger.javaClass.getDeclaredField("diagnosticListener")
-                    listenerField.isAccessible = true
-                    @Suppress("UNCHECKED_CAST")
-                    val listener = listenerField.get(logger) as? javax.tools.DiagnosticListener<javax.tools.JavaFileObject>
-                    println("ENGINE_DIAGNOSTIC_LISTENER=" + listener?.javaClass?.simpleName)
-                    println("ENGINE_LOGGER_ISOLATED=" + (logger.javaClass.classLoader !== listener?.javaClass?.classLoader))
-                    if (listener != null) {
-                        listenerField.set(logger, javax.tools.DiagnosticListener<javax.tools.JavaFileObject> { diagnostic ->
-                            val record = listOf(diagnostic.kind, diagnostic.getMessage(null), diagnostic.source?.toUri(),
-                                diagnostic.lineNumber, diagnostic.columnNumber).joinToString("|")
-                            java.io.File(environment.options.getValue("diagnosticsFile")).appendText(record + "\n")
-                            listener.report(diagnostic)
-                        })
-                    }
-                    return object : SymbolProcessor {
-                        private var processed = false
-                        override fun process(resolver: Resolver): List<KSAnnotated> {
-                            if (processed) return emptyList()
-                            processed = true
-                            for (declaration in resolver.getDeclarationsFromPackage("test")) {
-                                val name = declaration.simpleName.asString()
-                                if (name == "ErrorTrigger") {
-                                    environment.logger.error("quiet-cache error", declaration)
-                                }
-                                if (name in setOf("KotlinOne", "KotlinTwo", "JavaOne", "JavaTwo")) {
-                                    environment.logger.warn("warning-" + name, declaration)
-                                    if (environment.options["errors"] == "true") {
-                                        environment.logger.error("error-" + name, declaration)
-                                    }
-                                }
-                            }
-                            environment.logger.warn("source-free warning")
-                            if (environment.options["errors"] == "true") environment.logger.error("source-free error")
-                            environment.codeGenerator.createNewFile(Dependencies.ALL_FILES, "test", "Generated")
-                                .bufferedWriter().use { it.write("package test; class Generated") }
-                            return emptyList()
-                        }
-                    }
-                }
-            }
-        """,
-        )
-        write(
-            "app/build.gradle.kts",
-            """
-            @file:OptIn(
-                org.jetbrains.kotlin.buildtools.api.ExperimentalBuildToolsApi::class,
-                org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class,
-            )
-            import com.google.devtools.ksp.gradle.KspAATask
-            plugins {
-                kotlin("jvm")
-                id("com.google.devtools.ksp")
-            }
-            dependencies { add("ksp", project(":processor")) }
-            ksp {
-                arg("errors", "$errors")
-                arg("diagnosticsFile", "${tmpDir.root.resolve("diagnostics.txt").invariantSeparatorsPath}")
-            }
-            kotlin.compilerVersion.set("$compilerVersion")
-            configurations.matching { it.name.startsWith("kotlinCompilerPluginClasspath") }.configureEach {
-                resolutionStrategy.eachDependency {
-                    if (requested.group == "org.jetbrains.kotlin" && requested.name.startsWith("kotlin-scripting-")) {
-                        useVersion("$compilerVersion")
-                    }
-                }
-            }
-            val compilerArtifacts = configurations.named("kotlinBuildToolsApiClasspath")
-                .get().incoming.artifacts.resolvedArtifacts
-            tasks.withType<KspAATask>().configureEach {
-                inputs.property("resolvedCompilerVersion", compilerArtifacts.map { artifacts ->
-                    artifacts.map { it.id.componentIdentifier }
-                        .filterIsInstance<org.gradle.api.artifacts.component.ModuleComponentIdentifier>()
-                        .single { it.group == "org.jetbrains.kotlin" && it.module == "kotlin-compiler-embeddable" }
-                        .version
-                })
-                doFirst {
-                    println("DIAGNOSTICS_BTA_ENABLED=" + (this as KspAATask).useBuildToolsApi.get())
-                    println("RESOLVED_COMPILER=" + inputs.properties["resolvedCompilerVersion"])
-                }
-            }
-        """,
-        )
-        write(
-            "app/src/main/kotlin/test/Symbols.kt",
-            """
-            package test
-            class KotlinOne; class KotlinTwo
-            class UsesGenerated { val value = Generated() }
-        """,
-        )
-        write(
-            "app/src/main/java/test/Symbols.java",
-            """
-            package test;
-            class JavaOne {} class JavaTwo {}
-        """,
-        )
-    }
-
-    private fun write(path: String, content: String) {
-        File(tmpDir.root, path).apply { parentFile.mkdirs() }.writeText(content.trimIndent())
-    }
-
-    companion object {
-        private val names = listOf("KotlinOne", "KotlinTwo", "JavaOne", "JavaTwo")
     }
 }
