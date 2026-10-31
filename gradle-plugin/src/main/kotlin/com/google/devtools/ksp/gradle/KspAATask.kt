@@ -394,6 +394,12 @@ abstract class KspAATask @Inject constructor(
                         project.logger.isEnabled(it)
                     }
                     cfg.logLevel.value(logLevel)
+                    cfg.useBuildToolsApiDiagnostics.value(
+                        project.providers
+                            .gradleProperty("ksp.diagnostics.useBuildToolsApi")
+                            .map { it.toBoolean() }
+                            .orElse(true)
+                    )
                     cfg.allWarningsAsErrors.value(kspExtension.allWarningsAsErrors)
                     cfg.excludedProcessors.value(kspExtension.excludedProcessors)
 
@@ -729,6 +735,9 @@ abstract class KspGradleConfig @Inject constructor() {
     @get:Internal
     abstract val logLevel: Property<LogLevel>
 
+    @get:Internal
+    abstract val useBuildToolsApiDiagnostics: Property<Boolean>
+
     @get:Input
     abstract val allWarningsAsErrors: Property<Boolean>
 
@@ -804,10 +813,12 @@ val doNotGC = mutableSetOf<Any>()
 
 abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
     override fun execute() {
-        val diagnosticReporter = KspDiagnosticReporterFactory.create(
-            parameters.useBuildToolsApi.get(),
-            parameters.config.get().logLevel.get().ordinal,
-        )
+        val diagnosticReporter = if (parameters.config.get().useBuildToolsApiDiagnostics.get()) {
+            KspDiagnosticReporterFactory.create(
+                parameters.useBuildToolsApi.get(),
+                parameters.config.get().logLevel.get().ordinal,
+            )
+        } else null
         try {
             execute(diagnosticReporter)
         } finally {
