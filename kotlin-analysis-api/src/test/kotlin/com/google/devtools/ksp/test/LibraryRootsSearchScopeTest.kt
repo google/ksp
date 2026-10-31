@@ -15,8 +15,11 @@
  * limitations under the License.
  */
 
-package com.google.devtools.ksp.standalone
+package com.google.devtools.ksp.test
 
+import com.google.devtools.ksp.standalone.LibraryRootsSearchScope
+import com.google.devtools.ksp.test.annotations.Bug
+import com.google.devtools.ksp.test.annotations.BugState
 import com.intellij.openapi.vfs.impl.jar.CoreJarFileSystem
 import java.nio.file.Files
 import java.nio.file.Path
@@ -31,6 +34,7 @@ import org.junit.jupiter.api.io.TempDir
 class LibraryRootsSearchScopeTest {
     @TempDir lateinit var tempDir: Path
 
+    @Bug("https://github.com/google/ksp/issues/3286", BugState.FIXED)
     @Test
     fun containsLibraryClassesAfterJarHandlersAreCleared() {
         val library = createJar("library.jar")
