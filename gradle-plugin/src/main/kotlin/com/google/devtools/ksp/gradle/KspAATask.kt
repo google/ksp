@@ -32,6 +32,7 @@ import com.google.devtools.ksp.processing.KSPJsConfig
 import com.google.devtools.ksp.processing.KSPJvmConfig
 import com.google.devtools.ksp.processing.KSPNativeConfig
 import com.google.devtools.ksp.processing.KspGradleLogger
+import org.gradle.StartParameter
 import org.gradle.api.DefaultTask
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
@@ -42,6 +43,9 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.LogLevel
+import org.gradle.api.logging.Logging
+import org.gradle.api.logging.configuration.WarningMode
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -104,6 +108,9 @@ abstract class KspAATask @Inject constructor(
     /** Whether the target and compiler version allow Build Tools API diagnostics. */
     @get:Internal
     abstract val useBuildToolsApi: Property<Boolean>
+
+    @get:Inject
+    abstract val startParameter: StartParameter
 
     @get:Nested
     abstract val kspConfig: KspGradleConfig
@@ -187,6 +194,8 @@ abstract class KspAATask @Inject constructor(
         workerQueue.submit(KspAAWorkerAction::class.java) {
             it.config.set(kspConfig)
             it.useBuildToolsApi.set(useBuildToolsApi)
+            it.warningModeAll.set(startParameter.warningMode == WarningMode.All)
+            it.taskPath.set(path)
             it.kspClasspath.from(kspClasspath)
             it.modifiedSources = modifiedSources
             it.removedSources = removedSources
@@ -803,6 +812,8 @@ abstract class KspGradleConfig @Inject constructor() {
 interface KspAAWorkParameter : WorkParameters {
     val config: Property<KspGradleConfig>
     val useBuildToolsApi: Property<Boolean>
+    val warningModeAll: Property<Boolean>
+    val taskPath: Property<String>
     val kspClasspath: ConfigurableFileCollection
     var modifiedSources: List<File>
     var removedSources: List<File>
@@ -811,13 +822,23 @@ interface KspAAWorkParameter : WorkParameters {
 
 val doNotGC = mutableSetOf<Any>()
 
-abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
+abstract class KspAAWorkerAction @Inject constructor(
+    private val objects: ObjectFactory,
+) : WorkAction<KspAAWorkParameter> {
     override fun execute() {
         val diagnosticReporter = if (parameters.config.get().useBuildToolsApiDiagnostics.get()) {
             KspDiagnosticReporterFactory.create(
                 parameters.useBuildToolsApi.get(),
                 parameters.config.get().logLevel.get().ordinal,
-            )
+            )?.let { reporter ->
+                ProblemsKspDiagnosticReporterFactory.create(
+                    reporter,
+                    objects,
+                    Logging.getLogger(KspAAWorkerAction::class.java),
+                    parameters.warningModeAll.get(),
+                    parameters.taskPath.get(),
+                )
+            }
         } else null
         try {
             execute(diagnosticReporter)
