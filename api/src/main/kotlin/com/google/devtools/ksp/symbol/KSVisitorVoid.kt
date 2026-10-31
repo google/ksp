@@ -26,6 +26,15 @@ import com.google.devtools.ksp.errors.InternalKSPException
 open class KSVisitorVoid(val enableNewFeatures: Boolean) : KSVisitorNext<Unit, Unit> {
 
     // For binary compatibility
+    @Deprecated(
+        message = "KSVisitorVoid is deprecated in favor of KSVisitorVoid(enableNewFeatures = true) which supports backing fields.\n" +
+            "In an upcoming KSP version, KSVisitorNext will be deprecated and implementations should move back to KSVisitor.\n" +
+            "This is done to preserve binary compatibility and to avoid breaking changes for users\n" +
+            "while giving library / processor authors time to support the new features.",
+        replaceWith = ReplaceWith(
+            expression = "KSVisitorVoid(enableNewFeatures = true)",
+        ),
+    )
     constructor() : this(enableNewFeatures = false)
 
     override fun visitNode(node: KSNode, data: Unit) {}
@@ -85,6 +94,16 @@ open class KSVisitorVoid(val enableNewFeatures: Boolean) : KSVisitorNext<Unit, U
     override fun visitTypeParameter(typeParameter: KSTypeParameter, data: Unit) {}
 
     override fun visitTypeReference(typeReference: KSTypeReference, data: Unit) {}
+
+    override fun visitContextParameter(contextParameter: KSContextParameter, data: Unit) {
+        if (!enableNewFeatures) {
+            throw InternalKSPException(
+                "Unexpected call to visitContextParameter in ${javaClass.simpleName} with enabledNewFeatures = false",
+                contextParameter.location,
+                javaClass
+            )
+        }
+    }
 
     override fun visitValueParameter(valueParameter: KSValueParameter, data: Unit) {}
 

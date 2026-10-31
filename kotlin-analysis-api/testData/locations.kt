@@ -17,33 +17,35 @@
 
 // TEST PROCESSOR: LocationsProcessor
 // EXPECTED:
-// A:K.kt:57
+// A:K.kt:59
 // File: K.kt:K.kt:1
-// K:J.java:81
-// K:K.kt:60
-// Q:J.java:89
-// Q:K.kt:69
-// T:J.java:81
-// T:J.java:81
-// T:K.kt:60
-// delegateProp:K2.kt:110
-// f1:J.java:85
-// f1:K.kt:67
-// fieldProp:K2.kt:105
-// p1:K.kt:62
-// p2:J.java:85
-// p2:K.kt:67
-// v1:K.kt:61
-// v1:K.kt:61
-// v2:J.java:82
-// v2:K.kt:64
-// v3.getter():K.kt:74
-// v3.setter():K.kt:75
-// v3:J.java:94
-// value:K2.kt:113
+// K:J.java:84
+// K:K.kt:62
+// Q:J.java:92
+// Q:K.kt:72
+// T:J.java:84
+// T:J.java:84
+// T:K.kt:62
+// delegateProp:K2.kt:113
+// f1:J.java:88
+// f1:K.kt:70
+// EXPECT CURRENT: fieldProp:K2.kt:108
+// EXPECT NEXT: field:J.java:85
+// EXPECT NEXT: field:J.java:97
+// EXPECT NEXT: field:K2.kt:108
+// p1:K.kt:64
+// p2:J.java:88
+// p2:K.kt:70
+// v1:K.kt:63
+// v1:K.kt:63
+// v2:J.java:85
+// v2:K.kt:67
+// v3.getter():K.kt:77
+// v3.setter():K.kt:78
+// v3:J.java:97
+// value:K2.kt:116
 // x1.getter():NonExistLocation
 // END
-
 
 // FILE: Location.kt
 
@@ -61,7 +63,8 @@ class K<@Location T>(
     @Location val v1: Int,
     @Location p1: String,
 ) {
-    @Location val v2: Int
+    @Location
+    val v2: Int
 
     @Location
     fun f1(@Location p2: Int) = Unit
@@ -82,12 +85,12 @@ class K<@Location T> {
     @Location int v2 = 0;
 
     @Location
-    void f1(@Location int p2) {
-
+    void f1(@Location int p2)
+    {
     }
 
-    <@Location Q> void f2() {
-
+    <@Location Q> void f2()
+    {
     }
 
     @Location
@@ -110,7 +113,9 @@ class L {
     val delegateProp: Int by backing
 
     var setParamProp: Int = 0
-        set(@setparam:Location value) { field = value }
+        set(@setparam:Location value) {
+            field = value
+        }
 }
 
 fun @receiver:Location String.extFun() = Unit

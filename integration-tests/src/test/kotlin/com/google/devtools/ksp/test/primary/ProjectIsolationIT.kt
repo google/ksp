@@ -13,7 +13,7 @@ import java.util.jar.JarFile
 
 @RunWith(Parameterized::class)
 class ProjectIsolationIT(
-    private val propertyName: String,
+    private val isolationArgument: String,
     private val gradleVersion: String?
 ) {
     @Rule
@@ -24,12 +24,17 @@ class ProjectIsolationIT(
     )
 
     companion object {
+        // The --isolated-projects command line option was added in Gradle 9.7, before that Isolated Projects
+        // could only be turned on through a property.
+        private const val ISOLATION_CLI_GRADLE_VERSION = "9.7.1"
+
         @JvmStatic
         @Parameterized.Parameters(name = "{0}, Gradle: {1}")
         fun data(): Collection<Array<String?>> {
             return listOf(
-                arrayOf("org.gradle.unsafe.isolated-projects", null),
-                arrayOf("org.gradle.isolated-projects", "9.7.0-rc-1")
+                arrayOf("-Dorg.gradle.unsafe.isolated-projects=true", null),
+                arrayOf("-Dorg.gradle.isolated-projects=true", ISOLATION_CLI_GRADLE_VERSION),
+                arrayOf("--isolated-projects", ISOLATION_CLI_GRADLE_VERSION)
             )
         }
     }
@@ -40,7 +45,7 @@ class ProjectIsolationIT(
         gradleVersion?.let { gradleRunner.withGradleVersion(it) }
 
         val result = gradleRunner.withArguments(
-            "clean", "build", "-D$propertyName=true",
+            "clean", "build", isolationArgument,
             "--configuration-cache", "--info", "--stacktrace"
         ).build()
 

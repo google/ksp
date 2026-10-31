@@ -27,6 +27,15 @@ import com.google.devtools.ksp.symbol.*
 abstract class KSEmptyVisitor<D, R>(val enableNewFeatures: Boolean) : KSVisitorNext<D, R> {
 
     // For binary compatibility
+    @Deprecated(
+        message = "KSEmptyVisitor is deprecated in favor of KSEmptyVisitor(enableNewFeatures = true) which supports backing fields.\n" +
+            "In an upcoming KSP version, KSVisitorNext will be deprecated and implementations should move back to KSVisitor.\n" +
+            "This is done to preserve binary compatibility and to avoid breaking changes for users\n" +
+            "while giving library / processor authors time to support the new features.",
+        replaceWith = ReplaceWith(
+            expression = "KSEmptyVisitor(enableNewFeatures = true)",
+        ),
+    )
     constructor() : this(enableNewFeatures = false)
 
     abstract fun defaultHandler(node: KSNode, data: D): R
@@ -100,6 +109,17 @@ abstract class KSEmptyVisitor<D, R>(val enableNewFeatures: Boolean) : KSVisitorN
             )
         }
         return defaultHandler(backingField, data)
+    }
+
+    override fun visitContextParameter(contextParameter: KSContextParameter, data: D): R {
+        if (!enableNewFeatures) {
+            throw InternalKSPException(
+                "Unexpected call to visitContextParameter in ${javaClass.simpleName} with enabledNewFeatures = false",
+                contextParameter.location,
+                javaClass
+            )
+        }
+        return defaultHandler(contextParameter, data)
     }
 
     override fun visitClassifierReference(reference: KSClassifierReference, data: D): R {

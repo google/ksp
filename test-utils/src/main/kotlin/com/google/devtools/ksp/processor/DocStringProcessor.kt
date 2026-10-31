@@ -19,6 +19,7 @@ package com.google.devtools.ksp.processor
 
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSBackingField
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
@@ -35,8 +36,18 @@ class DocStringProcessor(override val enableNewFeatures: Boolean) : AbstractTest
         override fun defaultHandler(node: KSNode, data: MutableCollection<String>) = Unit
 
         override fun visitDeclaration(declaration: KSDeclaration, data: MutableCollection<String>) {
-            data.add("${declaration.simpleName.asString()}: ${declaration.docString?.lines()?.joinToString("\\n")}")
+            data.add("${declaration.simpleName.asString()}: ${declaration.renderDocString()}")
         }
+
+        override fun visitBackingField(backingField: KSBackingField, data: MutableCollection<String>) {
+            // Override this method to also render parent property's name
+            data.add(
+                "${backingField.property.simpleName.asString()}.${backingField.simpleName.asString()}: " +
+                    "${backingField.renderDocString()}"
+            )
+        }
+
+        private fun KSDeclaration.renderDocString(): String? = this.docString?.lines()?.joinToString("\\n")
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {

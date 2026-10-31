@@ -21,6 +21,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSBackingField
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
@@ -146,6 +147,13 @@ fun KSDeclaration.isLocal(): Boolean {
  * @param predicate A lambda for filtering interested symbols for performance purpose. Default
  *   checks all.
  */
+@Deprecated(
+    message = "KSNode.validate is deprecated in favor of KSNode.validate(predicate, enableNewFeatures).\n" +
+        "Please specify enableNewFeatures to indicate whether new language features (such as backing fields and context parameters) should be validated.",
+    replaceWith = ReplaceWith(
+        expression = "validate(predicate, enableNewFeatures = false)",
+    ),
+)
 fun KSNode.validate(
     predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true },
 ): Boolean {
@@ -189,6 +197,7 @@ fun KSDeclaration.getVisibility(): Visibility {
             } ?: Visibility.PUBLIC
         }
 
+        this.isKotlinBackingField() -> Visibility.PRIVATE
         this.isLocal() -> Visibility.LOCAL
         this.modifiers.contains(Modifier.PRIVATE) -> Visibility.PRIVATE
         this.modifiers.contains(Modifier.PROTECTED) || this.modifiers.contains(Modifier.OVERRIDE) ->
@@ -206,6 +215,11 @@ fun KSDeclaration.getVisibility(): Visibility {
             else Visibility.JAVA_PACKAGE
     }
 }
+
+internal fun KSDeclaration.isKotlinBackingField(): Boolean =
+    this is KSBackingField && (
+        origin == Origin.KOTLIN || origin == Origin.KOTLIN_LIB
+        )
 
 /**
  * get all super types for a class declaration Calling [getAllSuperTypes] requires type resolution

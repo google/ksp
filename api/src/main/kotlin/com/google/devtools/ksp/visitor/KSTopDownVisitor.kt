@@ -29,6 +29,15 @@ import com.google.devtools.ksp.symbol.*
 abstract class KSTopDownVisitor<D, R>(enableNewFeatures: Boolean) : KSDefaultVisitor<D, R>(enableNewFeatures) {
 
     // For binary compatibility
+    @Deprecated(
+        message = "KSTopDownVisitor is deprecated in favor of KSTopDownVisitor(enableNewFeatures = true) which supports backing fields.\n" +
+            "In an upcoming KSP version, KSVisitorNext will be deprecated and implementations should move back to KSVisitor.\n" +
+            "This is done to preserve binary compatibility and to avoid breaking changes for users\n" +
+            "while giving library / processor authors time to support the new features.",
+        replaceWith = ReplaceWith(
+            expression = "KSTopDownVisitor(enableNewFeatures = true)",
+        ),
+    )
     constructor() : this(enableNewFeatures = false)
 
     private fun Sequence<KSNode>.accept(data: D) {
@@ -47,6 +56,7 @@ abstract class KSTopDownVisitor<D, R>(enableNewFeatures: Boolean) : KSDefaultVis
         property.getter?.accept(data)
         property.setter?.accept(data)
         if (enableNewFeatures) {
+            property.contextParameters.accept(data)
             property.backingField?.accept(data)
         }
         return super.visitPropertyDeclaration(property, data)
@@ -82,6 +92,9 @@ abstract class KSTopDownVisitor<D, R>(enableNewFeatures: Boolean) : KSDefaultVis
         function.extensionReceiver?.accept(data)
         function.parameters.accept(data)
         function.returnType?.accept(data)
+        if (enableNewFeatures) {
+            function.contextParameters.accept(data)
+        }
         return super.visitFunctionDeclaration(function, data)
     }
 
@@ -117,6 +130,18 @@ abstract class KSTopDownVisitor<D, R>(enableNewFeatures: Boolean) : KSDefaultVis
         }
         backingField.type.accept(data)
         return super.visitBackingField(backingField, data)
+    }
+
+    override fun visitContextParameter(contextParameter: KSContextParameter, data: D): R {
+        if (!enableNewFeatures) {
+            throw InternalKSPException(
+                "Unexpected call to visitContextParameter in ${javaClass.simpleName} with enabledNewFeatures = false",
+                contextParameter.location,
+                javaClass
+            )
+        }
+        contextParameter.type.accept(data)
+        return super.visitContextParameter(contextParameter, data)
     }
 
     override fun visitReferenceElement(element: KSReferenceElement, data: D): R {

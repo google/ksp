@@ -9,6 +9,15 @@ open class KSValidateVisitor(
 ) : KSDefaultVisitor<KSNode?, Boolean>(enableNewFeatures) {
 
     // For binary compatibility
+    @Deprecated(
+        message = "KSValidateVisitor is deprecated in favor of KSValidateVisitor(predicate, enableNewFeatures = true) which supports backing fields.\n" +
+            "In an upcoming KSP version, KSVisitorNext will be deprecated and implementations should move back to KSVisitor.\n" +
+            "This is done to preserve binary compatibility and to avoid breaking changes for users\n" +
+            "while giving library / processor authors time to support the new features.",
+        replaceWith = ReplaceWith(
+            expression = "KSValidateVisitor(predicate, enableNewFeatures = true)",
+        ),
+    )
     constructor(predicate: (KSNode?, KSNode) -> Boolean) : this(predicate, enableNewFeatures = false)
 
     private fun validateType(type: KSType): Boolean {
@@ -85,7 +94,13 @@ open class KSValidateVisitor(
         ) {
             return false
         }
-        if (!function.parameters.all { it.accept(this, function) }) {
+        if (
+            !function.parameters.all { it.accept(this, function) } ||
+            // N.B.: Short-circuit AND with enableNewFeatures to only evaluate contextParameters
+            // if the feature toggle is enabled.
+            (enableNewFeatures &&
+                !function.contextParameters.all { it.accept(this, function) })
+        ) {
             return false
         }
         if (!this.visitDeclaration(function, data)) {
@@ -116,6 +131,18 @@ open class KSValidateVisitor(
             return false
         }
         return this.visitDeclaration(backingField, data)
+    }
+
+    override fun visitContextParameter(contextParameter: KSContextParameter, data: KSNode?): Boolean {
+        if (!enableNewFeatures) {
+            throw InternalKSPException(
+                "Unexpected call to visitContextParameter in ${javaClass.simpleName} with enabledNewFeatures = false",
+                contextParameter.location,
+                javaClass
+            )
+        }
+        // N.B.: Mirrors visitValueParameter
+        return contextParameter.type.accept(this, data)
     }
 
     override fun visitValueArgument(valueArgument: KSValueArgument, data: KSNode?): Boolean {

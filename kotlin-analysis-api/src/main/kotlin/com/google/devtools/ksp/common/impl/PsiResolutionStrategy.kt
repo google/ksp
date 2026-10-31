@@ -24,6 +24,7 @@ import com.google.devtools.ksp.impl.FileCache
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFunctionDeclarationImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.impl.symbol.kotlin.getFqn
@@ -33,10 +34,10 @@ import com.google.devtools.ksp.impl.symbol.kotlin.psi
 import com.google.devtools.ksp.impl.symbol.kotlin.setter
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSAnnotated
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSAnnotationUseSiteTarget
+import com.google.devtools.ksp.impl.symbol.kotlin.toKSBackingField
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSClassDeclaration
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSFile
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSFunctionDeclaration
-import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSPropertyDeclaration
 import com.google.devtools.ksp.impl.symbol.kotlin.toKtClassSymbol
 import com.google.devtools.ksp.impl.symbol.kotlin.toLocation
@@ -81,7 +82,6 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.psiUtil.parameterIndex
 import org.jetbrains.kotlin.utils.addToStdlib.flatGroupBy
-import kotlin.collections.mapValues
 
 /**
  * An [AnnotationResolutionStrategy] that uses a combination of Psi and Kotlin's Analysis API to resolve
@@ -421,7 +421,20 @@ class PsiResolutionStrategy(
      *
      * This is used as a fallback when [fastResolveClassId] cannot determine the class ID.
      */
-    private fun slowResolveClassId(annotationEntry: KtAnnotationEntry): ClassId? = annotationEntry.classId
+    private fun slowResolveClassId(annotationEntry: KtAnnotationEntry): ClassId? =
+        analyze {
+            // N.B. do not use typeReference.type to get the ClassId because that can fail in certain edge cases, e.g.
+            //  https://github.com/google/ksp/issues/2913
+            val declaration = annotationEntry.resolveToCall()
+                ?.successfulCallOrNull<KaAnnotationCall>()
+                ?.symbol
+                ?.containingDeclaration
+            when (declaration) {
+                is KaClassSymbol -> declaration.classId
+                is KaTypeAliasSymbol -> declaration.expandedType.fullyExpandedType.symbol?.classId
+                else -> null
+            }
+        }
 
     /**
      * Resolves this [PsiElement] to the set of [KSAnnotated] symbols targeted by [annotation].
@@ -432,7 +445,7 @@ class PsiResolutionStrategy(
      */
     private fun PsiElement.resolveToKSAnnotated(
         annotation: KtAnnotationEntry? = null,
-        enableNewFeatures: Boolean = false,
+        enableNewFeatures: Boolean,
     ): Collection<KSAnnotated> =
         when (val element = this@resolveToKSAnnotated) {
             // Kotlin sources
@@ -496,6 +509,9 @@ class PsiResolutionStrategy(
                 ksSym,
                 annotationEntry
             )
+
+            // N.B.: Mirror AA implementation: Return the owning property of the backing field if the feature is disabled.
+            ksSym is KSBackingField && !enableNewFeatures -> listOf(ksSym.property)
 
             else -> ksSym.findTargetedSymbol(annotationEntry.ksUseSiteTarget, enableNewFeatures)
         }
@@ -579,11 +595,12 @@ class PsiResolutionStrategy(
                 toLocation(),
                 javaClass
             )
-        throw InternalKSPException(
-            "Unexpected unreachable function. PsiField.resolveToField is not implemented yet",
-            toLocation(),
-            javaClass
-        )
+        return sym.toKSBackingField(property)
+            ?: throw InternalKSPException(
+                "Unexpected null KSBackingField",
+                toLocation(),
+                javaClass
+            )
     }
 
     /**
@@ -912,20 +929,6 @@ class PsiResolutionStrategy(
                         parent.javaClass
                     )
             }
-        }
-
-    /**
-     * The fully expanded [ClassId] of the annotation entry.
-     * This member is expensive to compute.
-     */
-    private val KtAnnotationEntry.classId: ClassId?
-        get() = analyze {
-            // N.B. do not use typeReference.type to get the ClassId because that can fail in certain edge cases, e.g.
-            //  https://github.com/google/ksp/issues/2913
-            this@classId.resolveToCall()
-                ?.successfulCallOrNull<KaAnnotationCall>()
-                ?.symbol
-                ?.containingClassId
         }
 
     /**

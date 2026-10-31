@@ -34,6 +34,6 @@ class DeferredSymbolsProcessor(override val enableNewFeatures: Boolean): Abstrac
 
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
         env = environment
-        return this
+        return super.create(environment)
     }
 }

@@ -19,15 +19,15 @@
 // PROCESSOR INPUT: Anno
 // EXPECTED:
 // Anno: MyClass.myImmProp
-// Anno: MyClass.myImmProp.ctxParam1
+// EXPECT NEXT: Anno: MyClass.myImmProp.ctxParam1
 // Anno: MyClass.myMutProp
-// Anno: MyClass.myMutProp.ctxParam1
-// Anno: MyClass.myMutProp.ctxParam2
-// Anno: MyClass.onlyOneCtxParamAnnotated.ctxParam2
-// Anno: bar.ctxParam1
-// Anno: bar.ctxParam2
+// EXPECT NEXT: Anno: MyClass.myMutProp.ctxParam1
+// EXPECT NEXT: Anno: MyClass.myMutProp.ctxParam2
+// EXPECT NEXT: Anno: MyClass.onlyOneCtxParamAnnotated.ctxParam2
+// EXPECT NEXT: Anno: bar.ctxParam1
+// EXPECT NEXT: Anno: bar.ctxParam2
 // Anno: bar.str
-// Anno: foo.ctxParam1
+// EXPECT NEXT: Anno: foo.ctxParam1
 // END
 
 // FILE: Main.kt

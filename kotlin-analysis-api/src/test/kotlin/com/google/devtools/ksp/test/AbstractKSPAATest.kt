@@ -24,20 +24,22 @@ import com.google.devtools.ksp.processing.KSPJsConfig
 import com.google.devtools.ksp.processing.KSPJvmConfig
 import com.google.devtools.ksp.processing.KSPNativeConfig
 import com.google.devtools.ksp.processor.AbstractTestProcessor
+import org.jetbrains.kotlin.cli.common.ExitCode
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import org.jetbrains.kotlin.cli.jvm.config.javaSourceRoots
 import org.jetbrains.kotlin.cli.jvm.config.jvmModularRoots
+import org.jetbrains.kotlin.cli.metadata.KotlinMetadataCompiler
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.platform.JsPlatform
+import org.jetbrains.kotlin.platform.TargetPlatform
 import org.jetbrains.kotlin.platform.konan.NativePlatform
 import org.jetbrains.kotlin.test.TargetBackend
 import org.jetbrains.kotlin.test.compileJavaFiles
 import org.jetbrains.kotlin.test.directives.ConfigurationDirectives
 import org.jetbrains.kotlin.test.directives.NativeEnvironmentConfigurationDirectives
 import org.jetbrains.kotlin.test.services.targetPlatformProvider
-import org.jetbrains.kotlin.test.compileJavaFiles
 import org.jetbrains.kotlin.test.kotlinPathsForDistDirectoryForTests
 import org.jetbrains.kotlin.test.model.FrontendKinds
 import org.jetbrains.kotlin.test.model.TestModule
@@ -111,9 +113,13 @@ abstract class AbstractKSPAATest(
         moduleName: String,
         jvmTarget: JvmTarget?
     ) {
+        val sourcesPathAsFile = File(sourcesPath)
+        if (!sourcesPathAsFile.containsKotlinFile()) {
+            return
+        }
         val classpath = mutableListOf<String>()
         classpath.addAll(dependencies.map { it.canonicalPath })
-        if (File(sourcesPath).isDirectory) {
+        if (sourcesPathAsFile.isDirectory) {
             classpath += sourcesPath
         }
         classpath += PathUtil.kotlinPathsForDistDirectoryForTests.stdlibPath.path
@@ -123,7 +129,6 @@ abstract class AbstractKSPAATest(
             javaSourcePath,
             "-d", outDir.absolutePath,
             "-no-stdlib",
-            "-Xannotation-target-all",
             "-module-name", moduleName,
             "-classpath", classpath.joinToString(File.pathSeparator)
         )
@@ -134,37 +139,99 @@ abstract class AbstractKSPAATest(
     }
 
     private fun runJvmCompiler(args: List<String>) {
-        val outStream = ByteArrayOutputStream()
-        val compilerClass = URLClassLoader(arrayOf(), javaClass.classLoader).loadClass(K2JVMCompiler::class.java.name)
-        val compiler = compilerClass.getDeclaredConstructor().newInstance()
-        val execMethod = compilerClass.getMethod("exec", PrintStream::class.java, Array<String>::class.java)
-        execMethod.invoke(compiler, PrintStream(outStream), args.toTypedArray())
+        runCompiler(K2JVMCompiler::class.java.name, args)
     }
 
-    override fun compileModule(module: TestModule, testServices: TestServices) {
+    private fun runMetadataCompiler(args: List<String>) {
+        runCompiler(KotlinMetadataCompiler::class.java.name, args)
+    }
+
+    private fun runCompiler(compilerClassName: String, args: List<String>) {
+        val outStream = ByteArrayOutputStream()
+        val compilerClass = URLClassLoader(arrayOf(), javaClass.classLoader).loadClass(compilerClassName)
+        val compiler = compilerClass.getDeclaredConstructor().newInstance()
+        val execMethod = compilerClass.getMethod("exec", PrintStream::class.java, Array<String>::class.java)
+        val exitCode = execMethod.invoke(compiler, PrintStream(outStream), args.toTypedArray()) as ExitCode
+        if (exitCode != ExitCode.OK) {
+            throw IllegalStateException("Compilation failed with exit code $exitCode:\n$outStream")
+        }
+    }
+
+    /**
+     * Precompile dependent modules into metadata KLIBs for Native/JS targets,
+     * so downstream test modules can resolve declarations from KLIB dependencies.
+     */
+    private fun compileMetadata(
+        dependencies: List<File>,
+        sourcesPath: String,
+        outDir: File,
+        moduleName: String
+    ) {
+        val classpath = mutableListOf<String>()
+        classpath.addAll(dependencies.map { it.canonicalPath })
+        classpath += PathUtil.kotlinPathsForDistDirectoryForTests.stdlibPath.path
+
+        val ktFiles = File(sourcesPath).walk().filter { it.extension == "kt" }.map { it.absolutePath }.toList()
+        val args = mutableListOf(
+            "-d", outDir.absolutePath,
+            "-module-name", moduleName,
+            "-classpath", classpath.joinToString(File.pathSeparator),
+        ) + ktFiles
+        runMetadataCompiler(args)
+    }
+
+    override fun compileLibraryModule(module: TestModule, testServices: TestServices) {
         module.writeKtFiles()
         val javaFiles = module.writeJavaFiles()
         val dependencies = module.allDependencies.map { outDirForModule(it.dependencyModule.name) }
-        val jvmTarget = testServices.compilerConfigurationProvider
-            .getCompilerConfiguration(module, CompilationStage.FIRST)
-            .get(JVMConfigurationKeys.JVM_TARGET)
-        compileKotlin(
-            dependencies,
-            module.kotlinSrc.path,
-            module.javaDir.path,
-            module.outDir,
-            module.findCompilerModuleName(),
-            jvmTarget
-        )
+        val targetBackend = module.directives[ConfigurationDirectives.TARGET_BACKEND].firstOrNull()
+        val fixedNativeTarget =
+            module.directives[NativeEnvironmentConfigurationDirectives.WITH_FIXED_TARGET].firstOrNull()
+        val targetPlatform = testServices.targetPlatformProvider.getTargetPlatform(module)
+
+        val isNative = isNativeCompilation(targetBackend, targetPlatform, fixedNativeTarget)
+        val isJs = isJsCompilation(targetBackend, targetPlatform)
+
+        // Non-JVM targets (Native, JS, Wasm) consume dependencies as KLIBs rather than JVM bytecode.
+        when {
+            isNative || isJs -> compileMetadata(
+                dependencies,
+                module.kotlinSrc.path,
+                module.outDir,
+                module.findCompilerModuleName()
+            )
+
+            else -> {
+                val jvmTarget = testServices.compilerConfigurationProvider
+                    .getCompilerConfiguration(module, CompilationStage.FIRST)[JVMConfigurationKeys.JVM_TARGET]
+                compileKotlin(
+                    dependencies,
+                    module.kotlinSrc.path,
+                    module.javaDir.path,
+                    module.outDir,
+                    module.findCompilerModuleName(),
+                    jvmTarget
+                )
+                compileJavaFilesInModule(module, dependencies, javaFiles)
+            }
+        }
+    }
+
+    private fun compileJavaFilesInModule(
+        module: TestModule,
+        dependencies: List<File>,
+        javaFiles: List<File>
+    ) {
+        if (javaFiles.isEmpty()) {
+            return
+        }
         val classpath = (dependencies + KtTestUtil.getAnnotationsJar() + module.outDir)
             .joinToString(File.pathSeparator) { it.absolutePath }
         val options = listOf(
             "-classpath", classpath,
             "-d", module.outDir.path
         )
-        if (javaFiles.isNotEmpty()) {
-            compileJavaFiles(javaFiles, options)
-        }
+        compileJavaFiles(javaFiles, options)
     }
 
     override fun runTest(
@@ -191,16 +258,8 @@ abstract class AbstractKSPAATest(
             mainModule.directives[NativeEnvironmentConfigurationDirectives.WITH_FIXED_TARGET].firstOrNull()
         val targetPlatform = testServices.targetPlatformProvider.getTargetPlatform(mainModule)
 
-        val isNative = targetBackend == TargetBackend.NATIVE ||
-            targetPlatform.componentPlatforms.any { it is NativePlatform } ||
-            fixedNativeTarget != null
-
-        val isJs = targetBackend?.isTransitivelyCompatibleWith(TargetBackend.JS_IR) == true ||
-            targetBackend?.isTransitivelyCompatibleWith(TargetBackend.WASM) == true ||
-            targetPlatform.componentPlatforms.any { it is JsPlatform }
-
         val kspConfig: KSPConfig = when {
-            isNative -> {
+            isNativeCompilation(targetBackend, targetPlatform, fixedNativeTarget) -> {
                 KSPNativeConfig.Builder().apply {
                     target = fixedNativeTarget ?: "linux_x64"
                     moduleName = mainModule.findCompilerModuleName()
@@ -222,7 +281,7 @@ abstract class AbstractKSPAATest(
                 }.build()
             }
 
-            isJs -> {
+            isJsCompilation(targetBackend, targetPlatform) -> {
                 KSPJsConfig.Builder().apply {
                     backend =
                         if (targetBackend?.isTransitivelyCompatibleWith(TargetBackend.WASM) == true) "WASM" else "JS"
@@ -276,4 +335,31 @@ abstract class AbstractKSPAATest(
         }
         return testProcessor.toResult()
     }
+
+    /**
+     * Returns `true` if `this` is a directory and there is at least one Kotlin file in it
+     */
+    private fun File.containsKotlinFile(): Boolean =
+        this.isDirectory && this.walkTopDown().any { it.isFile && it.extension == "kt" }
+
+    /**
+     * Returns `true` if the current compilation targets the native backend.
+     */
+    private fun isNativeCompilation(
+        targetBackend: TargetBackend?,
+        targetPlatform: TargetPlatform,
+        fixedNativeTarget: String?
+    ): Boolean = targetBackend == TargetBackend.NATIVE ||
+        targetPlatform.componentPlatforms.any { it is NativePlatform } ||
+        fixedNativeTarget != null
+
+    /**
+     * Returns `true` if the current compilation targets the JS backend.
+     */
+    private fun isJsCompilation(
+        targetBackend: TargetBackend?,
+        targetPlatform: TargetPlatform
+    ): Boolean = targetBackend?.isTransitivelyCompatibleWith(TargetBackend.JS_IR) == true ||
+        targetBackend?.isTransitivelyCompatibleWith(TargetBackend.WASM) == true ||
+        targetPlatform.componentPlatforms.any { it is JsPlatform }
 }

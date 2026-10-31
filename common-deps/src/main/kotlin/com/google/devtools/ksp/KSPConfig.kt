@@ -50,7 +50,6 @@ abstract class KSPConfig(
     val apiVersion: String,
 
     val allWarningsAsErrors: Boolean,
-    val mapAnnotationArgumentsInJava: Boolean,
     val experimentalPsiResolution: Boolean,
 ) : Serializable {
     abstract class Builder {
@@ -169,7 +168,6 @@ class KSPJvmConfig(
     apiVersion,
 
     allWarningsAsErrors,
-    mapAnnotationArgumentsInJava,
     experimentalPsiResolution,
 ) {
     @KSPArgParserGen(name = "kspJvmArgParser")
@@ -280,7 +278,6 @@ class KSPNativeConfig(
     apiVersion,
 
     allWarningsAsErrors,
-    mapAnnotationArgumentsInJava,
     experimentalPsiResolution,
 ) {
     @KSPArgParserGen(name = "kspNativeArgParser")
@@ -382,7 +379,6 @@ class KSPJsConfig(
     apiVersion,
 
     allWarningsAsErrors,
-    mapAnnotationArgumentsInJava,
     experimentalPsiResolution,
 ) {
     @KSPArgParserGen(name = "kspJsArgParser")
@@ -489,7 +485,6 @@ class KSPCommonConfig(
     apiVersion,
 
     allWarningsAsErrors,
-    mapAnnotationArgumentsInJava,
     experimentalPsiResolution,
 ) {
     @KSPArgParserGen(name = "kspCommonArgParser")

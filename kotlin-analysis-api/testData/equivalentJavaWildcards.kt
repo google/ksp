@@ -36,28 +36,42 @@
 // p1.getter() : A<in X, out X> -> A<X, X>
 // - CONTRAVARIANT X : X -> X
 // - COVARIANT X : X -> X
+// EXPECT NEXT: p1.field : A<in X, out X> -> A<in X, out X>
+// EXPECT NEXT: - CONTRAVARIANT X : X -> X
+// EXPECT NEXT: - COVARIANT X : X -> X
 // p2 : A<Any, Y> -> A<Any, Y>
 // - INVARIANT Any : Any -> Any
 // - INVARIANT Y : Y -> Y
 // p2.getter() : A<Any, Y> -> A<Any, Y>
 // - INVARIANT Any : Any -> Any
 // - INVARIANT Y : Y -> Y
+// EXPECT NEXT: p2.field : A<Any, Y> -> A<Any, Y>
+// EXPECT NEXT: - INVARIANT Any : Any -> Any
+// EXPECT NEXT: - INVARIANT Y : Y -> Y
 // p3 : A<*, *> -> A<Any?, Any?>
 // p3.getter() : A<*, *> -> A<Any?, Any?>
+// EXPECT NEXT: p3.field : A<*, *> -> A<out Any?, out Any?>
 // p4 : B<X> -> B<X>
 // - INVARIANT X : X -> X
 // p4.getter() : B<X> -> B<X>
 // - INVARIANT X : X -> X
+// EXPECT NEXT: p4.field : B<X> -> B<X>
+// EXPECT NEXT: - INVARIANT X : X -> X
 // p5 : B<in X> -> B<in X>
 // - CONTRAVARIANT X : X -> X
 // p5.getter() : B<in X> -> B<in X>
 // - CONTRAVARIANT X : X -> X
+// EXPECT NEXT: p5.field : B<in X> -> B<in X>
+// EXPECT NEXT: - CONTRAVARIANT X : X -> X
 // p6 : B<out X> -> B<out X>
 // - COVARIANT X : X -> X
 // p6.getter() : B<out X> -> B<out X>
 // - COVARIANT X : X -> X
+// EXPECT NEXT: p6.field : B<out X> -> B<out X>
+// EXPECT NEXT: - COVARIANT X : X -> X
 // p7 : B<*> -> B<out Any?>
 // p7.getter() : B<*> -> B<out Any?>
+// EXPECT NEXT: p7.field : B<*> -> B<out Any?>
 // p8 : B<A<X, out Y>> -> B<A<X, Y>>
 // - INVARIANT A<INVARIANT X, COVARIANT Y> : A<X, out Y> -> A<X, Y>
 // - - INVARIANT X : X -> X
@@ -66,6 +80,10 @@
 // - INVARIANT A<INVARIANT X, COVARIANT Y> : A<X, out Y> -> A<X, Y>
 // - - INVARIANT X : X -> X
 // - - COVARIANT Y : Y -> Y
+// EXPECT NEXT: p8.field : B<A<X, out Y>> -> B<A<X, Y>>
+// EXPECT NEXT: - INVARIANT A<X, out Y> : A<X, out Y> -> A<X, Y>
+// EXPECT NEXT: - - INVARIANT X : X -> X
+// EXPECT NEXT: - - COVARIANT Y : Y -> Y
 // v1 : A<X, X> -> A<in X, out X>
 // - INVARIANT X : X -> X
 // - INVARIANT X : X -> X

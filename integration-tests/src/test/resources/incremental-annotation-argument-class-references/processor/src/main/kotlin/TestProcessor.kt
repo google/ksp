@@ -26,11 +26,22 @@ import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.Origin
 
 class TestProcessor(val environment: SymbolProcessorEnvironment) : SymbolProcessor {
+    init {
+        // Identifies the classloader this processor was loaded from. Modules that share a cached
+        // processor classloader report the same id; modules with their own loader report different
+        // ids. Deliberately uses a prefix distinct from [log]'s so that tests asserting on
+        // "[TestProcessor]" lines are unaffected.
+        println("[KSPLoaderId] ${System.identityHashCode(TestProcessor::class.java.classLoader)}")
+    }
+
     private val createdFiles = mutableSetOf<String>()
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        resolver.getSymbolsWithAnnotation("ExampleReference")
+        sequenceOf("ExampleReference", "com.example.upstream.ExampleReferenceJava")
+            .flatMap { resolver.getSymbolsWithAnnotation(it) }
+            .filter { it.origin == Origin.KOTLIN }
             .filterIsInstance<KSClassDeclaration>().forEach { sym ->
                 // Follow dependencies to let KSP capture dependency graph
                 followSym(sym)
