@@ -32,9 +32,9 @@ class AGPVersionBuiltInKotlinIT(
                 // Latest
                 arrayOf(null, null, null),
 
-                arrayOf("9.0.0-alpha14", "2.3.0-RC", "9.1.0"),
+                arrayOf("9.0.0-alpha14", "2.3.20", "9.1.0"),
                 arrayOf("9.0.0-alpha14", "2.4.0", "9.1.0"),
-                arrayOf("9.0.0-beta01", "2.3.0-RC", "9.1.0"),
+                arrayOf("9.0.0-beta01", "2.3.20", "9.1.0"),
                 arrayOf("9.0.0-beta01", "2.4.0", "9.1.0"),
             ).flatMap {
                 listOf(it.plus("true"), it.plus("false"))
