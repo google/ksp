@@ -35,9 +35,9 @@ value class EnumEntry(val clazz: KSClassDeclaration) : KSAnnotationValue
 @JvmInline
 value class AnnotationClass(val anno: KSAnnotation) : KSAnnotationValue
 
-/** An array or collection whose elements are recursively represented as [KSAnnotationValue]s. */
+/** An array or collection of recursively converted values, preserving null elements. */
 @JvmInline
-value class ArrayValue(val values: Array<KSAnnotationValue>) : KSAnnotationValue
+value class ArrayValue(val values: Array<KSAnnotationValue?>) : KSAnnotationValue
 
-/** A value that could not be converted, with a diagnostic [message] and the original [v]. */
-class ErrorValue(val message: String, val v: Any?) : KSAnnotationValue
+/** A value that could not be converted, with a diagnostic [message] and the original [value]. */
+class ErrorValue(val message: String, val value: Any?) : KSAnnotationValue

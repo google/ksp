@@ -20,40 +20,40 @@ package com.google.devtools.ksp.symbol
 sealed interface KSPrimitiveType
 
 @JvmInline
-value class KSBool(val v: Boolean) : KSPrimitiveType
+value class KSBool(val value: Boolean) : KSPrimitiveType
 
 @JvmInline
-value class KSByte(val v: Byte) : KSPrimitiveType
+value class KSByte(val value: Byte) : KSPrimitiveType
 
 @JvmInline
-value class KSShort(val v: Short) : KSPrimitiveType
+value class KSShort(val value: Short) : KSPrimitiveType
 
 @JvmInline
-value class KSInt(val v: Int) : KSPrimitiveType
+value class KSInt(val value: Int) : KSPrimitiveType
 
 @JvmInline
-value class KSLong(val v: Long) : KSPrimitiveType
+value class KSLong(val value: Long) : KSPrimitiveType
 
 @JvmInline
-value class KSFloat(val v: Float) : KSPrimitiveType
+value class KSFloat(val value: Float) : KSPrimitiveType
 
 @JvmInline
-value class KSDouble(val v: Double) : KSPrimitiveType
+value class KSDouble(val value: Double) : KSPrimitiveType
 
 @JvmInline
-value class KSChar(val v: Char) : KSPrimitiveType
+value class KSChar(val value: Char) : KSPrimitiveType
 
 @JvmInline
-value class KSString(val v: String) : KSPrimitiveType
+value class KSString(val value: String) : KSPrimitiveType
 
 @JvmInline
-value class KSUByte(val v: UByte) : KSPrimitiveType
+value class KSUByte(val value: UByte) : KSPrimitiveType
 
 @JvmInline
-value class KSUShort(val v: UShort) : KSPrimitiveType
+value class KSUShort(val value: UShort) : KSPrimitiveType
 
 @JvmInline
-value class KSUInt(val v: UInt) : KSPrimitiveType
+value class KSUInt(val value: UInt) : KSPrimitiveType
 
 @JvmInline
-value class KSULong(val v: ULong) : KSPrimitiveType
+value class KSULong(val value: ULong) : KSPrimitiveType

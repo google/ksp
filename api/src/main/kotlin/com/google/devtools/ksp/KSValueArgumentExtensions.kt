@@ -42,20 +42,22 @@ import com.google.devtools.ksp.symbol.Primitive
 import com.google.devtools.ksp.symbol.ReflectionClassReference
 
 /**
- * Returns this annotation argument as a [KSAnnotationValue]. Prefer this over [KSValueArgument.value]
- * when the value's kind matters; the `value` property remains available for existing callers.
+ * Returns this annotation argument as a [KSAnnotationValue], or null if its value is null.
+ * Prefer this over [KSValueArgument.value] when the value's kind matters.
  */
-fun KSValueArgument.typedValue(): KSAnnotationValue = value.toKSAnnotationValue()
+@Suppress("DEPRECATION")
+fun KSValueArgument.typedValue(): KSAnnotationValue? = value.toKSAnnotationValue()
 
 /**
  * Wraps Boolean, numeric, character, and string values in [Primitive] with the matching
  * [com.google.devtools.ksp.symbol.KSPrimitiveType]. Class references become [ReflectionClassReference],
  * enum entries become [EnumEntry], and nested annotations become [AnnotationClass]. Arrays and collections
- * become [ArrayValue], recursively converting their elements. Any other value, including null, becomes
- * [ErrorValue].
+ * become [ArrayValue], recursively converting their elements. Null is preserved, including within
+ * arrays and collections. Any other value becomes [ErrorValue].
  */
-private fun Any?.toKSAnnotationValue(): KSAnnotationValue =
+private fun Any?.toKSAnnotationValue(): KSAnnotationValue? =
     when (this) {
+        null -> null
         is Boolean -> Primitive(KSBool(this))
         is Byte -> Primitive(KSByte(this))
         is Short -> Primitive(KSShort(this))
@@ -74,5 +76,5 @@ private fun Any?.toKSAnnotationValue(): KSAnnotationValue =
         is KSAnnotation -> AnnotationClass(this)
         is Array<*> -> ArrayValue(map { it.toKSAnnotationValue() }.toTypedArray())
         is Collection<*> -> ArrayValue(map { it.toKSAnnotationValue() }.toTypedArray())
-        else -> ErrorValue("Unexpected annotation value type: ${this?.javaClass?.name ?: "null"}", this)
+        else -> ErrorValue("Unexpected annotation value type: ${this.javaClass.name}", this)
     }
