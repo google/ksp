@@ -796,10 +796,13 @@ class ResolverAAImpl(
 
     override fun overrides(overrider: KSDeclaration, overridee: KSDeclaration): Boolean {
         val overriderSymbol = when (overrider) {
-            is KSFunctionDeclarationImpl -> if (overrider.ktFunctionSymbol is KaPropertyAccessorSymbol) {
-                (overrider.parent as KSPropertyDeclarationImpl).ktPropertySymbol
-            } else {
-                overrider.ktFunctionSymbol
+            is KSFunctionDeclarationImpl -> {
+                val symbol = overrider.ktFunctionSymbol
+                if (symbol is KaPropertyAccessorSymbol) {
+                    analyze { symbol.containingSymbol } as? KaPropertySymbol ?: return false
+                } else {
+                    symbol
+                }
             }
 
             is KSPropertyDeclarationImpl -> overrider.ktPropertySymbol

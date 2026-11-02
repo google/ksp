@@ -781,11 +781,11 @@ abstract class KSPUnitTestSuite(
         runTest("$AA_PATH/parameterTypes.kt")
     }
 
-    @Bug("https://github.com/google/ksp/issues/2498", BugState.OPEN)
+    @Bug("https://github.com/google/ksp/issues/2498", BugState.FIXED)
     @TestMetadata("parentOfJavaMethodOverridingKotlinProperty.kt")
     @Test
     fun testParentOfJavaMethodOverridingKotlinProperty() {
-        runFailingTest("$AA_PATH/parentOfJavaMethodOverridingKotlinProperty.kt")
+        runTest("$AA_PATH/parentOfJavaMethodOverridingKotlinProperty.kt")
     }
 
     @TestMetadata("parent.kt")
