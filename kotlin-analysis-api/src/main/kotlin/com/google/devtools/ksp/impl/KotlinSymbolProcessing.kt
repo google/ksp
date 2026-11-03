@@ -59,6 +59,7 @@ import com.intellij.openapi.roots.PackageIndex
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.impl.ZipHandler
 import com.intellij.openapi.vfs.impl.jar.CoreJarFileSystem
 import com.intellij.psi.PsiFileSystemItem
 import com.intellij.psi.PsiJavaFile
@@ -515,6 +516,9 @@ class KotlinSymbolProcessing(
         val projectDisposable: Disposable = Disposer.newDisposable("StandaloneAnalysisAPISession.project")
         var kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment? = null
 
+        synchronized(activeExecutionsLock) {
+            activeExecutions++
+        }
         try {
             val (project, env, modules) = createAASession(projectDisposable)
             kotlinCoreProjectEnvironment = env
@@ -592,8 +596,8 @@ class KotlinSymbolProcessing(
                 maybeRunInWriteAction {
                     project.publishGlobalSourceModuleStateModificationEvent()
                     psiManager.dropPsiCaches()
-                    KSObjectCacheManager.clear()
                 }
+                KSObjectCacheManager.clear()
             }
 
             // Run processors until either
@@ -684,11 +688,24 @@ class KotlinSymbolProcessing(
             codeGenerator.closeFiles()
         } finally {
             KSObjectCacheManager.clear()
+            ResolverAAImpl.tearDown()
+            KSPCoreEnvironment.tearDown()
             maybeRunInWriteAction {
-                (kotlinCoreProjectEnvironment?.environment?.jarFileSystem as? CoreJarFileSystem)?.clearHandlersCache()
                 Disposer.dispose(projectDisposable)
-                ResolverAAImpl.tearDown()
-                KSPCoreEnvironment.tearDown()
+            }
+            synchronized(activeExecutionsLock) {
+                if (--activeExecutions == 0) {
+                    (kotlinCoreProjectEnvironment?.environment?.jarFileSystem as? CoreJarFileSystem)
+                        ?.clearHandlersCache()
+                    // CoreJarFileSystem.myHandlers uses ConcurrentFactoryMap, which can construct
+                    // duplicate CoreJarHandler instances on concurrent lookups of an uncached JAR
+                    // and discard the loser via putIfAbsent. Because each CoreJarHandler opens a
+                    // ZipFile in ZipHandler's static cache (keyed by handler identity),
+                    // clearHandlersCache() only closes the winning handler. Also clear
+                    // ZipHandler's cache to close any orphaned ZipFile handles when the
+                    // application environment stays alive across runs.
+                    ZipHandler.clearFileAccessorCache()
+                }
             }
         }
 
@@ -745,6 +762,9 @@ class KotlinSymbolProcessing(
     }
 
     companion object {
+        private val activeExecutionsLock = Any()
+        private var activeExecutions = 0
+
         fun List<KSFile>.toKtFiles(project: Project): List<KtFile> =
             getPsiFilesFromPaths<KtFile>(project, this.toPathSet())
 
