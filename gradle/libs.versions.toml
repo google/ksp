@@ -1,7 +1,7 @@
 [versions]
 kotlin-base = "2.4.21"
 kotlinx-serialization = "1.6.3"
-agp-base = "9.4.0-alpha01"
+agp-base = "9.6.0-alpha02"
 junit = "4.13.1"
 junit5 = "5.8.2"
 junit-platform = "1.8.2"
