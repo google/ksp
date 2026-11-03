@@ -308,3 +308,19 @@ internal fun ClassId.getVirtualFile(fileManager: KotlinCliJavaFileManagerImpl): 
     analyze {
         (fileManager.findClass(this@getVirtualFile, analysisScope) as? JavaClassImpl)?.virtualFile
     }
+
+/**
+ * Returns the class file that holds this class's own members.
+ *
+ * [getVirtualFile] resolves a nested class through its outermost class file, which is the right
+ * place to look for companion members (they are compiled into the outer class) but not for the
+ * nested class's own members. Nested classes are emitted next to their outer class file
+ * (e.g. Foo.Bar -> "Foo$Bar.class"), so locate the class's own file by name.
+ */
+internal fun ClassId.getOwnClassFile(fileManager: KotlinCliJavaFileManagerImpl): VirtualFile? {
+    val resolvedFile = getVirtualFile(fileManager) ?: return null
+    if (outerClassId == null) {
+        return resolvedFile
+    }
+    return resolvedFile.parent?.findChild(relativeClassName.asString().replace('.', '$') + ".class")
+}
