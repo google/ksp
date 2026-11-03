@@ -45,9 +45,9 @@ If you want to submit a bug fix or report a bug via a test, follow this workflow
     - **No**: Feel free to open a new issue detailing your bug (since `@Bug` requires a linked GitHub issue).
 3. **Open a PR with a failing test**
     - *Note*: Reproducing issues with unit tests is the preferred way of reproducing issues. Some issues such as those related to Gradle or incremental processing may require an integration test. However, if it's an API bug, then please do spend some time to find a small unit test case.
-    - The test should be added **first** in a separate PR where it either fails or throws via `runFailingTest` or `runThrowingTest` respectively (annotated with `@Bug(..., BugState.OPEN)`).
+    - The test should be added **first** in a separate PR where it either fails or throws via `runFailingKSPTest` or `runThrowingKSPTest` respectively (annotated with `@Bug(..., BugState.OPEN)`).
 4. **Open a PR with a bug fix**
-    - In the subsequent PR containing the fix, flip the test call from `runFailingTest`/`runThrowingTest` to `runTest` and update the `BugState` value (e.g., to `BugState.FIXED`).
+    - In the subsequent PR containing the fix, flip the test call from `runFailingKSPTest`/`runThrowingKSPTest` to `runKSPTest` and update the `BugState` value (e.g., to `BugState.FIXED`).
 
 You may choose to follow any or all of the above steps as long as they are in that order.
 
@@ -96,6 +96,10 @@ Here are some [sample test processors](kotlin-analysis-api/src/test/kotlin/com/g
         * You can use `// FILE: <file name>` to create files that will be available at runtime of the test.
             * E.g. `// FILE: a.kt` will result in a file named `a.kt` at runtime.
 * Add new test to [`KSPUnitTestSuite`](kotlin-analysis-api/src/test/kotlin/com/google/devtools/ksp/test/KSPUnitTestSuite.kt) in `kotlin-analysis-api` (or declare it `abstract` in `KSPUnitTestSuite` and override in [`AAConfiguredUnitTestSuite`](kotlin-analysis-api/src/test/kotlin/com/google/devtools/ksp/test/AAConfiguredUnitTestSuite.kt) and [`PsiConfiguredUnitTestSuite`](kotlin-analysis-api/src/test/kotlin/com/google/devtools/ksp/test/PsiConfiguredUnitTestSuite.kt) if behavior differs between resolution strategies).
+    * Prefer calling the helper functions in `KSPUnitTestSuite` (passing a path relative to `kotlin-analysis-api/testData`) instead of `runTest`, `runFailingTest`, or `runThrowingTest`:
+        * `runKSPTest(path: String)` — runs a positive test.
+        * `runFailingKSPTest(path: String)` — runs a failing test.
+        * `runThrowingKSPTest(path: String, expectedThrowableType: KClass<*> = InternalKSPException::class)` — runs a throwing test.
     * Annotate the test with `@Bug` and `@BugState`.
     * The `@Bug` annotation requires a link to an open or existing GitHub issue (e.g., `@Bug("https://github.com/google/ksp/issues/<issue_number>", BugState.OPEN)`).
     * Use the `@Negative` marker annotation if applicable.
