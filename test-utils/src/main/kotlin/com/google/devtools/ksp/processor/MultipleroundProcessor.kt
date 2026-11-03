@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
@@ -8,7 +9,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.validate
 
-class MultipleroundProcessor : AbstractTestProcessor() {
+class MultipleroundProcessor(override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
     val result = mutableListOf<String>()
     override fun toResult(): List<String> {
         return result
@@ -58,7 +59,7 @@ class MultipleroundProcessor : AbstractTestProcessor() {
     override fun finish() {
         val allFiles = filesFromLastRound.map { it.fileName }.joinToString(", ")
         result.add("Finish: $allFiles")
-        assert(filesFromLastRound.all { it.validate() })
+        assert(filesFromLastRound.all { it.validate(apiFeatures = apiFeatures) })
         super.finish()
     }
 
@@ -66,6 +67,6 @@ class MultipleroundProcessor : AbstractTestProcessor() {
 
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
         env = environment
-        return this
+        return super.create(environment)
     }
 }

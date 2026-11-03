@@ -17,13 +17,14 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getConstructors
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 
-class ConstructorDeclarationsProcessor : AbstractTestProcessor() {
-    val visitor = ConstructorsVisitor()
+class ConstructorDeclarationsProcessor(override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
+    val visitor = ConstructorsVisitor(apiFeatures)
     lateinit var result: List<String>
 
     override fun toResult(): List<String> {
@@ -44,7 +45,7 @@ class ConstructorDeclarationsProcessor : AbstractTestProcessor() {
         return emptyList()
     }
 
-    class ConstructorsVisitor : KSVisitorVoid() {
+    class ConstructorsVisitor(apiFeatures: ApiFeatures) : KSVisitorVoid(apiFeatures) {
         private val declarationsByClass = LinkedHashMap<KSClassDeclaration, MutableList<String>>()
         fun classNames() = declarationsByClass.keys
         fun toResult(): List<String> {
@@ -58,18 +59,23 @@ class ConstructorDeclarationsProcessor : AbstractTestProcessor() {
                     listOf("class: " + it.key.qualifiedName!!.asString()) + it.value
                 }
         }
+
         fun KSFunctionDeclaration.toSignature(): String {
             return this.simpleName.asString() +
-                "(${this.parameters.map {
-                    buildString {
-                        append(it.type.resolve().declaration.qualifiedName?.asString())
-                        if (it.hasDefault) {
-                            append("(hasDefault)")
+                "(${
+                    this.parameters.map {
+                        buildString {
+                            append(it.type.resolve().declaration.qualifiedName?.asString())
+                            if (it.hasDefault) {
+                                append("(hasDefault)")
+                            }
                         }
-                    }
-                }.joinToString(",")})" +
-                ": ${this.returnType?.resolve()?.declaration?.qualifiedName?.asString()
-                    ?: "<no-return>"}"
+                    }.joinToString(",")
+                })" +
+                ": ${
+                    this.returnType?.resolve()?.declaration?.qualifiedName?.asString()
+                        ?: "<no-return>"
+                }"
         }
 
         override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {

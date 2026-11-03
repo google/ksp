@@ -17,12 +17,13 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.validate
 
-class RecordJavaProcessor : AbstractTestProcessor() {
+class RecordJavaProcessor(override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun toResult(): List<String> {
@@ -34,7 +35,7 @@ class RecordJavaProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         resolver.getAllFiles().forEach {
             it.declarations.forEach {
-                it.validate()
+                it.validate(apiFeatures = apiFeatures)
             }
         }
         val m = when (resolver) {

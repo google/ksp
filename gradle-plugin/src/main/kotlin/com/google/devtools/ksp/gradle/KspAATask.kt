@@ -23,6 +23,7 @@ import com.google.devtools.ksp.gradle.utils.canUseGeneratedKotlinApi
 import com.google.devtools.ksp.gradle.utils.enableProjectIsolationCompatibleCodepath
 import com.google.devtools.ksp.gradle.utils.isAgpBuiltInKotlinUsed
 import com.google.devtools.ksp.gradle.utils.isLegacyKaptPluginApplied
+import com.google.devtools.ksp.gradle.utils.kotlinSourceSetsObservable
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
 import com.google.devtools.ksp.processing.ExitCode
 import com.google.devtools.ksp.processing.KSPCommonConfig
@@ -230,7 +231,19 @@ abstract class KspAATask @Inject constructor(
                     val filteredTasks = if (kspExtension.excludedSources.isEmpty.not()) {
                         kspExtension.excludedSources.buildDependencies.getDependencies(null).map { it.name }
                     } else emptyList()
-                    kotlinCompilation.allKotlinSourceSetsObservable.forAll { sourceSet ->
+                    // Opt-in: metadata compilations process only their own source sets, matching the
+                    // compiler; upstream stays resolvable via its klib on `cfg.libraries`. Without it,
+                    // an intermediate compilation regenerates its upstream's output (#2814).
+                    val ownSourcesOnly = project.providers
+                        .gradleProperty("ksp.experimental.metadata.own.sources.only")
+                        .map { it.toBoolean() }
+                        .getOrElse(false)
+                    val sourceSetsToProcess = if (ownSourcesOnly && kotlinCompilation is KotlinCommonCompilation) {
+                        kotlinCompilation.kotlinSourceSetsObservable
+                    } else {
+                        kotlinCompilation.allKotlinSourceSetsObservable
+                    }
+                    sourceSetsToProcess.forAll { sourceSet ->
                         val filtered = kotlinOutputDir.zip(javaOutputDir) { kotlinOut, javaOut ->
                             sourceSet.kotlin.srcDirs.filter {
                                 !kotlinOut.asFile.isParentOf(it) && !javaOut.asFile.isParentOf(it) &&
@@ -246,6 +259,10 @@ abstract class KspAATask @Inject constructor(
                         }
                         cfg.sourceRoots.from(filtered)
                         cfg.javaSourceRoots.from(filtered)
+                    }
+                    // Dependencies span the full closure even when only a subset is processed:
+                    // upstream must be compiled first so its klib exists.
+                    kotlinCompilation.allKotlinSourceSetsObservable.forAll { sourceSet ->
                         if (project.canUseGeneratedKotlinApi() && project.enableProjectIsolationCompatibleCodepath()) {
                             kspAATask.dependsOn(sourceSet.kotlin.buildDependencies)
                         } else {
@@ -467,6 +484,14 @@ abstract class KspAATask @Inject constructor(
                     cfg.profilingMode.value(
                         project.providers
                             .gradleProperty("ksp.ksp2.profiling.mode")
+                            .map { it.toBoolean() }
+                            .orElse(false)
+                    )
+                    // Opt-in: reuse processor classloaders across modules in the same build.
+                    // Off by default because it extends the lifetime of processor static state.
+                    cfg.cacheProcessorClassloader.value(
+                        project.providers
+                            .gradleProperty("ksp.classloader.cache.processors")
                             .map { it.toBoolean() }
                             .orElse(false)
                     )
@@ -714,6 +739,14 @@ abstract class KspGradleConfig @Inject constructor() {
 
     @get:Internal
     abstract val profilingMode: Property<Boolean>
+
+    /**
+     * Whether processor classloaders may be reused across modules within a build.
+     *
+     * Purely a performance knob; it must not affect task outputs, hence [Internal].
+     */
+    @get:Internal
+    abstract val cacheProcessorClassloader: Property<Boolean>
 }
 
 interface KspAAWorkParameter : WorkParameters {
@@ -743,13 +776,12 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
         // TODO: support incremental processing.
         gradleCfg.outputBaseDir.get().asFile.deleteRecursively()
 
-        val processorClassloader = URLClassLoader(
-            gradleCfg.processorClasspath.files.map { it.toURI().toURL() }.toTypedArray(),
-            isolatedClassLoader
-        )
+        val cacheProcessorLoader = gradleCfg.cacheProcessorClassloader.get()
+        val processorClassloader =
+            getProcessorClassLoader(gradleCfg, isolatedClassLoader, kspClasspath, cacheProcessorLoader)
         if (gradleCfg.profilingMode.get()) {
             doNotGC.add(processorClassloader)
-        } else {
+        } else if (!cacheProcessorLoader) {
             doNotGC.clear()
         }
 
@@ -860,11 +892,51 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             kspGradleLogger.exception(e.targetException)
             throw e.targetException
         } finally {
-            processorClassloader.close()
+            // Cached loaders are shared across modules for the lifetime of the build service,
+            // so closing here would break every subsequent module that reuses them.
+            if (!cacheProcessorLoader) {
+                processorClassloader.close()
+            }
         }
 
         if (exitCode != ExitCode.OK) {
             throw Exception("KSP failed with exit code: $exitCode")
+        }
+    }
+
+    /**
+     * Creates a classloader over the processor classpath, delegating to [isolatedClassLoader] so
+     * that processors resolve KSP's own API classes from the shared, already-cached parent.
+     */
+    private fun createProcessorClassLoader(
+        gradleCfg: KspGradleConfig,
+        isolatedClassLoader: ClassLoader,
+    ): URLClassLoader = URLClassLoader(
+        gradleCfg.processorClasspath.files.map { it.toURI().toURL() }.toTypedArray(),
+        isolatedClassLoader
+    )
+
+    /**
+     * Returns the classloader to load symbol processors from, reusing a cached one when
+     * [cacheProcessorLoader] is set.
+     *
+     * See [ProcessorClassLoaderKey] for why both classpaths take part in the cache key.
+     */
+    private fun getProcessorClassLoader(
+        gradleCfg: KspGradleConfig,
+        isolatedClassLoader: ClassLoader,
+        kspClasspath: ConfigurableFileCollection,
+        cacheProcessorLoader: Boolean,
+    ): URLClassLoader {
+        if (!cacheProcessorLoader) {
+            return createProcessorClassLoader(gradleCfg, isolatedClassLoader)
+        }
+        val processorKey = ProcessorClassLoaderKey(
+            kspClasspath = kspClasspath.files.map { it.path },
+            processorClasspath = gradleCfg.processorClasspath.files.map { it.path },
+        )
+        return IsolatedClassLoaderCache.processorCache.computeIfAbsent(processorKey) {
+            createProcessorClassLoader(gradleCfg, isolatedClassLoader)
         }
     }
 }

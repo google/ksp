@@ -1,13 +1,14 @@
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-class AbstractFunctionsProcessor : AbstractTestProcessor() {
-    private val visitor = Visitor()
+class AbstractFunctionsProcessor(override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
+    private val visitor = Visitor(apiFeatures)
 
     override fun toResult(): List<String> {
         return visitor.abstractFunctionNames.sorted()
@@ -18,7 +19,7 @@ class AbstractFunctionsProcessor : AbstractTestProcessor() {
         return emptyList()
     }
 
-    private class Visitor : KSTopDownVisitor<Unit, Unit>() {
+    private class Visitor(apiFeatures: ApiFeatures) : KSTopDownVisitor<Unit, Unit>(apiFeatures) {
         val abstractFunctionNames = arrayListOf<String>()
 
         override fun defaultHandler(node: KSNode, data: Unit) {

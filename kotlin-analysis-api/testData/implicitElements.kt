@@ -32,8 +32,12 @@
 // comp2.set(): SYNTHETIC
 // <init>
 // synthetic constructor for ImplictConstructorJava
-// Test, p: [MyKotlinAnnotation: null, MyJavaAnnotation: null]
-// lib.Test, p: [MyKotlinAnnotation: null, MyJavaAnnotation: null]
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: Test, p: [MyKotlinAnnotation: null, MyJavaAnnotation: null]
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: lib.Test, p: [MyKotlinAnnotation: null, MyJavaAnnotation: null]
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Test, p: [MyKotlinAnnotation: null]
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Test, field: [MyJavaAnnotation: null]
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: lib.Test, p: [MyKotlinAnnotation: null]
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: lib.Test, field: [MyJavaAnnotation: null]
 // END
 // MODULE: lib
 // FILE: lib/MyJavaAnnotation.java

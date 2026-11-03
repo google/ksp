@@ -27,15 +27,19 @@
 // com.example.Anno: TargetClass.allUseSite.allUseSite.getter()
 // com.example.Anno: TargetClass.allUseSite.allUseSite.setter()
 // com.example.Anno: TargetClass.allUseSite.allUseSite.setter().value
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: com.example.Anno: TargetClass.allUseSite.field
 // com.example.Anno: TargetClass.delegateUseSite
-// com.example.Anno: TargetClass.fieldUseSite
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: com.example.Anno: TargetClass.fieldUseSite
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: com.example.Anno: TargetClass.fieldUseSite.field
 // com.example.Anno: TargetClass.getAndSetUseSite.getAndSetUseSite.getter()
 // com.example.Anno: TargetClass.getAndSetUseSite.getAndSetUseSite.setter()
 // com.example.Anno: TargetClass.getterUseSite.getterUseSite.getter()
 // com.example.Anno: TargetClass.noUseSite
 // com.example.Anno: TargetClass.nonParamValAllUseSite
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: com.example.Anno: TargetClass.nonParamValAllUseSite.field
 // com.example.Anno: TargetClass.nonParamValAllUseSite.nonParamValAllUseSite.getter()
 // com.example.Anno: TargetClass.nonParamVarAllUseSite
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: com.example.Anno: TargetClass.nonParamVarAllUseSite.field
 // com.example.Anno: TargetClass.nonParamVarAllUseSite.nonParamVarAllUseSite.getter()
 // com.example.Anno: TargetClass.nonParamVarAllUseSite.nonParamVarAllUseSite.setter()
 // com.example.Anno: TargetClass.nonParamVarAllUseSite.nonParamVarAllUseSite.setter().value

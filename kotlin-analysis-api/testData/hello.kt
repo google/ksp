@@ -18,12 +18,14 @@
 // WITH_RUNTIME
 // TEST PROCESSOR: HelloProcessor
 // EXPECTED:
-// 8
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: 8
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: 9
 // AClass
 // Bar.BBB
 // Bar.list
 // C
 // C.f
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: C.f.field
 // C.javaFun
 // test.Foo
 // test.ITF

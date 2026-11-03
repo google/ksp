@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+import com.google.devtools.ksp.ApiFeatures
+import com.google.devtools.ksp.buildApiFeatures
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
 import java.io.OutputStream
@@ -38,7 +40,8 @@ private fun String.camelToOptionName(): String = fold(StringBuilder()) { acc, c 
 class CmdlineParserGenerator(
     val codeGenerator: CodeGenerator,
     val logger: KSPLogger,
-    val options: Map<String, String>
+    val options: Map<String, String>,
+    override val apiFeatures: ApiFeatures
 ) : SymbolProcessor {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val annotationName = "com.google.devtools.ksp.processing.KSPArgParserGen"
@@ -85,6 +88,7 @@ class CmdlineParserGenerator(
                                     "$propName = parse$typeName(arg.substring(${optionNameLen + 1}))"
                             )
                         }
+
                         "List", "Map" -> {
                             val elementTypeName =
                                 type.arguments.last().type!!.resolve().declaration.simpleName.asString()
@@ -98,6 +102,7 @@ class CmdlineParserGenerator(
                                     "::parse$elementTypeName)"
                             )
                         }
+
                         else -> {
                             throw IllegalArgumentException("Unknown type of option `$propName: ${prop.type}`")
                         }
@@ -144,6 +149,16 @@ class CmdlineParserGeneratorProvider : SymbolProcessorProvider {
     override fun create(
         environment: SymbolProcessorEnvironment
     ): SymbolProcessor {
-        return CmdlineParserGenerator(environment.codeGenerator, environment.logger, environment.options)
+        val parserGenerator =
+            CmdlineParserGenerator(
+                environment.codeGenerator,
+                environment.logger,
+                environment.options,
+                buildApiFeatures {
+                    enableBackingFields = true
+                    enableContextParameters = true
+                }
+            )
+        return parserGenerator
     }
 }

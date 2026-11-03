@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.common.impl
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.common.visitor.CollectAnnotatedSymbolsVisitor
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeImpl
@@ -39,22 +40,38 @@ class AAResolutionStrategy(
     override val deferredSymbols: Map<SymbolProcessor, List<Restorable>>
 ) : AnnotationResolutionStrategy {
 
-    override fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean): Sequence<KSAnnotated> =
-        if (inDepth)
-            annotationToSymbolsWithLocalsCache[annotationName]?.asSequence() ?: emptySequence()
-        else
-            annotationToSymbolsCache[annotationName]?.asSequence() ?: emptySequence()
+    override fun getSymbolsWithAnnotation(
+        annotationName: String,
+        inDepth: Boolean,
+        apiFeatures: ApiFeatures
+    ): Sequence<KSAnnotated> =
+        CacheConfigurationKey.from(inDepth, apiFeatures).let { cacheKey ->
+            annotationToSymbolsCache.getOrPut(cacheKey) {
+                mapAnnotatedSymbols(inDepth = cacheKey.inDepth, apiFeatures = cacheKey)
+            }[annotationName]?.asSequence() ?: emptySequence()
+        }
 
-    private val annotationToSymbolsCache: Map<String, Collection<KSAnnotated>> by lazy {
-        mapAnnotatedSymbols(false)
+    private val annotationToSymbolsCache: MutableMap<CacheConfigurationKey, Map<String, Collection<KSAnnotated>>> =
+        mutableMapOf()
+
+    private data class CacheConfigurationKey(
+        val inDepth: Boolean,
+        override val enableBackingFields: Boolean,
+        override val enableContextParameters: Boolean
+    ) : ApiFeatures {
+        companion object {
+            // TODO: Memoize these configurations
+            @JvmStatic
+            fun from(inDepth: Boolean, apiFeatures: ApiFeatures): CacheConfigurationKey = CacheConfigurationKey(
+                inDepth = inDepth,
+                enableBackingFields = apiFeatures.enableBackingFields,
+                enableContextParameters = apiFeatures.enableContextParameters
+            )
+        }
     }
 
-    private val annotationToSymbolsWithLocalsCache: Map<String, Collection<KSAnnotated>> by lazy {
-        mapAnnotatedSymbols(true)
-    }
-
-    private fun collectAnnotatedSymbols(inDepth: Boolean): Collection<KSAnnotated> {
-        val visitor = CollectAnnotatedSymbolsVisitor(inDepth)
+    private fun collectAnnotatedSymbols(inDepth: Boolean, apiFeatures: ApiFeatures): Collection<KSAnnotated> {
+        val visitor = CollectAnnotatedSymbolsVisitor(inDepth, apiFeatures)
 
         for (file in newKSFiles) {
             file.accept(visitor, Unit)
@@ -63,8 +80,11 @@ class AAResolutionStrategy(
         return visitor.symbols
     }
 
-    private fun mapAnnotatedSymbols(inDepth: Boolean): Map<String, Collection<KSAnnotated>> {
-        val newSymbols = collectAnnotatedSymbols(inDepth)
+    private fun mapAnnotatedSymbols(
+        inDepth: Boolean,
+        apiFeatures: ApiFeatures
+    ): Map<String, Collection<KSAnnotated>> {
+        val newSymbols = collectAnnotatedSymbols(inDepth, apiFeatures)
         val withDeferred = newSymbols + deferredSymbolsRestored
         return mutableMapOf<String, MutableCollection<KSAnnotated>>().apply {
             withDeferred.forEach { annotated ->

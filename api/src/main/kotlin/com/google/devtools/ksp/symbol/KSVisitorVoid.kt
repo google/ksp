@@ -16,8 +16,60 @@
  */
 package com.google.devtools.ksp.symbol
 
-/** A visitor that doesn't pass or return anything. */
-open class KSVisitorVoid : KSVisitorNext<Unit, Unit> {
+import com.google.devtools.ksp.errors.InternalKSPException
+import com.google.devtools.ksp.ApiFeatures
+import com.google.devtools.ksp.buildApiFeatures
+
+/**
+ * A visitor that doesn't pass or return anything.
+ *
+ * @param apiFeatures An API feature configuration.
+ */
+open class KSVisitorVoid(val apiFeatures: ApiFeatures) : KSVisitorNext<Unit, Unit> {
+
+    /**
+     * A visitor that doesn't pass or return anything.
+     *
+     * @param enableNewFeatures A boolean flag toggling on or off backing fields. To enable context parameters,
+     * please use the primary constructor.
+     */
+    @Deprecated(
+        message = "KSVisitorVoid(enableNewFeatures) is deprecated in favor of KSVisitorVoid(apiFeatures) which supports configuring API features such as backing fields and context parameters.\n" +
+            "Your SymbolProcessor should override its parent SymbolProcessor.apiFeatures property, " +
+            "share that property across all KSP interactions, and replace every use of buildApiFeatures " +
+            "with a reference to that shared apiFeatures property/object.\n" +
+            "In an upcoming KSP version, KSVisitorNext will be deprecated and implementations should move back to KSVisitor.\n" +
+            "This is done to preserve binary compatibility and to avoid breaking changes for users\n" +
+            "while giving library / processor authors time to support the new features.",
+        replaceWith = ReplaceWith(
+            expression = "KSVisitorVoid(buildApiFeatures { enableBackingFields = enableNewFeatures; enableContextParameters = false })",
+            imports = ["com.google.devtools.ksp.buildApiFeatures"],
+        ),
+    )
+    // For binary compatibility
+    constructor(enableNewFeatures: Boolean) : this(
+        buildApiFeatures {
+            enableBackingFields = enableNewFeatures
+            enableContextParameters = false
+        }
+    )
+
+    // For binary compatibility
+    @Deprecated(
+        message = "KSVisitorVoid() is deprecated in favor of KSVisitorVoid(apiFeatures) which supports configuring API features such as backing fields and context parameters.\n" +
+            "Your SymbolProcessor should override its parent SymbolProcessor.apiFeatures property, " +
+            "share that property across all KSP interactions, and replace every use of buildApiFeatures " +
+            "with a reference to that shared apiFeatures property/object.\n" +
+            "In an upcoming KSP version, KSVisitorNext will be deprecated and implementations should move back to KSVisitor.\n" +
+            "This is done to preserve binary compatibility and to avoid breaking changes for users\n" +
+            "while giving library / processor authors time to support the new features.",
+        replaceWith = ReplaceWith(
+            expression = "KSVisitorVoid(buildApiFeatures { enableBackingFields = true; enableContextParameters = true })",
+            imports = ["com.google.devtools.ksp.buildApiFeatures"],
+        ),
+    )
+    constructor() : this(enableNewFeatures = false)
+
     override fun visitNode(node: KSNode, data: Unit) {}
 
     override fun visitAnnotated(annotated: KSAnnotated, data: Unit) {}
@@ -52,7 +104,15 @@ open class KSVisitorVoid : KSVisitorNext<Unit, Unit> {
 
     override fun visitPropertySetter(setter: KSPropertySetter, data: Unit) {}
 
-    override fun visitBackingField(backingField: KSBackingField, data: Unit) {}
+    override fun visitBackingField(backingField: KSBackingField, data: Unit) {
+        if (!apiFeatures.enableBackingFields) {
+            throw InternalKSPException(
+                "Unexpected call to visitBackingField in ${javaClass.simpleName} with enabledNewFeatures = false",
+                backingField.location,
+                javaClass
+            )
+        }
+    }
 
     override fun visitClassifierReference(reference: KSClassifierReference, data: Unit) {}
 
@@ -67,6 +127,16 @@ open class KSVisitorVoid : KSVisitorNext<Unit, Unit> {
     override fun visitTypeParameter(typeParameter: KSTypeParameter, data: Unit) {}
 
     override fun visitTypeReference(typeReference: KSTypeReference, data: Unit) {}
+
+    override fun visitContextParameter(contextParameter: KSContextParameter, data: Unit) {
+        if (!apiFeatures.enableContextParameters) {
+            throw InternalKSPException(
+                "Unexpected call to visitContextParameter in ${javaClass.simpleName} with enabledNewFeatures = false",
+                contextParameter.location,
+                javaClass
+            )
+        }
+    }
 
     override fun visitValueParameter(valueParameter: KSValueParameter, data: Unit) {}
 

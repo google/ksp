@@ -22,9 +22,12 @@
 // C.InnerC: PUBLIC : PUBLIC
 // C.NestedC.<init>: FINAL PUBLIC : FINAL PUBLIC
 // C.NestedC: JAVA_STATIC PUBLIC : JAVA_STATIC PUBLIC
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: C.i1.field: JAVA_STATIC JAVA_VOLATILE PROTECTED : JAVA_STATIC JAVA_VOLATILE PROTECTED
 // C.i1: JAVA_STATIC JAVA_VOLATILE PROTECTED : JAVA_STATIC JAVA_VOLATILE PROTECTED
 // C.intFun: JAVA_DEFAULT JAVA_SYNCHRONIZED : JAVA_DEFAULT JAVA_SYNCHRONIZED
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: C.s1.field: FINAL JAVA_TRANSIENT : FINAL JAVA_TRANSIENT
 // C.s1: FINAL JAVA_TRANSIENT : FINAL JAVA_TRANSIENT
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: C.staticStr.field: PRIVATE : PRIVATE
 // C.staticStr: PRIVATE : PRIVATE
 // C: ABSTRACT PUBLIC : ABSTRACT PUBLIC
 // DependencyOuterJavaClass.<init>: FINAL PUBLIC : FINAL PUBLIC
@@ -32,26 +35,36 @@
 // DependencyOuterJavaClass.DependencyInnerJavaClass: INNER OPEN PUBLIC : PUBLIC
 // DependencyOuterJavaClass.DependencyNestedJavaClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // DependencyOuterJavaClass.DependencyNestedJavaClass: OPEN PUBLIC : PUBLIC
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: DependencyOuterJavaClass.staticPackageProtectedField.field: FINAL JAVA_STATIC : FINAL JAVA_STATIC
 // DependencyOuterJavaClass.staticPackageProtectedField: FINAL JAVA_STATIC : FINAL JAVA_STATIC
 // DependencyOuterJavaClass.staticPackageProtectedMethod: FINAL JAVA_STATIC : FINAL JAVA_STATIC
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: DependencyOuterJavaClass.staticPrivateField.field: FINAL JAVA_STATIC PRIVATE : FINAL JAVA_STATIC PRIVATE
 // DependencyOuterJavaClass.staticPrivateField: FINAL JAVA_STATIC PRIVATE : FINAL JAVA_STATIC PRIVATE
 // DependencyOuterJavaClass.staticPrivateMethod: FINAL JAVA_STATIC PRIVATE : FINAL JAVA_STATIC PRIVATE
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: DependencyOuterJavaClass.staticProtectedField.field: FINAL JAVA_STATIC PROTECTED : FINAL JAVA_STATIC PROTECTED
 // DependencyOuterJavaClass.staticProtectedField: FINAL JAVA_STATIC PROTECTED : FINAL JAVA_STATIC PROTECTED
 // DependencyOuterJavaClass.staticProtectedMethod: FINAL JAVA_STATIC PROTECTED : FINAL JAVA_STATIC PROTECTED
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: DependencyOuterJavaClass.staticPublicField.field: FINAL JAVA_STATIC PUBLIC : FINAL JAVA_STATIC PUBLIC
 // DependencyOuterJavaClass.staticPublicField: FINAL JAVA_STATIC PUBLIC : FINAL JAVA_STATIC PUBLIC
 // DependencyOuterJavaClass.staticPublicMethod: FINAL JAVA_STATIC PUBLIC : FINAL JAVA_STATIC PUBLIC
 // DependencyOuterJavaClass.synchronizedFun: OPEN : JAVA_SYNCHRONIZED
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: DependencyOuterJavaClass.transientField.field: FINAL : FINAL
 // DependencyOuterJavaClass.transientField: FINAL : FINAL JAVA_TRANSIENT
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: DependencyOuterJavaClass.volatileField.field: FINAL : FINAL
 // DependencyOuterJavaClass.volatileField: FINAL : FINAL JAVA_VOLATILE
 // DependencyOuterJavaClass: OPEN PUBLIC : PUBLIC
 // DependencyOuterKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // DependencyOuterKotlinClass.Companion.<init>: FINAL PRIVATE : FINAL PRIVATE
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: DependencyOuterKotlinClass.Companion.companionField.field: FINAL PRIVATE : FINAL PRIVATE
 // DependencyOuterKotlinClass.Companion.companionField: FINAL PUBLIC : FINAL PUBLIC
 // DependencyOuterKotlinClass.Companion.companionMethod: FINAL PUBLIC : FINAL PUBLIC
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: DependencyOuterKotlinClass.Companion.customJvmStaticCompanionField.field: FINAL PRIVATE : FINAL PRIVATE
 // DependencyOuterKotlinClass.Companion.customJvmStaticCompanionField: FINAL PUBLIC : FINAL JAVA_STATIC PUBLIC
 // DependencyOuterKotlinClass.Companion.customJvmStaticCompanionMethod: FINAL PUBLIC : FINAL JAVA_STATIC PUBLIC
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: DependencyOuterKotlinClass.Companion.jvmStaticCompanionField.field: FINAL PRIVATE : FINAL PRIVATE
 // DependencyOuterKotlinClass.Companion.jvmStaticCompanionField: FINAL PUBLIC : FINAL JAVA_STATIC PUBLIC
 // DependencyOuterKotlinClass.Companion.jvmStaticCompanionMethod: FINAL PUBLIC : FINAL JAVA_STATIC PUBLIC
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: DependencyOuterKotlinClass.Companion.privateCompanionField.field: FINAL PRIVATE : FINAL PRIVATE
 // DependencyOuterKotlinClass.Companion.privateCompanionField: FINAL PUBLIC : FINAL PUBLIC
 // DependencyOuterKotlinClass.Companion.privateCompanionMethod: FINAL PRIVATE : FINAL PRIVATE
 // DependencyOuterKotlinClass.Companion: FINAL PUBLIC : FINAL PUBLIC
@@ -60,7 +73,9 @@
 // DependencyOuterKotlinClass.DependencyNestedKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // DependencyOuterKotlinClass.DependencyNestedKotlinClass: OPEN PUBLIC : PUBLIC
 // DependencyOuterKotlinClass.synchronizedFun: FINAL PUBLIC : FINAL JAVA_SYNCHRONIZED PUBLIC
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: DependencyOuterKotlinClass.transientProperty.field: FINAL PRIVATE : FINAL PRIVATE
 // DependencyOuterKotlinClass.transientProperty: FINAL PUBLIC : FINAL JAVA_TRANSIENT PUBLIC
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: DependencyOuterKotlinClass.volatileProperty.field: FINAL PRIVATE : FINAL PRIVATE
 // DependencyOuterKotlinClass.volatileProperty: FINAL PUBLIC : FINAL JAVA_VOLATILE PUBLIC
 // DependencyOuterKotlinClass: OPEN PUBLIC : PUBLIC
 // HasTypeAliasFuns: Modifiers: []
@@ -73,33 +88,45 @@
 // OuterJavaClass.InnerJavaClass: PUBLIC : PUBLIC
 // OuterJavaClass.NestedJavaClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // OuterJavaClass.NestedJavaClass: JAVA_STATIC PUBLIC : JAVA_STATIC PUBLIC
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterJavaClass.staticPackageProtectedField.field: JAVA_STATIC : JAVA_STATIC
 // OuterJavaClass.staticPackageProtectedField: JAVA_STATIC : JAVA_STATIC
 // OuterJavaClass.staticPackageProtectedMethod: JAVA_STATIC : JAVA_STATIC
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterJavaClass.staticPrivateField.field: JAVA_STATIC PRIVATE : JAVA_STATIC PRIVATE
 // OuterJavaClass.staticPrivateField: JAVA_STATIC PRIVATE : JAVA_STATIC PRIVATE
 // OuterJavaClass.staticPrivateMethod: JAVA_STATIC PRIVATE : JAVA_STATIC PRIVATE
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterJavaClass.staticProtectedField.field: JAVA_STATIC PROTECTED : JAVA_STATIC PROTECTED
 // OuterJavaClass.staticProtectedField: JAVA_STATIC PROTECTED : JAVA_STATIC PROTECTED
 // OuterJavaClass.staticProtectedMethod: JAVA_STATIC PROTECTED : JAVA_STATIC PROTECTED
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterJavaClass.staticPublicField.field: JAVA_STATIC PUBLIC : JAVA_STATIC PUBLIC
 // OuterJavaClass.staticPublicField: JAVA_STATIC PUBLIC : JAVA_STATIC PUBLIC
 // OuterJavaClass.staticPublicMethod: JAVA_STATIC PUBLIC : JAVA_STATIC PUBLIC
 // OuterJavaClass: PUBLIC : PUBLIC
 // OuterKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // OuterKotlinClass.Companion.<init>: FINAL PUBLIC : FINAL PUBLIC
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterKotlinClass.Companion.companionField.field: : FINAL PRIVATE
 // OuterKotlinClass.Companion.companionField: CONST : FINAL PUBLIC
 // OuterKotlinClass.Companion.companionMethod: : FINAL PUBLIC
-// OuterKotlinClass.Companion.customJvmStaticCompanionField: : FINAL PUBLIC
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterKotlinClass.Companion.customJvmStaticCompanionField.field: : FINAL PRIVATE
+// OuterKotlinClass.Companion.customJvmStaticCompanionField: : FINAL JAVA_STATIC PUBLIC
 // OuterKotlinClass.Companion.customJvmStaticCompanionMethod: : FINAL PUBLIC
-// OuterKotlinClass.Companion.jvmStaticCompanionField: : FINAL PUBLIC
-// OuterKotlinClass.Companion.jvmStaticCompanionMethod: : FINAL PUBLIC
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterKotlinClass.Companion.jvmStaticCompanionField.field: : FINAL PRIVATE
+// OuterKotlinClass.Companion.jvmStaticCompanionField: : FINAL JAVA_STATIC PUBLIC
+// OuterKotlinClass.Companion.jvmStaticCompanionMethod: : FINAL JAVA_STATIC PUBLIC
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterKotlinClass.Companion.privateCompanionField.field: : FINAL PRIVATE
 // OuterKotlinClass.Companion.privateCompanionField: PRIVATE : FINAL PRIVATE
 // OuterKotlinClass.Companion.privateCompanionMethod: PRIVATE : FINAL PRIVATE
-// OuterKotlinClass.Companion: : FINAL JAVA_STATIC PUBLIC
+// OuterKotlinClass.Companion: : FINAL PUBLIC
 // OuterKotlinClass.InnerKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // OuterKotlinClass.InnerKotlinClass: INNER : FINAL PUBLIC
 // OuterKotlinClass.NestedKotlinClass.<init>: FINAL PUBLIC : FINAL PUBLIC
 // OuterKotlinClass.NestedKotlinClass: OPEN : PUBLIC
 // OuterKotlinClass.synchronizedFun: : FINAL JAVA_SYNCHRONIZED PUBLIC
-// OuterKotlinClass.transientProperty: : FINAL JAVA_TRANSIENT PUBLIC
-// OuterKotlinClass.volatileProperty: : FINAL JAVA_VOLATILE PUBLIC
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: OuterKotlinClass.transientProperty: : FINAL JAVA_TRANSIENT PUBLIC
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: OuterKotlinClass.volatileProperty: : FINAL JAVA_VOLATILE PUBLIC
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterKotlinClass.transientProperty.field: : FINAL JAVA_TRANSIENT PRIVATE
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterKotlinClass.transientProperty: : FINAL PUBLIC
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterKotlinClass.volatileProperty.field: : FINAL JAVA_VOLATILE PRIVATE
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: OuterKotlinClass.volatileProperty: : FINAL PUBLIC
 // OuterKotlinClass: OPEN : PUBLIC
 // TypeAliasInKt: Modifiers: [PRIVATE]
 // TypeAliasInKt: Visibility: PRIVATE

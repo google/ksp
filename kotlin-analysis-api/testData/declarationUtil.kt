@@ -18,10 +18,14 @@
 // TEST PROCESSOR: DeclarationUtilProcessor
 // EXPECTED:
 // Cls: internal
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Cls.b.field: local
 // Cls.b: public open
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Cls.prop.field: local
 // Cls.prop: public open
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Cls.protectedProp.field: local
 // Cls.protectedProp: protected open
 // Cls.abstractITFFun: public open
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Cls.pri.field: local
 // Cls.pri: private
 // Cls / <init>: public
 // Cls / <init>: public
@@ -35,14 +39,17 @@
 // ITF.nonAbstractITFFun / aa: local
 // NestedClassSubjects: public open
 // NestedClassSubjects.NestedDataClass: public
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: NestedClassSubjects.NestedDataClass.field.field: local
 // NestedClassSubjects.NestedDataClass.field: public
 // NestedClassSubjects.NestedDataClass.component1: public
 // NestedClassSubjects.NestedDataClass.copy: public
 // NestedClassSubjects.NestedDataClass / <init>: public
 // NestedClassSubjects.NestedFinalClass: public
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: NestedClassSubjects.NestedFinalClass.field.field: local
 // NestedClassSubjects.NestedFinalClass.field: public
 // NestedClassSubjects.NestedFinalClass / <init>: public
 // NestedClassSubjects.NestedOpenClass: public open
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: NestedClassSubjects.NestedOpenClass.field.field: local
 // NestedClassSubjects.NestedOpenClass.field: public
 // NestedClassSubjects.NestedOpenClass / <init>: public
 // NestedClassSubjects.NestedInterface: public open

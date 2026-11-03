@@ -18,7 +18,8 @@
 // TEST PROCESSOR: GetSymbolsWithAnnotationProcessor
 // PROCESSOR INPUT: kspjavax.Inject
 // EXPECTED:
-// kspjavax.Inject: MainActivity.a.field
+// EXPECT ENABLE_BACKING_FIELDS = FALSE: kspjavax.Inject: MainActivity.a
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: kspjavax.Inject: MainActivity.a.field
 // END
 
 // FILE: Inject.java

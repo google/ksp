@@ -24,5 +24,7 @@ import com.google.devtools.ksp.processing.SymbolProcessorProvider
 abstract class AbstractTestProcessor : SymbolProcessor, SymbolProcessorProvider {
     abstract fun toResult(): List<String>
 
-    override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor = this
+    override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
+        return this
+    }
 }

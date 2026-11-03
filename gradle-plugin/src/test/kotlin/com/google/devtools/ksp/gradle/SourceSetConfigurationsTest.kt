@@ -437,4 +437,138 @@ class SourceSetConfigurationsTest(isExperimentalPsiResolution: Boolean) {
         require(kspTask != null)
         assertThat(kspTask.outcome).isEqualTo(TaskOutcome.NO_SOURCE)
     }
+
+    /**
+     * https://github.com/google/ksp/issues/2814: with `ksp.experimental.metadata.own.sources.only`,
+     * an intermediate metadata compilation processes only its own source sets, so the upstream's
+     * generated declarations are not duplicated into the intermediate klib.
+     */
+    @Test
+    fun intermediateMetadataCompilationProcessesOnlyItsOwnSourceSets() {
+        testRule.setupAppAsMultiplatformApp(
+            """
+                kotlin {
+                    jvm { }
+                    js(IR) { browser() }
+                    sourceSets {
+                        val commonMain by getting
+                        val sharedMain by creating { dependsOn(commonMain) }
+                        val jvmMain by getting { dependsOn(sharedMain) }
+                        val jsMain by getting { dependsOn(sharedMain) }
+                    }
+                }
+            """.trimIndent()
+        )
+        testRule.appModule.addMultiplatformSource("commonMain", "InCommon.kt", "class InCommon")
+        testRule.appModule.addMultiplatformSource("sharedMain", "InShared.kt", "class InShared")
+
+        // Explicit dependsOn edges conflict with the default hierarchy template.
+        testRule.appModule.moduleRoot.parentFile.resolve("gradle.properties").appendText(
+            "\nkotlin.mpp.applyDefaultHierarchyTemplate=false\n" +
+                "ksp.experimental.metadata.own.sources.only=true\n"
+        )
+
+        // kspSharedMainMetadata doesn't exist at script evaluation time (#2814), so attach late.
+        testRule.appModule.buildFileAdditions.add(
+            """
+                configurations.configureEach {
+                    if (name == "kspCommonMainMetadata" || name == "kspSharedMainMetadata") {
+                        dependencies.add(project.dependencies.create(project(":processor")))
+                    }
+                }
+            """.trimIndent()
+        )
+
+        class Processor(val codeGenerator: CodeGenerator) : SymbolProcessor {
+            // process() runs once per round; don't recreate files on later rounds.
+            private val alreadyGenerated = mutableSetOf<String>()
+
+            override fun process(resolver: Resolver): List<KSAnnotated> {
+                resolver.getAllFiles()
+                    .flatMap { it.declarations }
+                    .filterIsInstance<KSClassDeclaration>()
+                    .filterNot { it.simpleName.asString().endsWith("_Generated") }
+                    .forEach {
+                        val genClassName = "${it.simpleName.asString()}_Generated"
+                        if (!alreadyGenerated.add(genClassName)) return@forEach
+                        codeGenerator.createNewFile(Dependencies(false), "", genClassName).use { out ->
+                            out.writer().use { writer -> writer.write("class $genClassName") }
+                        }
+                    }
+                return emptyList()
+            }
+        }
+
+        class Provider : TestSymbolProcessorProvider({ env -> Processor(env.codeGenerator) })
+
+        testRule.addProvider(Provider::class)
+
+        testRule.runner()
+            .withArguments(":app:kspCommonMainKotlinMetadata", ":app:kspSharedMainKotlinMetadata")
+            .build()
+
+        val generated = testRule.appModule.moduleRoot.resolve("build/generated/ksp/metadata")
+        fun generatedIn(sourceSet: String): List<String> =
+            generated.resolve("$sourceSet/kotlin").walkTopDown()
+                .filter { it.isFile }
+                .map { it.name }
+                .sorted()
+                .toList()
+
+        assertThat(generatedIn("commonMain")).containsExactly("InCommon_Generated.kt")
+        // Must not also contain InCommon_Generated.kt.
+        assertThat(generatedIn("sharedMain")).containsExactly("InShared_Generated.kt")
+    }
+
+    /**
+     * KGP plans to stop creating the legacy metadata/main compilation (KT-62332), which currently
+     * creates kspCommonMainMetadata early. Removing it before KSP is applied simulates that.
+     */
+    @Test
+    fun commonMainMetadataConfigurationWithoutLegacyMetadataCompilation() {
+        testRule.setupAppAsMultiplatformApp(
+            """
+                kotlin.targets.getByName("metadata").compilations.run {
+                    findByName("main")?.let { remove(it) }
+                }
+                apply(plugin = "com.google.devtools.ksp")
+
+                kotlin {
+                    jvm { }
+                    js(IR) { browser() }
+                }
+
+                dependencies {
+                    add("kspCommonMainMetadata", project(":processor"))
+                }
+            """.trimIndent(),
+            applyKspPlugin = false
+        )
+        testRule.appModule.addMultiplatformSource("commonMain", "Foo.kt", "class Foo")
+
+        class Processor(val codeGenerator: CodeGenerator) : SymbolProcessor {
+            private var generated = false
+
+            override fun process(resolver: Resolver): List<KSAnnotated> {
+                if (!generated) {
+                    generated = true
+                    codeGenerator.createNewFile(Dependencies(false), "", "Generated").use { out ->
+                        out.writer().use { writer -> writer.write("class Generated") }
+                    }
+                }
+                return emptyList()
+            }
+        }
+
+        class Provider : TestSymbolProcessorProvider({ env -> Processor(env.codeGenerator) })
+
+        testRule.addProvider(Provider::class)
+
+        testRule.runner()
+            .withArguments(":app:kspCommonMainKotlinMetadata")
+            .build()
+
+        val generated = testRule.appModule.moduleRoot.resolve("build/generated/ksp/metadata/commonMain/kotlin")
+        assertThat(generated.resolve("Generated.kt").exists()).isTrue()
+    }
 }

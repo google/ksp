@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.isAnnotationPresent
@@ -25,7 +26,9 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import kotlin.reflect.KClass
 
 @KspExperimental
-class IsAnnotationPresentWithArbitraryClassValueProcessor : AbstractTestProcessor() {
+class IsAnnotationPresentWithArbitraryClassValueProcessor(
+    override val apiFeatures: ApiFeatures,
+) : AbstractTestProcessor() {
     private val results = mutableListOf<String>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {

@@ -1,6 +1,7 @@
 plugins {
     kotlin("multiplatform")
     id("com.android.kotlin.multiplatform.library")
+    id("com.android.lint")
     id("com.google.devtools.ksp")
 }
 
@@ -41,6 +42,11 @@ kotlin {
                 project.dependencies.add("kspAndroid", project(":test-processor"))
             }
             kotlin.srcDir("src/main/java")
+        }
+        val commonTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
+            }
         }
     }
 }

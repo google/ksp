@@ -63,6 +63,10 @@ class MultiplatformIT(experimentalPsiResolution: Boolean) {
             gradleRunner.withArguments("--configuration-cache-problems=warn", "clean", "build").build()
 
         Assert.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:build")?.outcome)
+        Assert.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:kspAndroidHostTest")?.outcome)
+        Assert.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:testAndroidHostTest")?.outcome)
+        Assert.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:generateAndroidHostTestLintModel")?.outcome)
+        Assert.assertEquals(TaskOutcome.SUCCESS, resultCleanBuild.task(":workload:lintAnalyzeAndroidHostTest")?.outcome)
 
         val classesJar = File(
             project.root,

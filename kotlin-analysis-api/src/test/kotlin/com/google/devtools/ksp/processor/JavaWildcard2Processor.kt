@@ -17,19 +17,20 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-open class JavaWildcard2Processor : AbstractTestProcessor() {
+open class JavaWildcard2Processor(override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
         resolver.getNewFiles().forEach {
             resolver.getNewFiles().forEach {
-                it.accept(RefVisitor(results, resolver), "")
+                it.accept(RefVisitor(results, resolver, apiFeatures), "")
             }
         }
 
@@ -40,10 +41,8 @@ open class JavaWildcard2Processor : AbstractTestProcessor() {
         return results
     }
 
-    private class RefVisitor(
-        val results: MutableList<String>,
-        val resolver: Resolver
-    ) : KSTopDownVisitor<String, Unit>() {
+    private class RefVisitor(val results: MutableList<String>, val resolver: Resolver, apiFeatures: ApiFeatures) :
+        KSTopDownVisitor<String, Unit>(apiFeatures) {
         override fun defaultHandler(node: KSNode, data: String) = Unit
 
         private fun KSTypeReference.pretty(): String {

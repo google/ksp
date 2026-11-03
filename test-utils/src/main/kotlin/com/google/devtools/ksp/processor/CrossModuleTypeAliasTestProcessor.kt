@@ -17,13 +17,14 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 
-class CrossModuleTypeAliasTestProcessor : AbstractTestProcessor() {
+class CrossModuleTypeAliasTestProcessor(override val apiFeatures: ApiFeatures): AbstractTestProcessor() {
     private val results = mutableListOf<String>()
     override fun toResult(): List<String> {
         return results
@@ -32,7 +33,7 @@ class CrossModuleTypeAliasTestProcessor : AbstractTestProcessor() {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val target = resolver.getClassDeclarationByName("TestTarget")
         val classes = mutableSetOf<KSClassDeclaration>()
-        val classCollector = object : BaseVisitor() {
+        val classCollector = object : BaseVisitor(apiFeatures) {
             override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
                 if (classes.add(classDeclaration)) {
                     super.visitClassDeclaration(classDeclaration, data)
