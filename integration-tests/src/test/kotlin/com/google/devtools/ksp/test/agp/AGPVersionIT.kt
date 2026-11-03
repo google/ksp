@@ -49,6 +49,10 @@ class AGPVersionIT(
                 arrayOf("9.0.0-beta01", "2.3.20", "9.1.0"),
                 arrayOf("9.0.0-beta01", "2.4.0", "9.1.0"),
                 arrayOf("9.0.0-beta01", "2.4.21", "9.1.0"),
+                // AGP 9.6.0-alpha02
+                arrayOf("9.6.0-alpha02", "2.3.20", "9.8.2"),
+                arrayOf("9.6.0-alpha02", "2.4.0", "9.8.2"),
+                arrayOf("9.6.0-alpha02", "2.4.21", "9.8.2"),
             ).flatMap {
                 listOf(it.plus("true"), it.plus("false"))
             }
