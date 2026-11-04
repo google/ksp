@@ -267,7 +267,7 @@ class PlaygroundIT(experimentalPsiResolution: Boolean) {
             """
             kotlin {
               compilerOptions {
-                apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9)
+                apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0)
                 languageVersion.set(compilerOptions.apiVersion)
                }
             }
@@ -276,8 +276,8 @@ class PlaygroundIT(experimentalPsiResolution: Boolean) {
 
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.buildAndCheck("clean", "build") { result ->
-            Assert.assertTrue(result.output.contains("language version: 1.9"))
-            Assert.assertTrue(result.output.contains("api version: 1.9"))
+            Assert.assertTrue(result.output.contains("language version: 2.0"))
+            Assert.assertTrue(result.output.contains("api version: 2.0"))
             val expectedKspVersion = "2.0"
             Assert.assertTrue(result.output.contains("ksp version: $expectedKspVersion"))
         }
@@ -398,7 +398,7 @@ class PlaygroundIT(experimentalPsiResolution: Boolean) {
         File(project.root, "workload/build.gradle.kts").createNewFile()
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
         gradleRunner.withArguments("build").build().let { result ->
-            Assert.assertTrue(result.output.contains("Module name is workload"))
+            Assert.assertTrue(result.output.contains("Module name is playground:workload"))
         }
     }
 
