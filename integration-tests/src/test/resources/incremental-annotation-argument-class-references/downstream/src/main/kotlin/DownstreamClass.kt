@@ -15,9 +15,5 @@
  * limitations under the License.
  */
 
-import com.example.upstream.ExampleReferenceJava
-import com.example.upstream.UpstreamEntryPointJava
-
 @ExampleReference(UpstreamEntryPoint::class)
-@ExampleReferenceJava(UpstreamEntryPointJava::class)
 class DownstreamClass

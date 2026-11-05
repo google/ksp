@@ -45,10 +45,9 @@ object SymbolCollector : KSDefaultVisitor<(LookupSymbolWrapper) -> Unit, Unit>(
     override fun defaultHandler(node: KSNode, data: (LookupSymbolWrapper) -> Unit) = Unit
 
     override fun visitDeclaration(declaration: KSDeclaration, data: (LookupSymbolWrapper) -> Unit) {
+        val qName = declaration.qualifiedName?.asString() ?: return
         val name = declaration.simpleName.asString()
-        val scope =
-            declaration.qualifiedName?.asString()?.let { it.substring(0, Math.max(it.length - name.length - 1, 0)) }
-                ?: return
+        val scope = qName.removeSuffix(name).removeSuffix(".").ifEmpty { "<anonymous>" }
         data(LookupSymbolWrapper(name, scope))
     }
 
@@ -562,9 +561,9 @@ abstract class IncrementalContextBase(
         if (!isIncremental)
             return
 
+        val qName = classDeclaration.qualifiedName?.asString() ?: return
         val name = classDeclaration.simpleName.asString()
-        val scope = classDeclaration.qualifiedName?.asString()
-            ?.let { it.substring(0, (it.length - name.length - 1).coerceAtLeast(0)) } ?: return
+        val scope = qName.removeSuffix(name).removeSuffix(".").ifEmpty { "<anonymous>" }
         updatedSealed.putValue(classDeclaration.containingFile!!.relativeFile, LookupSymbolWrapper(name, scope))
     }
 

@@ -234,11 +234,9 @@ class IncrementalContextAA(
 
         // Construct synthetic filepath
         val parentDeclarationName = declaration.qualifiedName?.asString()
-            ?: buildString {
-                append(declaration.packageName.asString())
-                append('.')
-                append(declaration.simpleName.asString())
-            }
+            ?: listOf(declaration.packageName.asString(), declaration.simpleName.asString())
+                .filter { it.isNotEmpty() }
+                .joinToString(".")
 
         return NoSourceFile(baseDir, parentDeclarationName).filePath
     }
@@ -369,24 +367,27 @@ class IncrementalContextAA(
             allDefinedSyms.getOrPut(file, ::mutableSetOf).addAll(updatedSymbols[file])
         }
 
+        val normalizedOrigin = normalizeGraphVertexName(origin)
+
         // Prepare edges
         val edges = mutableMapOf<String, MutableSet<String>>()
         lookupRecords.forEach { (fqn, paths) ->
+            val targetFqn = normalizeGraphVertexName(fqn)
             paths.forEach { path ->
                 if (NoSourceFile.isSyntheticFile(path)) {
-                    val fqnSource = stripSyntheticFileNameModifiers(path)
-                    edges.getOrPut(fqnSource, ::mutableSetOf).add(fqn)
+                    val fqnSource = normalizeGraphVertexName(stripSyntheticFileNameModifiers(path))
+                    edges.getOrPut(fqnSource, ::mutableSetOf).add(targetFqn)
                 } else {
                     val file = File(path)
                     val syms = allDefinedSyms[file]
                     if (!syms.isNullOrEmpty()) {
                         syms.forEach { sym ->
-                            val fqnSource = "${sym.scope}.${sym.name}"
-                            edges.getOrPut(fqnSource, ::mutableSetOf).add(fqn)
+                            val fqnSource = normalizeGraphVertexName("${sym.scope}.${sym.name}")
+                            edges.getOrPut(fqnSource, ::mutableSetOf).add(targetFqn)
                         }
                     } else {
                         // Default back to the path so we can visualize errors
-                        edges.getOrPut(path, ::mutableSetOf).add(fqn)
+                        edges.getOrPut(path, ::mutableSetOf).add(targetFqn)
                     }
                 }
             }
@@ -396,9 +397,9 @@ class IncrementalContextAA(
         val visited = mutableSetOf<String>()
         val queue = ArrayDeque<String>()
         val bfsEdges = mutableSetOf<Pair<String, String>>()
-        if (edges.contains(origin)) {
-            visited.add(origin)
-            queue.add(origin)
+        if (edges.contains(normalizedOrigin)) {
+            visited.add(normalizedOrigin)
+            queue.add(normalizedOrigin)
         }
         while (queue.isNotEmpty()) {
             val curr = queue.removeFirst()
@@ -414,13 +415,16 @@ class IncrementalContextAA(
         mkFileInLogDir("kspLookupGraphOrigin.dot").bufferedWriter().use { logFile ->
             logFile.write("digraph {\n")
             // Always add origin vertex
-            logFile.write("  \"$origin\";\n")
+            logFile.write("  \"$normalizedOrigin\";\n")
             bfsEdges.sortedWith(compareBy({ it.first }, { it.second })).forEach { (u, v) ->
                 logFile.write("  \"$u\" -> \"$v\";\n")
             }
             logFile.write("}\n")
         }
     }
+
+    private fun normalizeGraphVertexName(fqn: String): String =
+        fqn.removePrefix("<anonymous>.").removePrefix(".")
 
     private fun logLookupGraph(lookupRecords: Map<String, List<String>>) {
         if (!loggingOptions.incrementalLoggingEnabled) {
@@ -492,8 +496,9 @@ class LookupTrackerWrapperImpl(val lookupTracker: LookupTracker, val trackerLogF
         }
 
     override fun record(filePath: String, scopeFqName: String, name: String) {
-        trackerLogFile?.write("$scopeFqName.$name $filePath\n")
-        lookupTracker.record(filePath, Position.NO_POSITION, scopeFqName, ScopeKind.PACKAGE, name)
+        val normalizedScope = scopeFqName.ifEmpty { "<anonymous>" }
+        trackerLogFile?.write("$normalizedScope.$name $filePath\n")
+        lookupTracker.record(filePath, Position.NO_POSITION, normalizedScope, ScopeKind.PACKAGE, name)
     }
 }
 

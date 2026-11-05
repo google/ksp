@@ -31,7 +31,8 @@ class DualLookupTracker : LookupTracker {
         get() = symbolTracker.requiresPosition || classTracker.requiresPosition
 
     override fun record(filePath: String, position: Position, scopeFqName: String, scopeKind: ScopeKind, name: String) {
-        symbolTracker.record(filePath, position, scopeFqName, scopeKind, name)
+        val normalizedScope = scopeFqName.ifEmpty { "<anonymous>" }
+        symbolTracker.record(filePath, position, normalizedScope, scopeKind, name)
         if (scopeKind == ScopeKind.CLASSIFIER) {
             val (outerScope, className) = separateQualifierAndName(scopeFqName)
             // DO NOT USE: ScopeKind is meaningless

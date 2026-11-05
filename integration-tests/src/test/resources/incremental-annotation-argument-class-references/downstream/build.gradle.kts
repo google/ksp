@@ -31,6 +31,14 @@ repositories {
 }
 
 dependencies {
+    implementation(project(":transitive"))
+    implementation(project(":annotations"))
     implementation(project(":upstream"))
     ksp(project(":processor"))
+}
+
+ksp {
+    arg("followDefaultArguments", project.findProperty("followDefaultArguments")?.toString() ?: "false")
+    arg("callGetAllMembers", project.findProperty("callGetAllMembers")?.toString() ?: "false")
+    arg("associateJavaLibClass", project.findProperty("associateJavaLibClass")?.toString() ?: "")
 }
