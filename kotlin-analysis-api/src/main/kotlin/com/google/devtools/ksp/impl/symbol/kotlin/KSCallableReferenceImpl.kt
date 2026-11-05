@@ -18,19 +18,25 @@ class KSCallableReferenceImpl private constructor(
         fun getCached(ktFunctionalType: KaFunctionType, parent: KSNode?): KSCallableReference =
             cache.getOrPut(IdKeyPair(ktFunctionalType, parent)) { KSCallableReferenceImpl(ktFunctionalType, parent) }
     }
-    override val receiverType: KSTypeReference?
-        get() = ktFunctionalType.receiverType?.abbreviationOrSelf?.let { KSTypeReferenceResolvedImpl.getCached(it) }
-
-    override val functionParameters: List<KSValueParameter>
-        get() = ktFunctionalType.parameterTypes.map {
-            KSValueParameterLiteImpl.getCached(it, this@KSCallableReferenceImpl)
+    override val receiverType: KSTypeReference? by lazy {
+        ktFunctionalType.receiverType?.abbreviationOrSelf?.let {
+            KSTypeReferenceResolvedImpl.getCached(it, this, -2)
         }
+    }
 
-    override val returnType: KSTypeReference
-        get() = KSTypeReferenceResolvedImpl.getCached(ktFunctionalType.returnType.abbreviationOrSelf)
+    override val functionParameters: List<KSValueParameter> by lazy {
+        ktFunctionalType.parameterTypes.mapIndexed { index, it ->
+            KSValueParameterLiteImpl.getCached(it, this@KSCallableReferenceImpl, index)
+        }
+    }
 
-    override val typeArguments: List<KSTypeArgument>
-        get() = ktFunctionalType.typeArguments().map { KSTypeArgumentResolvedImpl.getCached(it, this) }
+    override val returnType: KSTypeReference by lazy {
+        KSTypeReferenceResolvedImpl.getCached(ktFunctionalType.returnType.abbreviationOrSelf, this, -1)
+    }
+
+    override val typeArguments: List<KSTypeArgument> by lazy {
+        ktFunctionalType.typeArguments().map { KSTypeArgumentResolvedImpl.getCached(it, this) }
+    }
 
     override val origin: Origin
         get() = parent?.origin ?: Origin.SYNTHETIC

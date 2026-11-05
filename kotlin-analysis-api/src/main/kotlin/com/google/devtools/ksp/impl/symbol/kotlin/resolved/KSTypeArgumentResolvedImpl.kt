@@ -23,6 +23,7 @@ import com.google.devtools.ksp.common.lazyMemoizedSequence
 import com.google.devtools.ksp.impl.symbol.kotlin.Deferrable
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.annotations
+import com.google.devtools.ksp.impl.symbol.kotlin.deferTypeArgument
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.types.KaStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.types.KaType
@@ -76,6 +77,6 @@ class KSTypeArgumentResolvedImpl private constructor(
     }
 
     override fun defer(): Restorable? {
-        TODO("Not yet implemented")
+        return deferTypeArgument()
     }
 }

@@ -27,6 +27,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeParameterImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.annotations
+import com.google.devtools.ksp.impl.symbol.kotlin.deferTypeReference
 import com.google.devtools.ksp.impl.symbol.kotlin.render
 import com.google.devtools.ksp.impl.symbol.kotlin.toClassifierReference
 import com.google.devtools.ksp.impl.symbol.kotlin.toLocation
@@ -145,6 +146,6 @@ class KSTypeReferenceResolvedImpl private constructor(
     }
 
     override fun defer(): Restorable? {
-        TODO("Not yet implemented")
+        return deferTypeReference()
     }
 }

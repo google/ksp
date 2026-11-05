@@ -34,7 +34,12 @@ import com.google.devtools.ksp.symbol.AnnotationUseSiteTarget
 import com.google.devtools.ksp.symbol.FileLocation
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSBackingField
+import com.google.devtools.ksp.symbol.KSCallableReference
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSClassifierReference
 import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSDefNonNullReference
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSNode
@@ -44,7 +49,9 @@ import com.google.devtools.ksp.symbol.KSPropertyGetter
 import com.google.devtools.ksp.symbol.KSPropertySetter
 import com.google.devtools.ksp.symbol.KSReferenceElement
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeAlias
 import com.google.devtools.ksp.symbol.KSTypeArgument
+import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSValueArgument
 import com.google.devtools.ksp.symbol.KSValueParameter
@@ -962,6 +969,129 @@ internal fun KSAnnotation.deferAnnotationByOrdinal(knownFqName: String? = null):
         } else {
             restoredCandidates?.getOrNull(ordinalInShortName)
         }
+    }
+}
+
+internal fun KSTypeReference.deferTypeReference(): Restorable? {
+    return when (val p = parent) {
+        is KSPropertyDeclaration -> {
+            val parentRestorable = (p as? Deferrable)?.defer() ?: return null
+            val isExtensionReceiver = when {
+                this === p.extensionReceiver -> true
+                this === p.type -> false
+                else -> return null
+            }
+            Restorable {
+                val restored = parentRestorable.restore() as? KSPropertyDeclaration ?: return@Restorable null
+                if (isExtensionReceiver) restored.extensionReceiver else restored.type
+            }
+        }
+        is KSFunctionDeclaration -> {
+            val parentRestorable = (p as? Deferrable)?.defer() ?: return null
+            val isExtensionReceiver = when {
+                this === p.extensionReceiver -> true
+                this === p.returnType -> false
+                else -> return null
+            }
+            Restorable {
+                val restored = parentRestorable.restore() as? KSFunctionDeclaration ?: return@Restorable null
+                if (isExtensionReceiver) restored.extensionReceiver else restored.returnType
+            }
+        }
+        is KSPropertyGetter -> {
+            val parentRestorable = (p as? Deferrable)?.defer() ?: return null
+            Restorable { (parentRestorable.restore() as? KSPropertyGetter)?.returnType }
+        }
+        is KSBackingField -> {
+            val parentRestorable = (p as? Deferrable)?.defer() ?: return null
+            Restorable { (parentRestorable.restore() as? KSBackingField)?.type }
+        }
+        is KSValueParameter -> {
+            val parentRestorable = (p as? Deferrable)?.defer() ?: return null
+            Restorable { (parentRestorable.restore() as? KSValueParameter)?.type }
+        }
+        is KSTypeAlias -> {
+            val parentRestorable = (p as? Deferrable)?.defer() ?: return null
+            Restorable { (parentRestorable.restore() as? KSTypeAlias)?.type }
+        }
+        is KSClassDeclaration -> {
+            val parentRestorable = (p as? Deferrable)?.defer() ?: return null
+            val superIndex = p.superTypes.indexOfFirst { it === this }
+            if (superIndex < 0) return null
+            Restorable { (parentRestorable.restore() as? KSClassDeclaration)?.superTypes?.elementAtOrNull(superIndex) }
+        }
+        is KSTypeParameter -> {
+            val parentRestorable = (p as? Deferrable)?.defer() ?: return null
+            val boundIndex = p.bounds.indexOfFirst { it === this }
+            if (boundIndex < 0) return null
+            Restorable { (parentRestorable.restore() as? KSTypeParameter)?.bounds?.elementAtOrNull(boundIndex) }
+        }
+        is KSTypeArgument -> {
+            val parentRestorable = (p as? Deferrable)?.defer() ?: return null
+            Restorable { (parentRestorable.restore() as? KSTypeArgument)?.type }
+        }
+        is KSCallableReference -> {
+            val typeRef = p.parent as? KSTypeReference ?: return null
+            val typeRefRestorable = (typeRef as? Deferrable)?.defer() ?: return null
+            val isReceiver = when {
+                this === p.receiverType -> true
+                this === p.returnType -> false
+                else -> return null
+            }
+            Restorable {
+                val restoredTypeRef = typeRefRestorable.restore() as? KSTypeReference ?: return@Restorable null
+                val restoredCallable = restoredTypeRef.element as? KSCallableReference ?: return@Restorable null
+                if (isReceiver) restoredCallable.receiverType else restoredCallable.returnType
+            }
+        }
+        is DeferrableAnnotation -> {
+            val parentRestorer = p.deferAnnotation() ?: return null
+            Restorable { parentRestorer()?.annotationType }
+        }
+        else -> null
+    }
+}
+
+private fun KSTypeReference.unwrapClassifierReference(): KSClassifierReference? = when (val elem = element) {
+    is KSClassifierReference -> elem
+    is KSDefNonNullReference -> elem.enclosedType
+    else -> null
+}
+
+internal fun KSTypeArgument.deferTypeArgument(): Restorable? {
+    return when (val p = parent) {
+        is KSClassifierReference -> {
+            val typeRef = p.parent as? KSTypeReference ?: return null
+            val typeRefRestorable = (typeRef as? Deferrable)?.defer() ?: return null
+            var depth = 0
+            var curr = typeRef.unwrapClassifierReference()
+            while (curr != null && curr !== p) {
+                curr = curr.qualifier
+                depth++
+            }
+            if (curr == null) return null
+            val argIndex = p.typeArguments.indexOfFirst { it === this }
+            if (argIndex < 0) return null
+            Restorable {
+                val restoredTypeRef = typeRefRestorable.restore() as? KSTypeReference ?: return@Restorable null
+                var restoredClassifier = restoredTypeRef.unwrapClassifierReference()
+                repeat(depth) {
+                    restoredClassifier = restoredClassifier?.qualifier
+                }
+                restoredClassifier?.typeArguments?.getOrNull(argIndex)
+            }
+        }
+        is KSCallableReference -> {
+            val typeRef = p.parent as? KSTypeReference ?: return null
+            val typeRefRestorable = (typeRef as? Deferrable)?.defer() ?: return null
+            val argIndex = p.typeArguments.indexOfFirst { it === this }
+            if (argIndex < 0) return null
+            Restorable {
+                val restoredTypeRef = typeRefRestorable.restore() as? KSTypeReference ?: return@Restorable null
+                (restoredTypeRef.element as? KSCallableReference)?.typeArguments?.getOrNull(argIndex)
+            }
+        }
+        else -> null
     }
 }
 

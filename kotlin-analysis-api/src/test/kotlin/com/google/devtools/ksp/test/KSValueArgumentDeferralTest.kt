@@ -17,6 +17,8 @@
 
 package com.google.devtools.ksp.test
 
+import com.google.devtools.ksp.ApiFeatures
+import com.google.devtools.ksp.buildApiFeatures
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.impl.CommandLineKSPLogger
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
@@ -31,7 +33,10 @@ import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSCallableReference
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSClassifierReference
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSValueArgument
@@ -200,6 +205,242 @@ class KSValueArgumentDeferralTest {
         assertTrue("kotlinSrc/KotlinDefaultConsumer.kt" in (round2Lookups["<anonymous>.TargetKotlinDefault"] ?: emptyList()))
         assertTrue("javaSrc/JavaConsumer.java" in (round2Lookups["<anonymous>.TargetJavaExplicit"] ?: emptyList()))
         assertTrue("javaSrc/JavaConsumer.java" in (round2Lookups["<anonymous>.TargetJavaDefault"] ?: emptyList()))
+    }
+
+    @Test
+    fun testDeferredTypeAnnotationValueArgumentsAA(@TempDir tempDir: File) {
+        runDeferredTypeAnnotationValueArgumentsTest(experimentalPsiResolution = false, tempDir = tempDir)
+    }
+
+    @Test
+    fun testDeferredTypeAnnotationValueArgumentsPsi(@TempDir tempDir: File) {
+        runDeferredTypeAnnotationValueArgumentsTest(experimentalPsiResolution = true, tempDir = tempDir)
+    }
+
+    private fun runDeferredTypeAnnotationValueArgumentsTest(
+        experimentalPsiResolution: Boolean,
+        tempDir: File,
+    ) {
+        val kotlinSrc = File(tempDir, "kotlinSrc").apply { mkdirs() }
+        val javaSrc = File(tempDir, "javaSrc").apply { mkdirs() }
+
+        File(kotlinSrc, "TypeAnnotations.kt").writeText(
+            """
+            import kotlin.reflect.KClass
+
+            class TargetParamType
+            class TargetParamTypeArg
+            class TargetReturnType
+            class TargetReturnTypeArg
+            class TargetPropType
+            class TargetReceiverType
+            class TargetBoundType
+            class TargetSuperType
+            class TargetFnReceiver
+            class TargetFnParam
+            class TargetFnReturn
+            class TargetKtBackingField
+            class TargetJavaFieldType
+            class TargetJavaFieldTypeArg
+
+            @Target(AnnotationTarget.TYPE)
+            annotation class TypeRef(val value: KClass<*>)
+
+            interface BoundIface
+
+            class TypeAnnotatedKotlin<T : @TypeRef(TargetBoundType::class) BoundIface> :
+                @TypeRef(TargetSuperType::class) BoundIface {
+                val @receiver:TypeRef(TargetReceiverType::class) String.extProp: @TypeRef(TargetPropType::class) Int
+                    get() = 0
+
+                val backedProp: @TypeRef(TargetKtBackingField::class) String = ""
+
+                val fnProp: (@TypeRef(TargetFnReceiver::class) String).(@TypeRef(TargetFnParam::class) Int) -> @TypeRef(TargetFnReturn::class) Boolean =
+                    { true }
+
+                fun compute(
+                    param: @TypeRef(TargetParamType::class) List<@TypeRef(TargetParamTypeArg::class) String>
+                ): @TypeRef(TargetReturnType::class) List<@TypeRef(TargetReturnTypeArg::class) String> = param
+            }
+            """.trimIndent() + "\n"
+        )
+        File(javaSrc, "JavaTypeRef.java").writeText(
+            """
+            import java.lang.annotation.ElementType;
+            import java.lang.annotation.Target;
+
+            @Target(ElementType.TYPE_USE)
+            public @interface JavaTypeRef {
+                Class<?> value();
+            }
+            """.trimIndent() + "\n"
+        )
+        File(javaSrc, "TypeAnnotatedJava.java").writeText(
+            """
+            import java.util.List;
+
+            public class TypeAnnotatedJava {
+                public @JavaTypeRef(TargetJavaFieldType.class) List<@JavaTypeRef(TargetJavaFieldTypeArg.class) String> field;
+            }
+            """.trimIndent() + "\n"
+        )
+
+        var roundCount = 0
+        var round2Lookups: Map<String, List<String>> = emptyMap()
+        val restoredSummaries = mutableListOf<String>()
+
+        val provider = SymbolProcessorProvider { env: SymbolProcessorEnvironment ->
+            object : SymbolProcessor {
+                override val apiFeatures: ApiFeatures = buildApiFeatures {
+                    enableBackingFields = true
+                }
+
+                private val deferredArgs = linkedMapOf<String, Restorable?>()
+
+                override fun process(resolver: Resolver): List<KSAnnotated> {
+                    if (roundCount++ == 0) {
+                        val ktCls = resolver.getClassDeclarationByName("TypeAnnotatedKotlin")!!
+                        val boundArg = ktCls.typeParameters.single().bounds.single()
+                            .annotations.single().arguments.single()
+                        val superArg = ktCls.superTypes.single()
+                            .annotations.single().arguments.single()
+                        val extProp = ktCls.declarations.single { it.simpleName.asString() == "extProp" }
+                            as KSPropertyDeclaration
+                        val receiverArg = extProp.extensionReceiver!!
+                            .annotations.single().arguments.single()
+                        val propTypeArg = extProp.type
+                            .annotations.single().arguments.single()
+                        val backedProp = ktCls.declarations.single { it.simpleName.asString() == "backedProp" }
+                            as KSPropertyDeclaration
+                        val ktBackingFieldArg = backedProp.backingField!!.type
+                            .annotations.single().arguments.single()
+                        val fnProp = ktCls.declarations.single { it.simpleName.asString() == "fnProp" }
+                            as KSPropertyDeclaration
+                        val fnCallable = fnProp.type.element as KSCallableReference
+                        val fnReceiverArg = fnCallable.receiverType!!
+                            .annotations.single().arguments.single()
+                        val fnParamArg = fnCallable.functionParameters.single().type
+                            .annotations.single().arguments.single()
+                        val fnReturnArg = fnCallable.returnType
+                            .annotations.single().arguments.single()
+                        val fnTypeArg0 = fnCallable.typeArguments.first().type!!
+                            .annotations.single().arguments.single()
+                        val fn = ktCls.declarations.single { it.simpleName.asString() == "compute" }
+                            as KSFunctionDeclaration
+                        val paramTypeRef = fn.parameters.single().type
+                        val paramArg = paramTypeRef.annotations.single().arguments.single()
+                        val paramTypeArgArg = (paramTypeRef.element as KSClassifierReference)
+                            .typeArguments.single().type!!.annotations.single().arguments.single()
+                        val returnTypeRef = fn.returnType!!
+                        val returnArg = returnTypeRef.annotations.single().arguments.single()
+                        val returnTypeArgArg = (returnTypeRef.element as KSClassifierReference)
+                            .typeArguments.single().type!!.annotations.single().arguments.single()
+
+                        val javaCls = resolver.getClassDeclarationByName("TypeAnnotatedJava")!!
+                        val javaField = javaCls.declarations.single { it.simpleName.asString() == "field" }
+                            as KSPropertyDeclaration
+                        val javaFieldTypeArg = javaField.type.annotations.single().arguments.single()
+                        val javaFieldTypeArgInner = (javaField.type.element as KSClassifierReference)
+                            .typeArguments.single().type!!.annotations.single().arguments.single()
+                        val javaBackingFieldArg = javaField.backingField!!.type
+                            .annotations.single().arguments.single()
+
+                        val rawArgs = linkedMapOf(
+                            "bound" to boundArg,
+                            "super" to superArg,
+                            "receiver" to receiverArg,
+                            "propType" to propTypeArg,
+                            "ktBackingField" to ktBackingFieldArg,
+                            "fnReceiver" to fnReceiverArg,
+                            "fnParam" to fnParamArg,
+                            "fnReturn" to fnReturnArg,
+                            "fnTypeArg0" to fnTypeArg0,
+                            "param" to paramArg,
+                            "paramTypeArg" to paramTypeArgArg,
+                            "return" to returnArg,
+                            "returnTypeArg" to returnTypeArgArg,
+                            "javaField" to javaFieldTypeArg,
+                            "javaFieldTypeArg" to javaFieldTypeArgInner,
+                            "javaBackingField" to javaBackingFieldArg,
+                        )
+                        for ((k, v) in rawArgs) {
+                            deferredArgs[k] = (v as? Deferrable)?.defer()
+                        }
+
+                        env.codeGenerator.createNewFile(Dependencies(false), "", "Round2TriggerType", "kt").use {
+                            it.write("class Round2TriggerType\n".toByteArray())
+                        }
+                        // Round 2 is triggered by file generation above; rawArgs are restored manually via Deferrable.defer().
+                        return emptyList()
+                    } else if (roundCount == 2) {
+                        for ((key, restorable) in deferredArgs) {
+                            assertNotNull(restorable, "Expected Deferrable.defer() to be non-null for $key")
+                            val restored = restorable!!.restore() as? KSValueArgument
+                            assertNotNull(restored, "Expected Restorable.restore() to return KSValueArgument for $key")
+                            val typeName = (restored!!.value as KSType).declaration.simpleName.asString()
+                            restoredSummaries.add("$key->$typeName")
+                        }
+                        round2Lookups = ResolverAAImpl.instance.incrementalContext.dumpLookupRecords()
+                    }
+                    return emptyList()
+                }
+            }
+        }
+
+        val kspConfig = KSPJvmConfig.Builder().apply {
+            moduleName = "main"
+            sourceRoots = listOf(kotlinSrc)
+            javaSourceRoots = listOf(javaSrc)
+            jdkHome = File(System.getProperty("java.home"))
+            jvmTarget = JvmTarget.DEFAULT.description
+            languageVersion = "2.0"
+            apiVersion = "2.0"
+            libraries = listOf(File("dist/kotlinc/lib/kotlin-stdlib.jar"))
+            projectBaseDir = tempDir
+            classOutputDir = File(tempDir, "out/classes")
+            javaOutputDir = File(tempDir, "out/java")
+            kotlinOutputDir = File(tempDir, "out/kotlin")
+            resourceOutputDir = File(tempDir, "out/resources")
+            cachesDir = File(tempDir, "out/caches")
+            outputBaseDir = File(tempDir, "out")
+            incremental = true
+            this.experimentalPsiResolution = experimentalPsiResolution
+        }.build()
+
+        val exitCode = KotlinSymbolProcessing(kspConfig, listOf(provider), CommandLineKSPLogger()).execute()
+        assertEquals(KotlinSymbolProcessing.ExitCode.OK, exitCode)
+        assertEquals(2, roundCount)
+        assertEquals(
+            listOf(
+                "bound->TargetBoundType",
+                "super->TargetSuperType",
+                "receiver->TargetReceiverType",
+                "propType->TargetPropType",
+                "ktBackingField->TargetKtBackingField",
+                "fnReceiver->TargetFnReceiver",
+                "fnParam->TargetFnParam",
+                "fnReturn->TargetFnReturn",
+                "fnTypeArg0->TargetFnReceiver",
+                "param->TargetParamType",
+                "paramTypeArg->TargetParamTypeArg",
+                "return->TargetReturnType",
+                "returnTypeArg->TargetReturnTypeArg",
+                "javaField->TargetJavaFieldType",
+                "javaFieldTypeArg->TargetJavaFieldTypeArg",
+                "javaBackingField->TargetJavaFieldType",
+            ),
+            restoredSummaries
+        )
+        assertTrue("kotlinSrc/TypeAnnotations.kt" in (round2Lookups["<anonymous>.TargetKtBackingField"] ?: emptyList()))
+        assertTrue("kotlinSrc/TypeAnnotations.kt" in (round2Lookups["<anonymous>.TargetFnReceiver"] ?: emptyList()))
+        assertTrue("kotlinSrc/TypeAnnotations.kt" in (round2Lookups["<anonymous>.TargetFnParam"] ?: emptyList()))
+        assertTrue("kotlinSrc/TypeAnnotations.kt" in (round2Lookups["<anonymous>.TargetFnReturn"] ?: emptyList()))
+        assertTrue("kotlinSrc/TypeAnnotations.kt" in (round2Lookups["<anonymous>.TargetParamType"] ?: emptyList()))
+        assertTrue("kotlinSrc/TypeAnnotations.kt" in (round2Lookups["<anonymous>.TargetParamTypeArg"] ?: emptyList()))
+        assertTrue("kotlinSrc/TypeAnnotations.kt" in (round2Lookups["<anonymous>.TargetReturnType"] ?: emptyList()))
+        assertTrue("kotlinSrc/TypeAnnotations.kt" in (round2Lookups["<anonymous>.TargetReturnTypeArg"] ?: emptyList()))
+        assertTrue("javaSrc/TypeAnnotatedJava.java" in (round2Lookups["<anonymous>.TargetJavaFieldType"] ?: emptyList()))
+        assertTrue("javaSrc/TypeAnnotatedJava.java" in (round2Lookups["<anonymous>.TargetJavaFieldTypeArg"] ?: emptyList()))
     }
 
     @Test

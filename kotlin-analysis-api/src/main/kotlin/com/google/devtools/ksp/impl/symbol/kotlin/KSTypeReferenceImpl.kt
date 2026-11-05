@@ -42,7 +42,7 @@ class KSTypeReferenceImpl(
     private val ktTypeReference: KtTypeReference,
     override val parent: KSNode?,
     private val additionalAnnotations: List<KaAnnotation>
-) : KSTypeReference {
+) : KSTypeReference, Deferrable {
     companion object : KSObjectCache<IdKeyPair<KtTypeReference, KSNode?>, KSTypeReference>() {
         fun getCached(
             ktTypeReference: KtTypeReference,
@@ -121,5 +121,9 @@ class KSTypeReferenceImpl(
             visit(typeElement)
             typeElement = typeElement.innerType
         }
+    }
+
+    override fun defer(): Restorable? {
+        return deferTypeReference()
     }
 }
