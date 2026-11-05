@@ -34,6 +34,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.KSFileImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
+import com.google.devtools.ksp.impl.symbol.kotlin.definitionOrigin
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.standalone.IncrementalGlobalSearchScope
 import com.google.devtools.ksp.standalone.IncrementalJavaFileManager
@@ -631,7 +632,7 @@ class KotlinSymbolProcessing(
                     incrementalContext.closeFilesOnException {
                         deferredSymbols[processor] =
                             processor.process(resolver)
-                                .filter { it.origin == Origin.KOTLIN || it.origin == Origin.JAVA }
+                                .filter { it.definitionOrigin == Origin.KOTLIN || it.definitionOrigin == Origin.JAVA }
                                 .filterIsInstance<Deferrable>()
                                 .mapNotNull(Deferrable::defer)
                     }

@@ -20,6 +20,7 @@ package com.google.devtools.ksp.test
 import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.buildApiFeatures
 import com.google.devtools.ksp.getClassDeclarationByName
+import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.impl.CommandLineKSPLogger
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
 import com.google.devtools.ksp.impl.ResolverAAImpl
@@ -38,8 +39,11 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSClassifierReference
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyGetter
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSValueArgument
+import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.Origin
 import org.jetbrains.kotlin.config.JvmTarget
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -782,5 +786,142 @@ class KSValueArgumentDeferralTest {
         assertTrue("kotlinSrc/ArrayClassLiterals.kt" in (lookups["<anonymous>.KtMultiDimElem"] ?: emptyList()))
         assertTrue("kotlinSrc/ArrayClassLiterals.kt" in (lookups["<anonymous>.JavaMultiDimDefaultElem"] ?: emptyList()))
         assertTrue("javaSrc/JavaConsumer.java" in (lookups["<anonymous>.JavaMultiDimExplicitElem"] ?: emptyList()))
+    }
+
+    @Test
+    fun testSyntheticSourceSymbolsDeferredAcrossRoundsAA(@TempDir tempDir: File) {
+        runSyntheticSourceSymbolsDeferredTest(experimentalPsiResolution = false, tempDir = tempDir)
+    }
+
+    @Test
+    fun testSyntheticSourceSymbolsDeferredAcrossRoundsPsi(@TempDir tempDir: File) {
+        runSyntheticSourceSymbolsDeferredTest(experimentalPsiResolution = true, tempDir = tempDir)
+    }
+
+    private fun runSyntheticSourceSymbolsDeferredTest(experimentalPsiResolution: Boolean, tempDir: File) {
+        val kotlinSrc = File(tempDir, "kotlinSrc").apply { mkdirs() }
+
+        File(kotlinSrc, "SyntheticDeferred.kt").writeText(
+            """
+            import kotlin.reflect.KClass
+
+            @Target(
+                AnnotationTarget.TYPE,
+                AnnotationTarget.PROPERTY_GETTER,
+                AnnotationTarget.VALUE_PARAMETER,
+                AnnotationTarget.CLASS,
+            )
+            annotation class DeferAnno(val target: KClass<*> = Any::class)
+
+            class Holder {
+                val implicitGetterProp: @DeferAnno(GeneratedTarget::class) String = ""
+
+                @get:DeferAnno(GeneratedTarget::class)
+                val annotatedImplicitGetter: String = ""
+
+                @setparam:DeferAnno(GeneratedTarget::class)
+                var annotatedSetterParam: String = ""
+            }
+            """.trimIndent()
+        )
+
+        var roundCount = 0
+        val round2Summaries = mutableListOf<String>()
+        var round2LibCount = -1
+
+        val provider = SymbolProcessorProvider { environment ->
+            object : SymbolProcessor {
+                override fun process(resolver: Resolver): List<KSAnnotated> {
+                    roundCount++
+                    if (roundCount == 1) {
+                        val holder = resolver.getClassDeclarationByName("Holder")!!
+                        val implicitGetterReturnType = holder.getDeclaredProperties()
+                            .single { it.simpleName.asString() == "implicitGetterProp" }
+                            .getter!!.returnType!!
+                        assertEquals(Origin.SYNTHETIC, implicitGetterReturnType.origin)
+
+                        val annotatedSymbols = resolver.getSymbolsWithAnnotation("DeferAnno").toList()
+                        val annotatedGetter = annotatedSymbols.filterIsInstance<KSPropertyGetter>().single()
+                        val annotatedSetParam = annotatedSymbols.filterIsInstance<KSValueParameter>().single()
+                        assertEquals(Origin.SYNTHETIC, annotatedGetter.origin)
+                        assertEquals(Origin.SYNTHETIC, annotatedSetParam.origin)
+
+                        val kotlinLibDecl = resolver.getClassDeclarationByName("kotlin.Deprecated")!!
+                        val javaLibSyntheticProp = resolver.getClassDeclarationByName("java.lang.Deprecated")!!
+                            .getDeclaredProperties().first()
+                        assertEquals(Origin.KOTLIN_LIB, kotlinLibDecl.origin)
+                        assertEquals(Origin.SYNTHETIC, javaLibSyntheticProp.origin)
+
+                        environment.codeGenerator.createNewFile(
+                            Dependencies(false, holder.containingFile!!),
+                            "",
+                            "GeneratedTarget"
+                        ).writer().use {
+                            it.write("class GeneratedTarget\n")
+                        }
+
+                        return listOf(
+                            annotatedGetter,
+                            annotatedSetParam,
+                            implicitGetterReturnType,
+                            kotlinLibDecl,
+                            javaLibSyntheticProp,
+                        )
+                    } else if (roundCount == 2) {
+                        val restored = resolver.getSymbolsWithAnnotation("DeferAnno").toList()
+                        restored.forEach { sym ->
+                            val targetDeclName = (
+                                sym.annotations.single { it.shortName.asString() == "DeferAnno" }
+                                    .arguments.single().value as? KSType
+                                )?.takeIf { !it.isError }?.declaration?.simpleName?.asString() ?: "ERROR"
+                            val kind = when (sym) {
+                                is KSPropertyGetter -> "getter:${sym.receiver.simpleName.asString()}"
+                                is KSValueParameter -> "setparam:${sym}"
+                                is KSTypeReference -> "typeRef:${sym}"
+                                else -> "other:${sym::class.simpleName}"
+                            }
+                            round2Summaries += "$kind->$targetDeclName"
+                        }
+                        round2LibCount =
+                            resolver.getSymbolsWithAnnotation("kotlin.annotation.MustBeDocumented").count() +
+                            resolver.getSymbolsWithAnnotation("java.lang.annotation.Documented").count()
+                    }
+                    return emptyList()
+                }
+            }
+        }
+
+        val kspConfig = KSPJvmConfig.Builder().apply {
+            moduleName = "main"
+            sourceRoots = listOf(kotlinSrc)
+            javaSourceRoots = emptyList()
+            jdkHome = File(System.getProperty("java.home"))
+            jvmTarget = JvmTarget.DEFAULT.description
+            languageVersion = "2.0"
+            apiVersion = "2.0"
+            libraries = listOf(File("dist/kotlinc/lib/kotlin-stdlib.jar"))
+            projectBaseDir = tempDir
+            classOutputDir = File(tempDir, "out/classes")
+            javaOutputDir = File(tempDir, "out/java")
+            kotlinOutputDir = File(tempDir, "out/kotlin")
+            resourceOutputDir = File(tempDir, "out/resources")
+            cachesDir = File(tempDir, "out/caches")
+            outputBaseDir = File(tempDir, "out")
+            incremental = true
+            this.experimentalPsiResolution = experimentalPsiResolution
+        }.build()
+
+        val exitCode = KotlinSymbolProcessing(kspConfig, listOf(provider), CommandLineKSPLogger()).execute()
+        assertEquals(KotlinSymbolProcessing.ExitCode.OK, exitCode)
+        assertEquals(2, roundCount)
+        assertEquals(0, round2LibCount)
+        assertEquals(
+            setOf(
+                "getter:annotatedImplicitGetter->GeneratedTarget",
+                "setparam:value->GeneratedTarget",
+                "typeRef:String->GeneratedTarget",
+            ),
+            round2Summaries.toSet()
+        )
     }
 }
