@@ -1165,4 +1165,223 @@ class IncrementalAnnotationArgumentClassReferences(experimentalPsiResolution: Bo
             )
         }
     }
+
+    @Test
+    fun testKotlinEnumDefaultAnnotationArgumentTransitiveChange() {
+        project.appendProperty("ksp.incremental.log=true")
+        project.appendProperty("ksp.incremental.log.graph.origin=DownstreamClass")
+        File(project.root, "annotations/src/main/kotlin/TransitiveEnum.kt").writeText(
+            """
+            enum class TransitiveEnum {
+                @ExampleReference(TransitiveChanges::class)
+                ENTRY_A,
+                ENTRY_B
+            }
+            """.trimIndent() + "\n"
+        )
+        File(project.root, "upstream/src/main/kotlin/EnumDefaultAnno.kt").writeText(
+            """
+            annotation class EnumDefaultAnno(
+                val value: TransitiveEnum = TransitiveEnum.ENTRY_A
+            )
+            """.trimIndent() + "\n"
+        )
+        File(project.root, "upstream/src/main/kotlin/UpstreamEnumHolder.kt").writeText(
+            """
+            @EnumDefaultAnno
+            class UpstreamEnumHolder
+            """.trimIndent() + "\n"
+        )
+        File(project.root, "downstream/src/main/kotlin/DownstreamClass.kt").writeText(
+            """
+            @ExampleReference(UpstreamEnumHolder::class)
+            class DownstreamClass
+            """.trimIndent() + "\n"
+        )
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(CLEAN, ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            val lines = result.output.lines()
+            Assert.assertTrue(lines.contains("$PROCESSOR_LABEL Processing DownstreamClass"))
+            Assert.assertTrue(lines.contains("$PROCESSOR_LABEL Processing TransitiveChanges"))
+        }
+
+        val dotFile = File(project.root, "downstream/build/kspCaches/main/logs/kspLookupGraphOrigin.dot")
+        Assert.assertTrue("Expected kspLookupGraphOrigin.dot to exist at ${dotFile.path}", dotFile.exists())
+        Assert.assertTrue(
+            "Expected UpstreamEnumHolder -> TransitiveEnum edge in lookup graph, got:\n${dotFile.readText()}",
+            dotFile.readText().contains("\"UpstreamEnumHolder\" -> \"TransitiveEnum\";")
+        )
+
+        File(project.root, "transitive/src/main/kotlin/TransitiveChanges.kt").appendText(
+            "\n{ val propFromEnumDefaultTest = 1 }\n"
+        )
+
+        gradleRunner.withArguments(ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            val lines = result.output.lines()
+            Assert.assertTrue(
+                "Expected DownstreamClass to be reprocessed when TransitiveChanges changes via enum default argument",
+                lines.contains("$PROCESSOR_LABEL Processing DownstreamClass")
+            )
+        }
+    }
+
+    @Test
+    fun testJavaSourceEnumExplicitAndDefaultAnnotationArgumentTransitiveChange() {
+        File(project.root, "annotations/src/main/kotlin/TransitiveEnum.kt").writeText(
+            """
+            enum class TransitiveEnum {
+                @ExampleReference(TransitiveChanges::class)
+                ENTRY_A,
+                ENTRY_B
+            }
+            """.trimIndent() + "\n"
+        )
+        File(project.root, "downstream/src/main/java/LocalJavaEnumExplicitAnno.java")
+            .apply { parentFile.mkdirs() }
+            .writeText(
+                """
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.RetentionPolicy;
+
+                @Retention(RetentionPolicy.RUNTIME)
+                public @interface LocalJavaEnumExplicitAnno {
+                    TransitiveEnum value();
+                }
+                """.trimIndent() + "\n"
+            )
+        File(project.root, "downstream/src/main/java/LocalJavaEnumDefaultAnno.java")
+            .apply { parentFile.mkdirs() }
+            .writeText(
+                """
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.RetentionPolicy;
+
+                @Retention(RetentionPolicy.RUNTIME)
+                public @interface LocalJavaEnumDefaultAnno {
+                    TransitiveEnum value() default TransitiveEnum.ENTRY_A;
+                }
+                """.trimIndent() + "\n"
+            )
+        File(project.root, "downstream/src/main/java/DownstreamJavaEnumExplicitHolder.java")
+            .apply { parentFile.mkdirs() }
+            .writeText(
+                """
+                @ExampleJavaReference(DownstreamJavaEnumExplicitHolder.class)
+                @LocalJavaEnumExplicitAnno(TransitiveEnum.ENTRY_A)
+                public class DownstreamJavaEnumExplicitHolder {}
+                """.trimIndent() + "\n"
+            )
+        File(project.root, "downstream/src/main/kotlin/DownstreamClass.kt").writeText(
+            """
+            class LocalDummy
+
+            @ExampleReference(LocalDummy::class)
+            @LocalJavaEnumDefaultAnno
+            class DownstreamClass
+            """.trimIndent() + "\n"
+        )
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(CLEAN, ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            val lines = result.output.lines()
+            Assert.assertTrue(lines.contains("$PROCESSOR_LABEL Processing DownstreamClass"))
+            Assert.assertTrue(lines.contains("$PROCESSOR_LABEL Processing DownstreamJavaEnumExplicitHolder"))
+            Assert.assertTrue(lines.contains("$PROCESSOR_LABEL Processing TransitiveChanges"))
+        }
+
+        File(project.root, "transitive/src/main/kotlin/TransitiveChanges.kt").appendText(
+            "\n{ val propFromJavaEnumTest = 1 }\n"
+        )
+
+        gradleRunner.withArguments(ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            val lines = result.output.lines()
+            Assert.assertTrue(
+                "Expected DownstreamJavaEnumExplicitHolder to be reprocessed when TransitiveChanges changes via Java explicit enum argument",
+                lines.contains("$PROCESSOR_LABEL Processing DownstreamJavaEnumExplicitHolder")
+            )
+            Assert.assertTrue(
+                "Expected DownstreamClass to be reprocessed when TransitiveChanges changes via Java source enum default argument",
+                lines.contains("$PROCESSOR_LABEL Processing DownstreamClass")
+            )
+        }
+    }
+
+    @Test
+    fun testArrayClassLiteralDefaultAnnotationArgumentTransitiveChange() {
+        File(project.root, "annotations/src/main/kotlin/KtArrayClassDefaultAnno.kt").writeText(
+            """
+            import kotlin.reflect.KClass
+
+            annotation class KtArrayClassDefaultAnno(
+                val value: KClass<*> = Array<TransitiveChanges>::class
+            )
+            """.trimIndent() + "\n"
+        )
+        File(project.root, "annotations/src/main/java/JavaMultiDimArrayClassDefaultAnno.java").writeText(
+            """
+            import java.lang.annotation.Retention;
+            import java.lang.annotation.RetentionPolicy;
+
+            @Retention(RetentionPolicy.RUNTIME)
+            public @interface JavaMultiDimArrayClassDefaultAnno {
+                Class<?> value() default TransitiveChanges[][].class;
+            }
+            """.trimIndent() + "\n"
+        )
+        File(project.root, "upstream/src/main/kotlin/UpstreamKtArrayClassHolder.kt").writeText(
+            """
+            @KtArrayClassDefaultAnno
+            class UpstreamKtArrayClassHolder
+            """.trimIndent() + "\n"
+        )
+        File(project.root, "upstream/src/main/java/UpstreamJavaArrayClassHolder.java").writeText(
+            """
+            @JavaMultiDimArrayClassDefaultAnno
+            public class UpstreamJavaArrayClassHolder {}
+            """.trimIndent() + "\n"
+        )
+        File(project.root, "downstream/src/main/kotlin/DownstreamKtArrayConsumer.kt").writeText(
+            """
+            @ExampleReference(UpstreamKtArrayClassHolder::class)
+            class DownstreamKtArrayConsumer
+            """.trimIndent() + "\n"
+        )
+        File(project.root, "downstream/src/main/kotlin/DownstreamClass.kt").writeText(
+            """
+            @ExampleReference(UpstreamJavaArrayClassHolder::class)
+            class DownstreamClass
+            """.trimIndent() + "\n"
+        )
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(CLEAN, ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            val lines = result.output.lines()
+            Assert.assertTrue(lines.contains("$PROCESSOR_LABEL Processing DownstreamKtArrayConsumer"))
+            Assert.assertTrue(lines.contains("$PROCESSOR_LABEL Processing DownstreamClass"))
+            Assert.assertTrue(lines.contains("$PROCESSOR_LABEL Processing TransitiveChanges"))
+        }
+
+        File(project.root, "transitive/src/main/kotlin/TransitiveChanges.kt").appendText(
+            "\n{ val propFromArrayClassLiteralTest = 1 }\n"
+        )
+
+        gradleRunner.withArguments(ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            val lines = result.output.lines()
+            Assert.assertTrue(
+                "Expected DownstreamKtArrayConsumer to be reprocessed when TransitiveChanges changes via Array<TransitiveChanges>::class default",
+                lines.contains("$PROCESSOR_LABEL Processing DownstreamKtArrayConsumer")
+            )
+            Assert.assertTrue(
+                "Expected DownstreamClass to be reprocessed when TransitiveChanges changes via TransitiveChanges[][].class default",
+                lines.contains("$PROCESSOR_LABEL Processing DownstreamClass")
+            )
+        }
+    }
 }

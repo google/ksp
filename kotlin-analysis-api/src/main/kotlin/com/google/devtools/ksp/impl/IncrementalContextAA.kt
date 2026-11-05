@@ -201,12 +201,42 @@ class IncrementalContextAA(
         if (!isIncremental) {
             return
         }
+        when (type) {
+            is KaClassType -> {
+                type.typeArguments().forEach { projection ->
+                    projection.type?.let { argType -> recordClassReferenceLookup(argType, context) }
+                }
+                val fqn = type.classId.asFqNameString()
+                recordClassReferenceLookup(fqn, context)
+                val expandedFqn = type.getFqn()
+                if (expandedFqn != null && expandedFqn != fqn) {
+                    recordClassReferenceLookup(expandedFqn, context)
+                }
+            }
 
-        val fqn = type.symbol?.classId?.asFqNameString()
-            ?: type.getFqn()
-            ?: return
+            is KaFlexibleType -> {
+                recordClassReferenceLookup(type.lowerBound, context)
+                recordClassReferenceLookup(type.upperBound, context)
+            }
 
-        recordClassReferenceLookup(fqn, context)
+            is KaIntersectionType -> {
+                type.conjuncts.forEach {
+                    recordClassReferenceLookup(it, context)
+                }
+            }
+
+            is KaCapturedType -> {
+                type.projection.type?.let {
+                    recordClassReferenceLookup(it, context)
+                }
+            }
+
+            is KaDefinitelyNotNullType -> {
+                recordClassReferenceLookup(type.original, context)
+            }
+
+            is KaErrorType, is KaDynamicType, is KaTypeParameterType -> {}
+        }
     }
 
     /**

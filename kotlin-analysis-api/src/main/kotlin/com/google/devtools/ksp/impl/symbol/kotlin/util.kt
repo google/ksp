@@ -779,6 +779,9 @@ internal fun KaAnnotationValue.toValue(parent: KSNode? = null, origin: Origin? =
     }
     // TODO: Enum entry should return a type, use declaration as a placeholder.
     is KaAnnotationValue.EnumEntryValue -> this.callableId?.classId?.let { classId ->
+        if (parent != null) {
+            recordClassReferenceLookup(classId.asFqNameString(), parent)
+        }
         analyze {
             classId.toKtClassSymbol()?.let { classSymbol ->
                 classSymbol.declarations().filterIsInstance<KSClassDeclarationEnumEntryImpl>().singleOrNull {
