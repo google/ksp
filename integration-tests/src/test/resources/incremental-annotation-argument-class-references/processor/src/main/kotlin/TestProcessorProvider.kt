@@ -21,6 +21,11 @@ import com.google.devtools.ksp.processing.SymbolProcessorProvider
 
 class TestProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
-        return TestProcessor(environment)
+        val followDefault = environment.options["followDefaultArguments"]?.toBoolean() ?: false
+        return if (followDefault) {
+            DualArgumentsTestProcessor(environment)
+        } else {
+            TestProcessor(environment)
+        }
     }
 }

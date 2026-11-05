@@ -48,6 +48,7 @@ class IncrementalAnnotationArgumentClassReferences(experimentalPsiResolution: Bo
         private const val ASSEMBLE: String = "assemble"
         private const val CLEAN: String = "clean"
         private const val PROCESSOR_LABEL: String = "[TestProcessor]"
+        private const val DUAL_PROCESSOR_LABEL: String = "[DualArgumentsTestProcessor]"
         private const val LOADER_LABEL: String = "[KSPLoaderId]"
     }
 
@@ -1407,6 +1408,566 @@ class IncrementalAnnotationArgumentClassReferences(experimentalPsiResolution: Bo
             }
             """.trimIndent()
         Assert.assertEquals(expectedDot, dotFile.readText().trim())
+    }
+
+    // --- Phase 5: Dual Arguments Tests (following both arguments and defaultArguments) ---
+
+    private fun setupDualArgumentsUpstreamEntryPoint(annoUsage: String) {
+        project.appendProperty("followDefaultArguments=true")
+        project.appendProperty("ksp.incremental.log=true")
+        project.appendProperty("ksp.incremental.log.graph.origin=DownstreamClass")
+        File(project.root, "upstream/src/main/kotlin/UpstreamEntryPoint.kt").writeText(
+            """
+            @ExampleReference(UpstreamExplicitTarget::class)
+            $annoUsage
+            class UpstreamEntryPoint
+            """.trimIndent() + "\n"
+        )
+    }
+
+    private fun setupDualArgumentsJavaUpstreamEntryPoint(annoUsage: String) {
+        project.appendProperty("followDefaultArguments=true")
+        project.appendProperty("ksp.incremental.log=true")
+        project.appendProperty("ksp.incremental.log.graph.origin=DownstreamClass")
+        File(project.root, "upstream/src/main/java/UpstreamJavaEntryPoint.java").writeText(
+            """
+            @ExampleJavaReference(UpstreamExplicitTarget.class)
+            $annoUsage
+            public class UpstreamJavaEntryPoint {
+            }
+            """.trimIndent() + "\n"
+        )
+        File(project.root, "downstream/src/main/kotlin/DownstreamClass.kt").writeText(
+            """
+            @ExampleJavaReference(UpstreamJavaEntryPoint::class)
+            class DownstreamClass
+            """.trimIndent() + "\n"
+        )
+    }
+
+    private fun setupDualArgumentsThreeHop(middleAnnoUsage: String) {
+        project.appendProperty("followDefaultArguments=true")
+        project.appendProperty("ksp.incremental.log=true")
+        project.appendProperty("ksp.incremental.log.graph.origin=DownstreamClass")
+        File(project.root, "upstream/src/main/kotlin/UpstreamEntryPoint.kt").writeText(
+            """
+            @ExampleReference(UpstreamExplicitTarget::class)
+            @ExampleMiddleDefaultReference(UpstreamMiddle::class)
+            class UpstreamEntryPoint
+            """.trimIndent() + "\n"
+        )
+        File(project.root, "upstream/src/main/kotlin/UpstreamMiddle.kt").writeText(
+            """
+            import kotlin.reflect.KClass
+
+            annotation class ExampleMiddleDefaultReference(
+                val value: KClass<*> = UpstreamMiddle::class
+            )
+
+            @ExampleReference(UpstreamExplicitTarget::class)
+            $middleAnnoUsage
+            class UpstreamMiddle
+            """.trimIndent() + "\n"
+        )
+    }
+
+    @Test
+    fun testDualArgumentsOverriddenDefaultDependencyGraphOrigin() {
+        setupDualArgumentsUpstreamEntryPoint("@ExampleDefaultReference(UpstreamExplicitTarget::class)")
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(CLEAN, ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            val actual = result.output.lines().filter { it.startsWith(DUAL_PROCESSOR_LABEL) }
+            Assert.assertTrue(
+                "Expected UpstreamChanges to be processed by DualArgumentsTestProcessor, got:\n${actual.joinToString("\n")}",
+                actual.contains("$DUAL_PROCESSOR_LABEL Processing UpstreamChanges")
+            )
+        }
+
+        val dotFile = File(project.root, "downstream/build/kspCaches/main/logs/kspLookupGraphOrigin.dot")
+        Assert.assertTrue("Expected kspLookupGraphOrigin.dot to exist at ${dotFile.path}", dotFile.exists())
+        val expectedDot =
+            """
+            digraph {
+              "DownstreamClass";
+              "DownstreamClass" -> "ExampleReference";
+              "DownstreamClass" -> "UpstreamEntryPoint";
+              "UpstreamEntryPoint" -> "ExampleDefaultReference";
+              "UpstreamEntryPoint" -> "ExampleReference";
+              "UpstreamEntryPoint" -> "UpstreamChanges";
+              "UpstreamEntryPoint" -> "UpstreamExplicitTarget";
+            }
+            """.trimIndent()
+        Assert.assertEquals(expectedDot, dotFile.readText().trim())
+    }
+
+    @Test
+    fun testDualArgumentsOverriddenDefaultProcessorChange() {
+        setupDualArgumentsUpstreamEntryPoint("@ExampleDefaultReference(UpstreamExplicitTarget::class)")
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        val expected = mutableListOf<String>()
+        gradleRunner.withArguments(CLEAN, ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            val processedClasses = result.output.lines().filter { it.startsWith(DUAL_PROCESSOR_LABEL) }
+            expected.addAll(processedClasses)
+            Assert.assertTrue(
+                "Expected UpstreamChanges to be processed, got:\n${expected.joinToString("\n")}",
+                expected.contains("$DUAL_PROCESSOR_LABEL Processing UpstreamChanges")
+            )
+        }
+
+        File(project.root, "upstream/src/main/kotlin/UpstreamChanges.kt").appendText("{ val prop2 = false }")
+
+        gradleRunner.withArguments(ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            val actual = result.output.lines().filter { it.startsWith(DUAL_PROCESSOR_LABEL) }
+            Assert.assertEquals(
+                "\n${expected.joinToString("\n")}\n[SEPARATOR]\n${actual.joinToString("\n")}",
+                expected,
+                actual
+            )
+            val dirtyLog = File(project.root, "downstream/build/kspCaches/main/logs/kspDirtySet.log").readText()
+            Assert.assertTrue(
+                "Expected DownstreamClass.kt to be marked dirty in kspDirtySet.log, got:\n$dirtyLog",
+                dirtyLog.contains("DownstreamClass.kt")
+            )
+        }
+    }
+
+    @Test
+    fun testDualArgumentsOverriddenDefaultNewlyAddedClassChange() {
+        setupDualArgumentsUpstreamEntryPoint("@ExampleDefaultReference(UpstreamExplicitTarget::class)")
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(CLEAN, ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+        }
+
+        File(project.root, "upstream/src/main/kotlin/NewlyAddedUpstreamClass.kt").writeText(
+            "class NewlyAddedUpstreamClass(val x: Int)\n"
+        )
+        File(project.root, "upstream/src/main/kotlin/UpstreamChanges.kt").writeText(
+            """
+            @ExampleDefaultReference(NewlyAddedUpstreamClass::class)
+            class UpstreamChanges(val prop: Int)
+            """.trimIndent() + "\n"
+        )
+
+        gradleRunner.withArguments(ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            val actual = result.output.lines().filter { it.startsWith(DUAL_PROCESSOR_LABEL) }
+            Assert.assertTrue(
+                "Expected NewlyAddedUpstreamClass to be processed, got:\n${actual.joinToString("\n")}",
+                actual.contains("$DUAL_PROCESSOR_LABEL Processing NewlyAddedUpstreamClass")
+            )
+        }
+
+        val dotFile = File(project.root, "downstream/build/kspCaches/main/logs/kspLookupGraphOrigin.dot")
+        Assert.assertTrue("Expected kspLookupGraphOrigin.dot to exist at ${dotFile.path}", dotFile.exists())
+        val expectedDot =
+            """
+            digraph {
+              "DownstreamClass";
+              "DownstreamClass" -> "ExampleReference";
+              "DownstreamClass" -> "UpstreamEntryPoint";
+              "UpstreamChanges" -> "ExampleDefaultReference";
+              "UpstreamChanges" -> "NewlyAddedUpstreamClass";
+              "UpstreamChanges" -> "UpstreamChanges";
+              "UpstreamEntryPoint" -> "ExampleDefaultReference";
+              "UpstreamEntryPoint" -> "ExampleReference";
+              "UpstreamEntryPoint" -> "UpstreamChanges";
+              "UpstreamEntryPoint" -> "UpstreamExplicitTarget";
+            }
+            """.trimIndent()
+        Assert.assertEquals(expectedDot, dotFile.readText().trim())
+    }
+
+    @Test
+    fun testDualArgumentsArrayOverriddenDefaultDependencyGraphOrigin() {
+        setupDualArgumentsUpstreamEntryPoint("@ExampleArrayDefaultReference(value = [UpstreamExplicitTarget::class])")
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(CLEAN, ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            val actual = result.output.lines().filter { it.startsWith(DUAL_PROCESSOR_LABEL) }
+            Assert.assertTrue(
+                "Expected UpstreamChanges to be processed, got:\n${actual.joinToString("\n")}",
+                actual.contains("$DUAL_PROCESSOR_LABEL Processing UpstreamChanges")
+            )
+        }
+
+        val dotFile = File(project.root, "downstream/build/kspCaches/main/logs/kspLookupGraphOrigin.dot")
+        Assert.assertTrue("Expected kspLookupGraphOrigin.dot to exist at ${dotFile.path}", dotFile.exists())
+        val expectedDot =
+            """
+            digraph {
+              "DownstreamClass";
+              "DownstreamClass" -> "ExampleReference";
+              "DownstreamClass" -> "UpstreamEntryPoint";
+              "UpstreamEntryPoint" -> "ExampleArrayDefaultReference";
+              "UpstreamEntryPoint" -> "ExampleReference";
+              "UpstreamEntryPoint" -> "UpstreamChanges";
+              "UpstreamEntryPoint" -> "UpstreamExplicitTarget";
+            }
+            """.trimIndent()
+        Assert.assertEquals(expectedDot, dotFile.readText().trim())
+    }
+
+    @Test
+    fun testDualArgumentsArrayOverriddenDefaultProcessorChange() {
+        setupDualArgumentsUpstreamEntryPoint("@ExampleArrayDefaultReference(value = [UpstreamExplicitTarget::class])")
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        val expected = mutableListOf<String>()
+        gradleRunner.withArguments(CLEAN, ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            val processedClasses = result.output.lines().filter { it.startsWith(DUAL_PROCESSOR_LABEL) }
+            expected.addAll(processedClasses)
+        }
+
+        File(project.root, "upstream/src/main/kotlin/UpstreamChanges.kt").appendText("{ val prop2 = false }")
+
+        gradleRunner.withArguments(ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            val actual = result.output.lines().filter { it.startsWith(DUAL_PROCESSOR_LABEL) }
+            Assert.assertEquals(
+                "\n${expected.joinToString("\n")}\n[SEPARATOR]\n${actual.joinToString("\n")}",
+                expected,
+                actual
+            )
+            val dirtyLog = File(project.root, "downstream/build/kspCaches/main/logs/kspDirtySet.log").readText()
+            Assert.assertTrue(
+                "Expected DownstreamClass.kt to be marked dirty in kspDirtySet.log, got:\n$dirtyLog",
+                dirtyLog.contains("DownstreamClass.kt")
+            )
+        }
+    }
+
+    @Test
+    fun testDualArgumentsTransitiveModuleOverriddenDefaultDependencyGraphOrigin() {
+        setupDualArgumentsUpstreamEntryPoint("@ExampleTransitiveDefaultReference(UpstreamExplicitTarget::class)")
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(CLEAN, ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            val actual = result.output.lines().filter { it.startsWith(DUAL_PROCESSOR_LABEL) }
+            Assert.assertTrue(
+                "Expected TransitiveChanges to be processed, got:\n${actual.joinToString("\n")}",
+                actual.contains("$DUAL_PROCESSOR_LABEL Processing TransitiveChanges")
+            )
+        }
+
+        val dotFile = File(project.root, "downstream/build/kspCaches/main/logs/kspLookupGraphOrigin.dot")
+        Assert.assertTrue("Expected kspLookupGraphOrigin.dot to exist at ${dotFile.path}", dotFile.exists())
+        val expectedDot =
+            """
+            digraph {
+              "DownstreamClass";
+              "DownstreamClass" -> "ExampleReference";
+              "DownstreamClass" -> "UpstreamEntryPoint";
+              "UpstreamEntryPoint" -> "ExampleReference";
+              "UpstreamEntryPoint" -> "ExampleTransitiveDefaultReference";
+              "UpstreamEntryPoint" -> "TransitiveChanges";
+              "UpstreamEntryPoint" -> "UpstreamExplicitTarget";
+            }
+            """.trimIndent()
+        Assert.assertEquals(expectedDot, dotFile.readText().trim())
+    }
+
+    @Test
+    fun testDualArgumentsTransitiveModuleOverriddenDefaultProcessorChange() {
+        setupDualArgumentsUpstreamEntryPoint("@ExampleTransitiveDefaultReference(UpstreamExplicitTarget::class)")
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        val expected = mutableListOf<String>()
+        gradleRunner.withArguments(CLEAN, ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            val processedClasses = result.output.lines().filter { it.startsWith(DUAL_PROCESSOR_LABEL) }
+            expected.addAll(processedClasses)
+        }
+
+        File(project.root, "transitive/src/main/kotlin/TransitiveChanges.kt").appendText("{ val prop2 = false }")
+
+        gradleRunner.withArguments(ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            val actual = result.output.lines().filter { it.startsWith(DUAL_PROCESSOR_LABEL) }
+            Assert.assertEquals(
+                "\n${expected.joinToString("\n")}\n[SEPARATOR]\n${actual.joinToString("\n")}",
+                expected,
+                actual
+            )
+            val dirtyLog = File(project.root, "downstream/build/kspCaches/main/logs/kspDirtySet.log").readText()
+            Assert.assertTrue(
+                "Expected DownstreamClass.kt to be marked dirty in kspDirtySet.log, got:\n$dirtyLog",
+                dirtyLog.contains("DownstreamClass.kt")
+            )
+        }
+    }
+
+    @Test
+    fun testDualArgumentsJavaOverriddenDefaultDependencyGraphOrigin() {
+        setupDualArgumentsJavaUpstreamEntryPoint("@ExampleJavaDefaultReference(UpstreamExplicitTarget.class)")
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(CLEAN, ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            val actual = result.output.lines().filter { it.startsWith(DUAL_PROCESSOR_LABEL) }
+            Assert.assertTrue(
+                "Expected UpstreamChanges to be processed, got:\n${actual.joinToString("\n")}",
+                actual.contains("$DUAL_PROCESSOR_LABEL Processing UpstreamChanges")
+            )
+        }
+
+        val dotFile = File(project.root, "downstream/build/kspCaches/main/logs/kspLookupGraphOrigin.dot")
+        Assert.assertTrue("Expected kspLookupGraphOrigin.dot to exist at ${dotFile.path}", dotFile.exists())
+        val expectedDot =
+            """
+            digraph {
+              "DownstreamClass";
+              "DownstreamClass" -> "ExampleJavaReference";
+              "DownstreamClass" -> "UpstreamJavaEntryPoint";
+              "UpstreamJavaEntryPoint" -> "ExampleJavaDefaultReference";
+              "UpstreamJavaEntryPoint" -> "ExampleJavaReference";
+              "UpstreamJavaEntryPoint" -> "UpstreamChanges";
+              "UpstreamJavaEntryPoint" -> "UpstreamExplicitTarget";
+            }
+            """.trimIndent()
+        Assert.assertEquals(expectedDot, dotFile.readText().trim())
+    }
+
+    @Test
+    fun testDualArgumentsJavaOverriddenDefaultProcessorChange() {
+        setupDualArgumentsJavaUpstreamEntryPoint("@ExampleJavaDefaultReference(UpstreamExplicitTarget.class)")
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        val expected = mutableListOf<String>()
+        gradleRunner.withArguments(CLEAN, ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            val processedClasses = result.output.lines().filter { it.startsWith(DUAL_PROCESSOR_LABEL) }
+            expected.addAll(processedClasses)
+        }
+
+        File(project.root, "upstream/src/main/kotlin/UpstreamChanges.kt").appendText("\n{ val prop2 = false }\n")
+
+        gradleRunner.withArguments(ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            val dirtyLog = File(project.root, "downstream/build/kspCaches/main/logs/kspDirtySet.log").readText()
+            Assert.assertTrue(
+                "Expected DownstreamClass.kt to be marked dirty in kspDirtySet.log, got:\n$dirtyLog",
+                dirtyLog.contains("DownstreamClass.kt")
+            )
+            Assert.assertTrue(
+                "Expected <NoSourceFile for UpstreamJavaEntryPoint> in Affected By CP, got:\n$dirtyLog",
+                dirtyLog.contains("<NoSourceFile for UpstreamJavaEntryPoint is a virtual file; DO NOT USE.>")
+            )
+        }
+    }
+
+    @Test
+    fun testDualArgumentsThreeHopOverriddenDefaultDependencyGraphOrigin() {
+        setupDualArgumentsThreeHop("@ExampleDefaultReference(UpstreamExplicitTarget::class)")
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(CLEAN, ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            val actual = result.output.lines().filter { it.startsWith(DUAL_PROCESSOR_LABEL) }
+            Assert.assertTrue(
+                "Expected UpstreamChanges to be processed, got:\n${actual.joinToString("\n")}",
+                actual.contains("$DUAL_PROCESSOR_LABEL Processing UpstreamChanges")
+            )
+        }
+
+        val dotFile = File(project.root, "downstream/build/kspCaches/main/logs/kspLookupGraphOrigin.dot")
+        Assert.assertTrue("Expected kspLookupGraphOrigin.dot to exist at ${dotFile.path}", dotFile.exists())
+        val expectedDot =
+            """
+            digraph {
+              "DownstreamClass";
+              "DownstreamClass" -> "ExampleReference";
+              "DownstreamClass" -> "UpstreamEntryPoint";
+              "UpstreamEntryPoint" -> "ExampleMiddleDefaultReference";
+              "UpstreamEntryPoint" -> "ExampleReference";
+              "UpstreamEntryPoint" -> "UpstreamExplicitTarget";
+              "UpstreamEntryPoint" -> "UpstreamMiddle";
+              "UpstreamMiddle" -> "ExampleDefaultReference";
+              "UpstreamMiddle" -> "ExampleReference";
+              "UpstreamMiddle" -> "UpstreamChanges";
+              "UpstreamMiddle" -> "UpstreamExplicitTarget";
+            }
+            """.trimIndent()
+        Assert.assertEquals(expectedDot, dotFile.readText().trim())
+    }
+
+    @Test
+    fun testDualArgumentsThreeHopOverriddenDefaultProcessorChange() {
+        setupDualArgumentsThreeHop("@ExampleDefaultReference(UpstreamExplicitTarget::class)")
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        val expected = mutableListOf<String>()
+        gradleRunner.withArguments(CLEAN, ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            val processedClasses = result.output.lines().filter { it.startsWith(DUAL_PROCESSOR_LABEL) }
+            expected.addAll(processedClasses)
+        }
+
+        File(project.root, "upstream/src/main/kotlin/UpstreamChanges.kt").appendText("{ val prop2 = false }")
+
+        gradleRunner.withArguments(ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            val actual = result.output.lines().filter { it.startsWith(DUAL_PROCESSOR_LABEL) }
+            Assert.assertEquals(
+                "\n${expected.joinToString("\n")}\n[SEPARATOR]\n${actual.joinToString("\n")}",
+                expected,
+                actual
+            )
+            val dirtyLog = File(project.root, "downstream/build/kspCaches/main/logs/kspDirtySet.log").readText()
+            Assert.assertTrue(
+                "Expected DownstreamClass.kt to be marked dirty in kspDirtySet.log, got:\n$dirtyLog",
+                dirtyLog.contains("DownstreamClass.kt")
+            )
+        }
+    }
+
+    // --- Phase 6: Nested Annotation Default Value Tests ---
+
+    @Test
+    fun testNestedExplicitDefaultValueDependencyGraphOrigin() {
+        runDefaultValueGraphOriginTest(
+            "@ExampleNestedExplicitDefaultReference",
+            "UpstreamChanges",
+            listOf("ExampleReference")
+        )
+    }
+
+    @Test
+    fun testNestedExplicitDefaultValueProcessorChange() {
+        runDefaultValueDirectChangeTest(
+            "@ExampleNestedExplicitDefaultReference",
+            "upstream/src/main/kotlin/UpstreamChanges.kt"
+        )
+    }
+
+    @Test
+    fun testNestedExplicitDefaultValueNewlyAddedClassChange() {
+        runDefaultValueNewlyAddedClassTest("@ExampleNestedExplicitDefaultReference", listOf("ExampleReference"))
+    }
+
+    @Test
+    fun testNestedDefaultValueDependencyGraphOrigin() {
+        runDefaultValueGraphOriginTest(
+            "@ExampleNestedDefaultReference",
+            "UpstreamChanges",
+            listOf("ExampleDefaultReference")
+        )
+    }
+
+    @Test
+    fun testNestedDefaultValueProcessorChange() {
+        runDefaultValueDirectChangeTest(
+            "@ExampleNestedDefaultReference",
+            "upstream/src/main/kotlin/UpstreamChanges.kt"
+        )
+    }
+
+    @Test
+    fun testNestedDefaultValueNewlyAddedClassChange() {
+        runDefaultValueNewlyAddedClassTest("@ExampleNestedDefaultReference", listOf("ExampleDefaultReference"))
+    }
+
+    @Test
+    fun testArrayNestedExplicitDefaultValueDependencyGraphOrigin() {
+        runDefaultValueGraphOriginTest(
+            "@ExampleArrayNestedExplicitDefaultReference",
+            "UpstreamChanges",
+            listOf("ExampleReference")
+        )
+    }
+
+    @Test
+    fun testArrayNestedExplicitDefaultValueProcessorChange() {
+        runDefaultValueDirectChangeTest(
+            "@ExampleArrayNestedExplicitDefaultReference",
+            "upstream/src/main/kotlin/UpstreamChanges.kt"
+        )
+    }
+
+    @Test
+    fun testArrayNestedExplicitDefaultValueNewlyAddedClassChange() {
+        runDefaultValueNewlyAddedClassTest("@ExampleArrayNestedExplicitDefaultReference", listOf("ExampleReference"))
+    }
+
+    @Test
+    fun testArrayNestedDefaultValueDependencyGraphOrigin() {
+        runDefaultValueGraphOriginTest(
+            "@ExampleArrayNestedDefaultReference",
+            "UpstreamChanges",
+            listOf("ExampleDefaultReference")
+        )
+    }
+
+    @Test
+    fun testArrayNestedDefaultValueProcessorChange() {
+        runDefaultValueDirectChangeTest(
+            "@ExampleArrayNestedDefaultReference",
+            "upstream/src/main/kotlin/UpstreamChanges.kt"
+        )
+    }
+
+    @Test
+    fun testArrayNestedDefaultValueNewlyAddedClassChange() {
+        runDefaultValueNewlyAddedClassTest("@ExampleArrayNestedDefaultReference", listOf("ExampleDefaultReference"))
+    }
+
+    @Test
+    fun testArrayNestedArrayExplicitDefaultValueDependencyGraphOrigin() {
+        runDefaultValueGraphOriginTest(
+            "@ExampleArrayNestedArrayExplicitDefaultReference",
+            "UpstreamChanges",
+            listOf("ExampleArrayDefaultReference")
+        )
+    }
+
+    @Test
+    fun testArrayNestedArrayExplicitDefaultValueProcessorChange() {
+        runDefaultValueDirectChangeTest(
+            "@ExampleArrayNestedArrayExplicitDefaultReference",
+            "upstream/src/main/kotlin/UpstreamChanges.kt"
+        )
+    }
+
+    @Test
+    fun testArrayNestedArrayExplicitDefaultValueNewlyAddedClassChange() {
+        runDefaultValueNewlyAddedClassTest(
+            "@ExampleArrayNestedArrayExplicitDefaultReference",
+            listOf("ExampleArrayDefaultReference")
+        )
+    }
+
+    @Test
+    fun testArrayNestedArrayDefaultValueDependencyGraphOrigin() {
+        runDefaultValueGraphOriginTest(
+            "@ExampleArrayNestedArrayDefaultReference",
+            "UpstreamChanges",
+            listOf("ExampleArrayDefaultReference")
+        )
+    }
+
+    @Test
+    fun testArrayNestedArrayDefaultValueProcessorChange() {
+        runDefaultValueDirectChangeTest(
+            "@ExampleArrayNestedArrayDefaultReference",
+            "upstream/src/main/kotlin/UpstreamChanges.kt"
+        )
+    }
+
+    @Test
+    fun testArrayNestedArrayDefaultValueNewlyAddedClassChange() {
+        runDefaultValueNewlyAddedClassTest(
+            "@ExampleArrayNestedArrayDefaultReference",
+            listOf("ExampleArrayDefaultReference")
+        )
     }
 
     @Test
