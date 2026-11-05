@@ -24,6 +24,7 @@ import com.google.devtools.ksp.common.impl.KSTypeReferenceSyntheticImpl
 import com.google.devtools.ksp.common.isObjectOverride
 import com.google.devtools.ksp.common.lazyMemoizedSequence
 import com.google.devtools.ksp.impl.ResolverAAImpl
+import com.google.devtools.ksp.impl.recordClassReferenceLookup
 import com.google.devtools.ksp.impl.recordGetSealedSubclasses
 import com.google.devtools.ksp.impl.recordLookup
 import com.google.devtools.ksp.impl.recordLookupForGetAllFunctions
@@ -190,16 +191,29 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
 
     override val declarations: Sequence<KSDeclaration> by lazyMemoizedSequence {
         // FAST PATH: Use PSI directly for Java classes
-        if (isExperimentalPsiResolutionEnabled) {
+        val rawDeclarations = if (isExperimentalPsiResolutionEnabled) {
             ktClassOrObjectSymbol.psi?.let { psi ->
                 if (psi is PsiClass && canUsePsiResolution()) {
-                    return@lazyMemoizedSequence psi.getDeclarationsFromPsi()
+                    psi.getDeclarationsFromPsi()
+                } else {
+                    null
                 }
             }
-        }
+        } else {
+            null
+        } ?: getDeclarationsFromAnalysisApi()
 
-        // SLOW PATH: Original AA fallback for Kotlin classes (or if ASM failed)
-        getDeclarationsFromAnalysisApi()
+        if (origin == Origin.KOTLIN_LIB || origin == Origin.JAVA_LIB) {
+            rawDeclarations.onEach { decl ->
+                if (decl is KSClassDeclaration && decl.classKind != ClassKind.ENUM_ENTRY) {
+                    decl.qualifiedName?.asString()?.let { fqn ->
+                        recordClassReferenceLookup(fqn, this@KSClassDeclarationImpl)
+                    }
+                }
+            }
+        } else {
+            rawDeclarations
+        }
     }
 
     private fun canUsePsiResolution(): Boolean {

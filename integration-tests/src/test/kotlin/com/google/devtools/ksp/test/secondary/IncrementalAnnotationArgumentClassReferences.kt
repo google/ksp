@@ -921,4 +921,248 @@ class IncrementalAnnotationArgumentClassReferences(experimentalPsiResolution: Bo
             )
         }
     }
+
+    @Test
+    fun testLibraryMemberFunctionAnnotationClassReference() {
+        project.appendProperty("ksp.incremental.log=true")
+        project.appendProperty("ksp.incremental.log.graph.origin=DownstreamClass")
+        File(project.root, "upstream/src/main/kotlin/UpstreamEntryPoint.kt").writeText(
+            """
+            class UpstreamEntryPoint {
+                @ExampleReference(UpstreamChanges::class)
+                fun annotatedMethod() {}
+            }
+            """.trimIndent() + "\n"
+        )
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(CLEAN, ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            Assert.assertTrue(result.output.lines().contains("$PROCESSOR_LABEL Processing DownstreamClass"))
+            Assert.assertTrue(result.output.lines().contains("$PROCESSOR_LABEL Processing UpstreamChanges"))
+        }
+
+        val dotFile = File(project.root, "downstream/build/kspCaches/main/logs/kspLookupGraphOrigin.dot")
+        Assert.assertTrue("Expected kspLookupGraphOrigin.dot to exist at ${dotFile.path}", dotFile.exists())
+        val expectedDot =
+            """
+            digraph {
+              "DownstreamClass";
+              "DownstreamClass" -> "ExampleReference";
+              "DownstreamClass" -> "UpstreamEntryPoint";
+              "UpstreamEntryPoint" -> "ExampleReference";
+              "UpstreamEntryPoint" -> "UpstreamChanges";
+            }
+            """.trimIndent()
+        Assert.assertEquals(expectedDot, dotFile.readText().trim())
+
+        File(project.root, "upstream/src/main/kotlin/UpstreamChanges.kt").appendText("{ val prop2 = false }")
+
+        gradleRunner.withArguments(ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            Assert.assertTrue(
+                "Expected DownstreamClass to be reprocessed after UpstreamChanges modification",
+                result.output.lines().contains("$PROCESSOR_LABEL Processing DownstreamClass")
+            )
+        }
+    }
+
+    @Test
+    fun testLibraryConstructorAndParameterAnnotationClassReference() {
+        project.appendProperty("ksp.incremental.log=true")
+        project.appendProperty("ksp.incremental.log.graph.origin=DownstreamClass")
+        File(project.root, "upstream/src/main/kotlin/UpstreamEntryPoint.kt").writeText(
+            """
+            class UpstreamEntryPoint @ExampleReference(UpstreamExplicitTarget::class) constructor(
+                @ExampleDefaultReference x: Int = 0
+            )
+            """.trimIndent() + "\n"
+        )
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(CLEAN, ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            Assert.assertTrue(result.output.lines().contains("$PROCESSOR_LABEL Processing DownstreamClass"))
+            Assert.assertTrue(result.output.lines().contains("$PROCESSOR_LABEL Processing UpstreamChanges"))
+        }
+
+        val dotFile = File(project.root, "downstream/build/kspCaches/main/logs/kspLookupGraphOrigin.dot")
+        Assert.assertTrue("Expected kspLookupGraphOrigin.dot to exist at ${dotFile.path}", dotFile.exists())
+        val expectedDot =
+            """
+            digraph {
+              "DownstreamClass";
+              "DownstreamClass" -> "ExampleReference";
+              "DownstreamClass" -> "UpstreamEntryPoint";
+              "UpstreamEntryPoint" -> "ExampleDefaultReference";
+              "UpstreamEntryPoint" -> "ExampleReference";
+              "UpstreamEntryPoint" -> "UpstreamChanges";
+              "UpstreamEntryPoint" -> "UpstreamExplicitTarget";
+            }
+            """.trimIndent()
+        Assert.assertEquals(expectedDot, dotFile.readText().trim())
+
+        File(project.root, "upstream/src/main/kotlin/UpstreamChanges.kt").appendText("{ val prop2 = false }")
+
+        gradleRunner.withArguments(ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            Assert.assertTrue(
+                "Expected DownstreamClass to be reprocessed after UpstreamChanges modification",
+                result.output.lines().contains("$PROCESSOR_LABEL Processing DownstreamClass")
+            )
+        }
+    }
+
+    @Test
+    fun testLibraryNestedClassAnnotationClassReference() {
+        project.appendProperty("ksp.incremental.log=true")
+        project.appendProperty("ksp.incremental.log.graph.origin=DownstreamClass")
+        File(project.root, "upstream/src/main/kotlin/UpstreamEntryPoint.kt").writeText(
+            """
+            class UpstreamEntryPoint {
+                @ExampleReference(UpstreamChanges::class)
+                class Nested
+            }
+            """.trimIndent() + "\n"
+        )
+        File(project.root, "downstream/src/main/kotlin/DownstreamClass.kt").writeText(
+            """
+            @ExampleReference(UpstreamEntryPoint.Nested::class)
+            class DownstreamClass
+            """.trimIndent() + "\n"
+        )
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(CLEAN, ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            Assert.assertTrue(result.output.lines().contains("$PROCESSOR_LABEL Processing DownstreamClass"))
+            Assert.assertTrue(result.output.lines().contains("$PROCESSOR_LABEL Processing UpstreamChanges"))
+        }
+
+        val dotFile = File(project.root, "downstream/build/kspCaches/main/logs/kspLookupGraphOrigin.dot")
+        Assert.assertTrue("Expected kspLookupGraphOrigin.dot to exist at ${dotFile.path}", dotFile.exists())
+        val expectedDot =
+            """
+            digraph {
+              "DownstreamClass";
+              "DownstreamClass" -> "ExampleReference";
+              "DownstreamClass" -> "UpstreamEntryPoint";
+              "DownstreamClass" -> "UpstreamEntryPoint.Nested";
+              "UpstreamEntryPoint.Nested" -> "ExampleReference";
+              "UpstreamEntryPoint.Nested" -> "UpstreamChanges";
+            }
+            """.trimIndent()
+        Assert.assertEquals(expectedDot, dotFile.readText().trim())
+
+        File(project.root, "upstream/src/main/kotlin/UpstreamChanges.kt").appendText("{ val prop2 = false }")
+
+        gradleRunner.withArguments(ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            Assert.assertTrue(
+                "Expected DownstreamClass to be reprocessed after UpstreamChanges modification",
+                result.output.lines().contains("$PROCESSOR_LABEL Processing DownstreamClass")
+            )
+        }
+    }
+
+    @Test
+    fun testLibraryEnumEntryAnnotationClassReference() {
+        project.appendProperty("ksp.incremental.log=true")
+        project.appendProperty("ksp.incremental.log.graph.origin=DownstreamClass")
+        File(project.root, "upstream/src/main/kotlin/UpstreamEntryPoint.kt").writeText(
+            """
+            enum class UpstreamEntryPoint {
+                @ExampleReference(UpstreamChanges::class)
+                ENTRY
+            }
+            """.trimIndent() + "\n"
+        )
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(CLEAN, ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            Assert.assertTrue(result.output.lines().contains("$PROCESSOR_LABEL Processing DownstreamClass"))
+            Assert.assertTrue(result.output.lines().contains("$PROCESSOR_LABEL Processing UpstreamChanges"))
+        }
+
+        val dotFile = File(project.root, "downstream/build/kspCaches/main/logs/kspLookupGraphOrigin.dot")
+        Assert.assertTrue("Expected kspLookupGraphOrigin.dot to exist at ${dotFile.path}", dotFile.exists())
+        val expectedDot =
+            """
+            digraph {
+              "DownstreamClass";
+              "DownstreamClass" -> "ExampleReference";
+              "DownstreamClass" -> "UpstreamEntryPoint";
+              "UpstreamEntryPoint" -> "ExampleReference";
+              "UpstreamEntryPoint" -> "UpstreamChanges";
+            }
+            """.trimIndent()
+        Assert.assertEquals(expectedDot, dotFile.readText().trim())
+
+        File(project.root, "upstream/src/main/kotlin/UpstreamChanges.kt").appendText("{ val prop2 = false }")
+
+        gradleRunner.withArguments(ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            Assert.assertTrue(
+                "Expected DownstreamClass to be reprocessed after UpstreamChanges modification via enum entry",
+                result.output.lines().contains("$PROCESSOR_LABEL Processing DownstreamClass")
+            )
+        }
+    }
+
+    @Test
+    fun testLibraryCompanionAndNestedMemberAnnotationClassReference() {
+        project.appendProperty("ksp.incremental.log=true")
+        project.appendProperty("ksp.incremental.log.graph.origin=DownstreamClass")
+        File(project.root, "upstream/src/main/kotlin/UpstreamEntryPoint.kt").writeText(
+            """
+            class UpstreamEntryPoint {
+                class Nested {
+                    @ExampleReference(UpstreamChanges::class)
+                    fun helper() {}
+                }
+                companion object {
+                    @ExampleReference(UpstreamExplicitTarget::class)
+                    fun compHelper() {}
+                }
+            }
+            """.trimIndent() + "\n"
+        )
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(CLEAN, ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            Assert.assertTrue(result.output.lines().contains("$PROCESSOR_LABEL Processing DownstreamClass"))
+            Assert.assertTrue(result.output.lines().contains("$PROCESSOR_LABEL Processing UpstreamChanges"))
+        }
+
+        val dotFile = File(project.root, "downstream/build/kspCaches/main/logs/kspLookupGraphOrigin.dot")
+        Assert.assertTrue("Expected kspLookupGraphOrigin.dot to exist at ${dotFile.path}", dotFile.exists())
+        val expectedDot =
+            """
+            digraph {
+              "DownstreamClass";
+              "DownstreamClass" -> "ExampleReference";
+              "DownstreamClass" -> "UpstreamEntryPoint";
+              "DownstreamClass" -> "UpstreamEntryPoint.Companion";
+              "UpstreamEntryPoint" -> "UpstreamEntryPoint.Companion";
+              "UpstreamEntryPoint" -> "UpstreamEntryPoint.Nested";
+              "UpstreamEntryPoint.Companion" -> "ExampleReference";
+              "UpstreamEntryPoint.Companion" -> "UpstreamExplicitTarget";
+              "UpstreamEntryPoint.Nested" -> "ExampleReference";
+              "UpstreamEntryPoint.Nested" -> "UpstreamChanges";
+            }
+            """.trimIndent()
+        Assert.assertEquals(expectedDot, dotFile.readText().trim())
+
+        File(project.root, "upstream/src/main/kotlin/UpstreamChanges.kt").appendText("{ val prop2 = false }")
+
+        gradleRunner.withArguments(ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            Assert.assertTrue(
+                "Expected DownstreamClass to be reprocessed after UpstreamChanges modification via nested member",
+                result.output.lines().contains("$PROCESSOR_LABEL Processing DownstreamClass")
+            )
+        }
+    }
 }

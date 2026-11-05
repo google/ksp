@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.IncrementalContextLoggingOptions
+import com.google.devtools.ksp.closestClassDeclaration
 import com.google.devtools.ksp.common.IncrementalContextBase
 import com.google.devtools.ksp.common.LookupStorageWrapper
 import com.google.devtools.ksp.common.LookupSymbolWrapper
@@ -33,6 +34,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.impl.symbol.kotlin.getFqn
 import com.google.devtools.ksp.impl.symbol.kotlin.separateQualifierAndName
 import com.google.devtools.ksp.impl.symbol.kotlin.typeArguments
+import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
@@ -244,12 +246,16 @@ class IncrementalContextAA(
 
         // Construct synthetic filepath
         val declaration = context.findParentDeclaration() ?: return null
-        val parentDeclarationName = declaration.qualifiedName?.asString()
-            ?: listOf(declaration.packageName.asString(), declaration.simpleName.asString())
+        var owner = declaration.closestClassDeclaration() ?: declaration
+        while (owner is KSClassDeclaration && owner.classKind == ClassKind.ENUM_ENTRY) {
+            owner = owner.parentDeclaration?.closestClassDeclaration() ?: owner.parentDeclaration ?: break
+        }
+        val ownerName = owner.qualifiedName?.asString()
+            ?: listOf(owner.packageName.asString(), owner.simpleName.asString())
                 .filter { it.isNotEmpty() }
                 .joinToString(".")
 
-        return NoSourceFile(baseDir, parentDeclarationName).filePath
+        return NoSourceFile(baseDir, ownerName).filePath
     }
 
     @OptIn(KaExperimentalApi::class)
