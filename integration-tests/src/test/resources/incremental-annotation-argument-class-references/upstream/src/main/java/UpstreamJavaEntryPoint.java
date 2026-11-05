@@ -1,0 +1,2 @@
+public class UpstreamJavaEntryPoint {
+}

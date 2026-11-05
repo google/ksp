@@ -29,7 +29,6 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.impl.compiled.ClsClassImpl
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
-import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotationValue
 import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaBaseNamedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.*
@@ -117,7 +116,7 @@ class KSAnnotationImpl private constructor(
 internal fun KSAnnotation.getAbsentDefaultArguments(
     presentArgs: List<KSValueArgument>
 ): List<KSValueArgument> {
-    val presentNames = presentArgs.mapNotNull { it.name?.asString() }
+    val presentNames = presentArgs.mapNotNullTo(hashSetOf()) { it.name?.asString() }
     return defaultArguments.filter { arg ->
         arg.name?.asString() !in presentNames
     }
@@ -128,6 +127,7 @@ internal fun KSAnnotation.getDefaultArguments(classId: ClassId?): List<KSValueAr
     if (classId == null) return emptyList()
     return analyze {
         classId.toKtClassSymbol()?.let { symbol ->
+            recordClassReferenceLookup(classId.asFqNameString(), this@getDefaultArguments)
             if (
                 symbol.origin == KaSymbolOrigin.JAVA_SOURCE && symbol.psi != null &&
                 symbol.psi !is ClsClassImpl && symbol.psi is PsiClass
@@ -137,7 +137,7 @@ internal fun KSAnnotation.getDefaultArguments(classId: ClassId?): List<KSValueAr
                         annoMethod.defaultValue?.let { value ->
                             KSValueArgumentLiteImpl(
                                 KSNameImpl.getCached(annoMethod.name),
-                                calcValue(value, this@getDefaultArguments),
+                                { arg -> calcValue(value, arg, Origin.SYNTHETIC) },
                                 this@getDefaultArguments,
                                 Origin.SYNTHETIC,
                                 value.toLocation()
@@ -149,11 +149,6 @@ internal fun KSAnnotation.getDefaultArguments(classId: ClassId?): List<KSValueAr
                     it.valueParameters.mapNotNull { valueParameterSymbol ->
                         if (!valueParameterSymbol.hasDefaultValue) return@mapNotNull null
                         val constantValue = valueParameterSymbol.getDefaultValue() ?: return@mapNotNull null
-                        if (constantValue is KaAnnotationValue.ClassLiteralValue) {
-                            this@getDefaultArguments.findParentDeclaration()?.let { decl ->
-                                recordClassReferenceLookup(constantValue.type, decl)
-                            }
-                        }
                         KSValueArgumentImpl.getCached(
                             KaBaseNamedAnnotationValue(
                                 valueParameterSymbol.name,
@@ -163,7 +158,7 @@ internal fun KSAnnotation.getDefaultArguments(classId: ClassId?): List<KSValueAr
                             Origin.SYNTHETIC
                         )
                     }
-                }
+                } ?: emptyList()
             }
         } ?: emptyList()
     }

@@ -769,7 +769,14 @@ internal fun KSNode.findParentDeclaration(): KSDeclaration? {
 
 internal fun KaAnnotationValue.toValue(parent: KSNode? = null, origin: Origin? = null): Any? = when (this) {
     is KaAnnotationValue.ArrayValue -> this.values.map { it.toValue(parent, origin) }
-    is KaAnnotationValue.NestedAnnotationValue -> KSAnnotationResolvedImpl.getCached(this.annotation, parent, origin)
+    is KaAnnotationValue.NestedAnnotationValue -> {
+        if (parent != null) {
+            this.annotation.classId?.asFqNameString()?.let { fqn ->
+                recordClassReferenceLookup(fqn, parent)
+            }
+        }
+        KSAnnotationResolvedImpl.getCached(this.annotation, parent, origin)
+    }
     // TODO: Enum entry should return a type, use declaration as a placeholder.
     is KaAnnotationValue.EnumEntryValue -> this.callableId?.classId?.let { classId ->
         analyze {
@@ -782,8 +789,8 @@ internal fun KaAnnotationValue.toValue(parent: KSNode? = null, origin: Origin? =
     } ?: KSErrorType
 
     is KaAnnotationValue.ClassLiteralValue -> {
-        parent?.findParentDeclaration()?.let { decl ->
-            recordClassReferenceLookup(type, decl)
+        parent?.let {
+            recordClassReferenceLookup(type, it)
         }
         KSTypeImpl.getCached(type)
     }

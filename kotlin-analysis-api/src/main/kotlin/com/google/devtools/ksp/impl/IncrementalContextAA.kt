@@ -35,8 +35,10 @@ import com.google.devtools.ksp.impl.symbol.kotlin.separateQualifierAndName
 import com.google.devtools.ksp.impl.symbol.kotlin.typeArguments
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.Origin
+import com.google.devtools.ksp.impl.symbol.kotlin.findParentDeclaration
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.impl.compiled.ClsFileImpl
 import com.intellij.util.containers.MultiMap
@@ -191,10 +193,9 @@ class IncrementalContextAA(
      * Records a reference to `MyClass::class`.
      * 
      * @param type the referenced type, e.g., `MyClass`
-     * @param declaration the closest enclosing declaration where the reference occurs.
-     *                    Callers can use [KSNode.findParentDeclaration] to obtain the enclosing declaration.
+     * @param context the enclosing [KSNode] where the reference occurs.
      */
-    fun recordClassReferenceLookup(type: KaType, declaration: KSDeclaration) {
+    fun recordClassReferenceLookup(type: KaType, context: KSNode) {
         if (!isIncremental) {
             return
         }
@@ -203,36 +204,36 @@ class IncrementalContextAA(
             ?: type.getFqn()
             ?: return
 
-        recordClassReferenceLookup(fqn, declaration)
+        recordClassReferenceLookup(fqn, context)
     }
 
     /**
      * Records a reference to `MyClass::class`.
      * 
      * @param fqn the fully qualified name of the referenced type, e.g., the fully qualified name of `MyClass`.
-     * @param declaration the closest enclosing declaration where the reference occurs.
-     *                    Callers can use [KSNode.findParentDeclaration] to obtain the enclosing declaration.
+     * @param context the enclosing [KSNode] where the reference occurs.
      */
-    fun recordClassReferenceLookup(fqn: String, declaration: KSDeclaration) {
+    fun recordClassReferenceLookup(fqn: String, context: KSNode) {
         if (!isIncremental) {
             return
         }
 
+        val filePath = filePathFor(context) ?: return
         val (scope, name) = separateQualifierAndName(fqn)
 
-        symbolLookupTracker.record(filePathFor(declaration), scope, name)
+        symbolLookupTracker.record(filePath, scope, name)
     }
 
     /**
-     * Returns a string representing a file path for [declaration].
+     * Returns a string representing a file path for [context].
      *
      * If the filepath is already available, it is returned. Otherwise, a synthetic filepath is generated.
      */
-    private fun filePathFor(declaration: KSDeclaration): String {
+    private fun filePathFor(context: KSNode): String? {
         // Try directly getting the filepath
-        val maybeAvailableFilePath = declaration.containingFile?.filePath
+        val maybeAvailableFilePath = (context as? KSFile)?.filePath ?: context.containingFile?.filePath
         if (maybeAvailableFilePath != null) {
-            val file = declaration.containingFile
+            val file = (context as? KSFile) ?: context.containingFile
             if (file is KSFileJavaImpl && file.psi is ClsFileImpl) {
                 // Decompiled Java class file in a library, not a source file!
                 // Fall through to construct synthetic NoSourceFile
@@ -242,6 +243,7 @@ class IncrementalContextAA(
         }
 
         // Construct synthetic filepath
+        val declaration = context.findParentDeclaration() ?: return null
         val parentDeclarationName = declaration.qualifiedName?.asString()
             ?: listOf(declaration.packageName.asString(), declaration.simpleName.asString())
                 .filter { it.isNotEmpty() }
@@ -459,22 +461,19 @@ internal fun recordLookup(ktType: KaType, context: KSNode?) =
  * Records a reference to `MyClass::class`.
  * 
  * @param ktType the referenced type, e.g., `MyClass`
- * @param declaration the closest enclosing declaration where the reference occurs.
- *                    Callers can use [KSNode.findParentDeclaration] to obtain the enclosing declaration.
+ * @param context the enclosing [KSNode] where the reference occurs.
  */
-internal fun recordClassReferenceLookup(ktType: KaType, declaration: KSDeclaration) =
-    ResolverAAImpl.instance.incrementalContext.recordClassReferenceLookup(ktType, declaration)
+internal fun recordClassReferenceLookup(ktType: KaType, context: KSNode) =
+    ResolverAAImpl.instance.incrementalContext.recordClassReferenceLookup(ktType, context)
 
 /**
  * Records a reference to `MyClass::class`.
  * 
  * @param fqn the fully qualified name of the referenced type, e.g., the fully qualified name of `MyClass`.
- * @param declaration the closest enclosing declaration where the reference occurs.
- *                    Callers can use [KSNode.findParentDeclaration] to obtain the enclosing declaration.
- *
+ * @param context the enclosing [KSNode] where the reference occurs.
  */
-internal fun recordClassReferenceLookup(fqn: String, declaration: KSDeclaration) =
-    ResolverAAImpl.instance.incrementalContext.recordClassReferenceLookup(fqn, declaration)
+internal fun recordClassReferenceLookup(fqn: String, context: KSNode) =
+    ResolverAAImpl.instance.incrementalContext.recordClassReferenceLookup(fqn, context)
 
 internal fun recordLookupWithSupertypes(ktType: KaType, extra: (KaType, PsiJavaFile) -> Unit = { _, _ -> }) =
     ResolverAAImpl.instance.incrementalContext.recordLookupWithSupertypes(ktType, mutableSetOf(), extra)
