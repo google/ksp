@@ -39,15 +39,26 @@ import com.intellij.psi.PsiLiteralValue
 import com.intellij.psi.PsiPrimitiveType
 import com.intellij.psi.PsiReference
 import com.intellij.psi.PsiType
+import com.intellij.psi.impl.compiled.ClsFileImpl
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassSymbol
 import org.jetbrains.kotlin.analysis.api.types.KaType
 import org.jetbrains.kotlin.name.ClassId
 
-class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, override val parent: KSNode?) :
-    KSAnnotation {
+class KSAnnotationJavaImpl private constructor(
+    private val psi: PsiAnnotation,
+    override val parent: KSNode?,
+    override val origin: Origin
+) : KSAnnotation {
     companion object : KSObjectCache<PsiAnnotation, KSAnnotationJavaImpl>() {
-        fun getCached(psi: PsiAnnotation, parent: KSNode?) =
-            KSAnnotationJavaImpl.cache.getOrPut(psi) { KSAnnotationJavaImpl(psi, parent) }
+        fun getCached(
+            psi: PsiAnnotation,
+            parent: KSNode?,
+            origin: Origin = when {
+                parent == null -> Origin.SYNTHETIC
+                psi.containingFile is ClsFileImpl -> Origin.JAVA_LIB
+                else -> Origin.JAVA
+            }
+        ) = KSAnnotationJavaImpl.cache.getOrPut(psi) { KSAnnotationJavaImpl(psi, parent, origin) }
     }
 
     private val classId: ClassId by lazy {
@@ -80,13 +91,14 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
         analyze {
             val annotationConstructor =
                 (type.classifierSymbol() as? KaClassSymbol)?.memberScope?.constructors?.singleOrNull()
+            val presentOrigin = if (psi.containingFile is ClsFileImpl) Origin.JAVA_LIB else Origin.JAVA
             val presentArgs = psi.parameterList.attributes.mapIndexed { index, it ->
                 val name = it.name ?: annotationConstructor?.valueParameters?.getOrNull(index)?.name?.asString()
                 KSValueArgumentLiteImpl(
                     name?.let { KSNameImpl.getCached(it) },
                     calcValue(it.value, this@KSAnnotationJavaImpl),
                     this@KSAnnotationJavaImpl,
-                    Origin.JAVA,
+                    presentOrigin,
                     it.toLocation()
                 )
             }
@@ -103,8 +115,6 @@ class KSAnnotationJavaImpl private constructor(private val psi: PsiAnnotation, o
     }
 
     override val useSiteTarget: AnnotationUseSiteTarget? = null
-
-    override val origin: Origin = if (parent == null) Origin.SYNTHETIC else Origin.JAVA
 
     override val location: Location
         get() = psi.toLocation()

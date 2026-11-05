@@ -25,6 +25,12 @@
 // Validating Foo
 // Validating FooProvider2
 // Validating JavaLib
+// Validating JavaLibAnno1
+// Exception: [File: JavaLibAnno1.class, JavaLibAnno1, value, String]: SYNTHETIC
+// Exception: [File: JavaLibAnno1.class, JavaLibAnno1, value, value.getter(), String]: SYNTHETIC
+// Exception: [File: JavaLibAnno1.class, JavaLibAnno1, value, value.getter()]: SYNTHETIC
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: Exception: [File: JavaLibAnno1.class, JavaLibAnno1, value, field]: SYNTHETIC
+// Exception: [File: JavaLibAnno1.class, JavaLibAnno1, value]: SYNTHETIC
 // Validating KotlinLibClass
 // Exception: [KotlinLibClass, T1, Any?]: SYNTHETIC
 // Exception: [KotlinLibClass, T1, Any?]: SYNTHETIC
@@ -89,13 +95,23 @@ import java.util.ArrayList;
 
 @Anno2
 class JavaLib<T2> {
+    @Anno2
     Byte javaLibField = 0;
+    @Anno2
     Byte javaLibFunction() {
         return 0;
     }
     Byte f1(T2 p0, ArrayList<T2> p1) {
         return 0;
     }
+}
+
+// FILE: JavaLibAnno1.java
+package foo.bar;
+
+public @interface JavaLibAnno1 {
+    @Anno5(p1 = 1, p2 = "a2")
+    String value();
 }
 
 // FILE: FooProvider2.kt

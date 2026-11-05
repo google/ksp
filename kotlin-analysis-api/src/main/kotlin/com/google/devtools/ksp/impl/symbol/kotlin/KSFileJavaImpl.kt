@@ -29,6 +29,7 @@ import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.Origin
 import com.intellij.psi.PsiJavaFile
+import com.intellij.psi.impl.compiled.ClsFileImpl
 
 class KSFileJavaImpl private constructor(val psi: PsiJavaFile) : KSFile, Deferrable {
     companion object : KSObjectCache<PsiJavaFile, KSFileJavaImpl>() {
@@ -51,7 +52,7 @@ class KSFileJavaImpl private constructor(val psi: PsiJavaFile) : KSFile, Deferra
         }
     }
 
-    override val origin: Origin = Origin.JAVA
+    override val origin: Origin = if (psi is ClsFileImpl) Origin.JAVA_LIB else Origin.JAVA
 
     override val location: Location by lazy {
         psi.toLocation()
