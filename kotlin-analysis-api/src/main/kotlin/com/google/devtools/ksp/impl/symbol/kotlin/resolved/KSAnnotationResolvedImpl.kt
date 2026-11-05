@@ -19,8 +19,10 @@ package com.google.devtools.ksp.impl.symbol.kotlin.resolved
 import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.DeferrableAnnotation
 import com.google.devtools.ksp.impl.symbol.kotlin.KSValueArgumentImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
+import com.google.devtools.ksp.impl.symbol.kotlin.deferAnnotationByOrdinal
 import com.google.devtools.ksp.impl.symbol.kotlin.getAbsentDefaultArguments
 import com.google.devtools.ksp.impl.symbol.kotlin.getDefaultArguments
 import com.google.devtools.ksp.symbol.AnnotationUseSiteTarget
@@ -68,8 +70,8 @@ import org.jetbrains.kotlin.psi.KtFile
 class KSAnnotationResolvedImpl private constructor(
     private val annotationApplication: KaAnnotation,
     override val parent: KSNode?,
-    override val origin: Origin,
-) : KSAnnotation {
+    override val origin: Origin
+) : KSAnnotation, DeferrableAnnotation {
 
     companion object :
         KSObjectCache<IdKeyPair<KaAnnotation, KSNode?>, KSAnnotationResolvedImpl>() {
@@ -146,5 +148,12 @@ class KSAnnotationResolvedImpl private constructor(
 
     override fun toString(): String {
         return "@${shortName.asString()}"
+    }
+
+    internal val annotationFqName: String?
+        get() = annotationApplication.classId?.asFqNameString()
+
+    override fun deferAnnotation(): (() -> KSAnnotation?)? {
+        return deferAnnotationByOrdinal(annotationFqName)
     }
 }

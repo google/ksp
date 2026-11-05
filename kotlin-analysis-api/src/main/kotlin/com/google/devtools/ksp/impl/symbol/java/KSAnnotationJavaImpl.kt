@@ -7,10 +7,12 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.recordClassReferenceLookup
 import com.google.devtools.ksp.impl.recordLookup
+import com.google.devtools.ksp.impl.symbol.kotlin.DeferrableAnnotation
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationEnumEntryImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSErrorType
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.impl.symbol.kotlin.classifierSymbol
+import com.google.devtools.ksp.impl.symbol.kotlin.deferAnnotationByOrdinal
 import com.google.devtools.ksp.impl.symbol.kotlin.getAbsentDefaultArguments
 import com.google.devtools.ksp.impl.symbol.kotlin.getDefaultArguments
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
@@ -50,7 +52,7 @@ class KSAnnotationJavaImpl private constructor(
     private val psi: PsiAnnotation,
     override val parent: KSNode?,
     override val origin: Origin
-) : KSAnnotation {
+) : KSAnnotation, DeferrableAnnotation {
     companion object : KSObjectCache<IdKeyPair<PsiAnnotation, KSNode?>, KSAnnotationJavaImpl>() {
         fun getCached(
             psi: PsiAnnotation,
@@ -131,6 +133,13 @@ class KSAnnotationJavaImpl private constructor(
 
     override fun toString(): String {
         return "@${shortName.asString()}"
+    }
+
+    internal val annotationFqName: String?
+        get() = psi.resolveAnnotationType()?.qualifiedName
+
+    override fun deferAnnotation(): (() -> KSAnnotation?)? {
+        return deferAnnotationByOrdinal(annotationFqName)
     }
 }
 

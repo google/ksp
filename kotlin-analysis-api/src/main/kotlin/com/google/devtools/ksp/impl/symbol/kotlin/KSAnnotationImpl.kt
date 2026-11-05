@@ -40,7 +40,7 @@ class KSAnnotationImpl private constructor(
     private val ktAnnotationEntry: KtAnnotationEntry,
     override val parent: KSNode?,
     private val resolveToAnnotationApplication: () -> KaAnnotation
-) : KSAnnotation {
+) : KSAnnotation, DeferrableAnnotation {
     companion object : KSObjectCache<IdKeyPair<KtAnnotationEntry, KSNode?>, KSAnnotationImpl>() {
         fun getCached(
             ktAnnotationEntry: KtAnnotationEntry,
@@ -110,6 +110,10 @@ class KSAnnotationImpl private constructor(
 
     override fun toString(): String {
         return "@${shortName.asString()}"
+    }
+
+    override fun deferAnnotation(): (() -> KSAnnotation?)? {
+        return deferAnnotationByOrdinal()
     }
 }
 

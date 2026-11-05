@@ -25,6 +25,7 @@ import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.KSPCoreEnvironment
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.recordClassReferenceLookup
+import com.google.devtools.ksp.impl.symbol.java.KSAnnotationJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSAnnotationResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSClassifierParameterImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSClassifierReferenceResolvedImpl
@@ -905,6 +906,63 @@ fun interface Restorable {
 
 fun interface Deferrable {
     fun defer(): Restorable?
+}
+
+fun interface DeferrableAnnotation {
+    fun deferAnnotation(): (() -> KSAnnotation?)?
+}
+
+private fun KSAnnotation.knownAnnotationFqName(): String? = when (this) {
+    is KSAnnotationResolvedImpl -> annotationFqName
+    is KSAnnotationJavaImpl -> annotationFqName
+    else -> null
+}
+
+internal fun KSAnnotation.deferAnnotationByOrdinal(knownFqName: String? = null): (() -> KSAnnotation?)? {
+    val p = parent as? Deferrable ?: return null
+    val parentRestorable = p.defer() ?: return null
+    if (p is KSValueArgument) {
+        val listIndex = when (val v = p.value) {
+            is KSAnnotation -> if (v === this) -1 else return null
+            is List<*> -> v.indexOfFirst { it === this }.takeIf { it >= 0 } ?: return null
+            else -> return null
+        }
+        return {
+            val restoredArg = parentRestorable.restore() as? KSValueArgument
+            when (val v = restoredArg?.value) {
+                is KSAnnotation -> if (listIndex == -1) v else null
+                is List<*> -> v.getOrNull(listIndex) as? KSAnnotation
+                else -> null
+            }
+        }
+    }
+    val annotatedParent = parent as? KSAnnotated ?: return null
+    val targetShortName = shortName.asString()
+    val targetUseSite = useSiteTarget
+    val sameShortName = annotatedParent.annotations.filter {
+        it.shortName.asString() == targetShortName && it.useSiteTarget == targetUseSite
+    }.toList()
+    val ordinalInShortName = sameShortName.indexOfFirst { it === this }
+    if (ordinalInShortName < 0) return null
+
+    val resolvedFqName = knownFqName?.takeIf { !it.startsWith("<error>") }
+    val ordinalInFqName = if (resolvedFqName != null) {
+        sameShortName.filter { it.knownAnnotationFqName() == resolvedFqName }.indexOfFirst { it === this }
+    } else {
+        -1
+    }
+
+    return {
+        val restoredCandidates = parentRestorable.restore()?.annotations?.filter {
+            it.shortName.asString() == targetShortName && it.useSiteTarget == targetUseSite
+        }?.toList()
+        if (resolvedFqName != null && ordinalInFqName >= 0) {
+            restoredCandidates?.filter { it.knownAnnotationFqName() == resolvedFqName }?.getOrNull(ordinalInFqName)
+                ?: restoredCandidates?.getOrNull(ordinalInShortName)
+        } else {
+            restoredCandidates?.getOrNull(ordinalInShortName)
+        }
+    }
 }
 
 fun <T : KaSymbol> T.defer(restore: (T) -> KSAnnotated?): Restorable {
