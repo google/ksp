@@ -122,6 +122,7 @@
 // () -> kotlin.Int!!
 // (kotlin.Int!!) -> kotlin.Unit!!
 // Baz!!<kotlin.Long!!, kotlin.Number!!>
+// C.Both.provideString: () -> kotlin.String!!
 // END
 // MODULE: lib
 // FILE: Test.java
@@ -177,6 +178,10 @@ fun <T>List<T>.fileLevelExtensionFunction():Unit = TODO()
 fun <T>fileLevelFunction():Unit = TODO()
 val fileLevelProperty:Int = 3
 val errorType: NonExistingType
+
+class A { interface Foo { fun provideString(): String } }
+class B { interface Bar { fun provideString(): String } }
+class C { interface Both : A.Foo, B.Bar }
 
 interface KotlinInterface {
     val x:Int
