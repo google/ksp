@@ -123,9 +123,7 @@ class IncrementalAnnotationArgumentClassReferences(experimentalPsiResolution: Bo
         // 3. Rebuild
         gradleRunner.withArguments(ASSEMBLE).build().let { result ->
             Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
-            // Bug: the downstream sources are wrongly considered up to date and nothing is
-            // reprocessed, because invalidation stops at the class file path of the changed class.
-            Assert.assertFalse(result.output.lines().contains(downstreamProcessed))
+            Assert.assertTrue(result.output.lines().contains(downstreamProcessed))
         }
     }
 
@@ -251,5 +249,116 @@ class IncrementalAnnotationArgumentClassReferences(experimentalPsiResolution: Bo
                 result.output.lines().contains("$PROCESSOR_LABEL Processing DownstreamClass")
             )
         }
+    }
+
+    @Test
+    fun testGetAllMembersOnJavaLibrarySupertypeDoesNotRecordClassFiles() {
+        project.appendProperty("ksp.incremental.log=true")
+        project.appendProperty("callGetAllMembers=true")
+        File(project.root, "upstream/src/main/java/com/example/upstream/UpstreamEntryPointJava.java").writeText(
+            """
+            package com.example.upstream;
+
+            public class UpstreamEntryPointJava {
+                public UpstreamChangesJava field = null;
+                public UpstreamChangesJava helper() {
+                    return null;
+                }
+            }
+            """.trimIndent() + "\n"
+        )
+        File(project.root, "downstream/src/main/kotlin/DownstreamClass.kt").writeText(
+            """
+            import com.example.upstream.UpstreamEntryPointJava
+
+            @ExampleReference(UpstreamExplicitTarget::class)
+            class DownstreamClass : UpstreamEntryPointJava()
+            """.trimIndent() + "\n"
+        )
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(CLEAN, ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            Assert.assertTrue(result.output.lines().contains("$PROCESSOR_LABEL Processing DownstreamClass"))
+        }
+
+        val lookupLogFile = File(project.root, "downstream/build/kspCaches/main/logs/kspLookupGraph.log")
+        Assert.assertTrue("Expected kspLookupGraph.log to exist at ${lookupLogFile.path}", lookupLogFile.exists())
+        val classFileLines = lookupLogFile.readLines().filter { it.contains(".class ->") || it.contains(".jar!") }
+        Assert.assertTrue(
+            "Expected kspLookupGraph.log not to record compiled .class/.jar paths, but found:\n" +
+                classFileLines.joinToString("\n"),
+            classFileLines.isEmpty()
+        )
+
+        File(project.root, "upstream/src/main/java/com/example/upstream/UpstreamEntryPointJava.java").writeText(
+            """
+            package com.example.upstream;
+
+            public class UpstreamEntryPointJava {
+                public UpstreamChangesJava field = null;
+                public UpstreamChangesJava helper() {
+                    return null;
+                }
+                public int addedMethod() {
+                    return 42;
+                }
+            }
+            """.trimIndent() + "\n"
+        )
+
+        gradleRunner.withArguments(ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            Assert.assertTrue(
+                "Expected DownstreamClass to be reprocessed after Java supertype ABI change",
+                result.output.lines().contains("$PROCESSOR_LABEL Processing DownstreamClass")
+            )
+        }
+    }
+
+    @Test
+    fun testAssociateWithJavaLibraryClassInvalidatesOutput() {
+        project.appendProperty("associateJavaLibClass=StandaloneAssociatedJavaLib")
+        File(project.root, "upstream/src/main/java/StandaloneAssociatedJavaLib.java").writeText(
+            """
+            public class StandaloneAssociatedJavaLib {
+                public void v1() {}
+            }
+            """.trimIndent() + "\n"
+        )
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(CLEAN, ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+        }
+
+        val generatedFile = File(
+            project.root,
+            "downstream/build/generated/ksp/main/kotlin/DownstreamClassGenerated.kt"
+        )
+        Assert.assertTrue("Expected generated file at ${generatedFile.path}", generatedFile.exists())
+        Assert.assertTrue(
+            "Expected initial generated file to contain v1, got: ${generatedFile.readText()}",
+            generatedFile.readText().contains("v1")
+        )
+
+        // Modify ONLY StandaloneAssociatedJavaLib.java in :upstream (unreferenced in DownstreamClass.kt; linked solely via associateWithClasses)
+        File(project.root, "upstream/src/main/java/StandaloneAssociatedJavaLib.java").writeText(
+            """
+            public class StandaloneAssociatedJavaLib {
+                public void v1() {}
+                public void v2() {}
+            }
+            """.trimIndent() + "\n"
+        )
+
+        gradleRunner.withArguments(ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+        }
+
+        Assert.assertTrue(
+            "Expected DownstreamClassGenerated.kt to be regenerated with v2 when StandaloneAssociatedJavaLib changed, got: ${generatedFile.readText()}",
+            generatedFile.readText().contains("v2")
+        )
     }
 }

@@ -30,6 +30,7 @@ import com.google.devtools.ksp.visitor.KSDefaultVisitor
 import com.intellij.psi.PsiImportStatement
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiPackage
+import com.intellij.psi.impl.compiled.ClsFileImpl
 import com.intellij.util.containers.MultiMap
 import java.io.Closeable
 import java.io.File
@@ -522,7 +523,7 @@ abstract class IncrementalContextBase(
      * - If `sym` is an implicit import, i.e., from the same package, then `sym` may invalidate the file.
      */
     fun recordLookup(psiFile: PsiJavaFile, fqn: String) {
-        if (!isIncremental)
+        if (!isIncremental || psiFile is ClsFileImpl)
             return
 
         val path = psiFile.virtualFile.path

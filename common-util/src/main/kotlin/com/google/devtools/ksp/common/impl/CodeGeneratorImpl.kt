@@ -20,10 +20,13 @@ package com.google.devtools.ksp.common.impl
 import com.google.devtools.ksp.common.NoSourceFile
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
+import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.Origin
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -87,6 +90,13 @@ class CodeGeneratorImpl(
         associate(sources, path + extension, extensionToDirectory(extensionName))
     }
 
+    private val KSDeclaration.sourceFileOrNull: KSFile?
+        get() = containingFile?.takeUnless {
+            origin == Origin.KOTLIN_LIB ||
+                origin == Origin.JAVA_LIB ||
+                it.fileName.endsWith(".class")
+        }
+
     override fun associateWithClasses(
         classes: List<KSClassDeclaration>,
         packageName: String,
@@ -94,8 +104,12 @@ class CodeGeneratorImpl(
         extensionName: String
     ) {
         val path = pathOf(packageName, fileName, extensionName)
-        val files = classes.map {
-            it.containingFile ?: NoSourceFile(projectBase, it.qualifiedName?.asString().toString())
+        val files = classes.map { cls ->
+            var owner: KSClassDeclaration = cls
+            while (owner.classKind == ClassKind.ENUM_ENTRY) {
+                owner = (owner.parentDeclaration as? KSClassDeclaration) ?: break
+            }
+            owner.sourceFileOrNull ?: NoSourceFile(projectBase, owner.qualifiedName?.asString().toString())
         }
         associate(files, path, extensionToDirectory(extensionName))
     }
@@ -113,7 +127,7 @@ class CodeGeneratorImpl(
     ) {
         val path = pathOf(packageName, fileName, extensionName)
         val files = functions.map {
-            it.containingFile ?: anyChangesWildcard
+            it.sourceFileOrNull ?: anyChangesWildcard
         }
         associate(files, path, extensionToDirectory(extensionName))
     }
@@ -131,7 +145,7 @@ class CodeGeneratorImpl(
     ) {
         val path = pathOf(packageName, fileName, extensionName)
         val files = properties.map {
-            it.containingFile ?: anyChangesWildcard
+            it.sourceFileOrNull ?: anyChangesWildcard
         }
         associate(files, path, extensionToDirectory(extensionName))
     }

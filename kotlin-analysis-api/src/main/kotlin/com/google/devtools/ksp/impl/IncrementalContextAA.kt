@@ -38,6 +38,7 @@ import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.Origin
 import com.intellij.psi.PsiJavaFile
+import com.intellij.psi.impl.compiled.ClsFileImpl
 import com.intellij.util.containers.MultiMap
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.symbols.KaFunctionSymbol
@@ -180,6 +181,8 @@ class IncrementalContextAA(
             return
 
         val file = (context?.containingFile as? KSFileJavaImpl)?.psi ?: return
+        if (file is ClsFileImpl)
+            return
 
         recordWithArgs(type, file)
     }
@@ -229,7 +232,13 @@ class IncrementalContextAA(
         // Try directly getting the filepath
         val maybeAvailableFilePath = declaration.containingFile?.filePath
         if (maybeAvailableFilePath != null) {
-            return maybeAvailableFilePath
+            val file = declaration.containingFile
+            if (file is KSFileJavaImpl && file.psi is ClsFileImpl) {
+                // Decompiled Java class file in a library, not a source file!
+                // Fall through to construct synthetic NoSourceFile
+            } else {
+                return maybeAvailableFilePath
+            }
         }
 
         // Construct synthetic filepath
@@ -263,6 +272,8 @@ class IncrementalContextAA(
             return
 
         val file = (declaration.containingFile as? KSFileJavaImpl)?.psi ?: return
+        if (file is ClsFileImpl)
+            return
 
         val symbol = when (declaration) {
             is KSPropertyDeclarationJavaImpl -> declaration.ktJavaFieldSymbol
@@ -297,7 +308,7 @@ class IncrementalContextAA(
     }
 
     private val KaSymbol.psiJavaFile: PsiJavaFile?
-        get() = psi?.containingFile as? PsiJavaFile
+        get() = (psi?.containingFile as? PsiJavaFile)?.takeIf { it !is ClsFileImpl }
 
     private val KaType.psiJavaFiles: List<PsiJavaFile>
         get() {
