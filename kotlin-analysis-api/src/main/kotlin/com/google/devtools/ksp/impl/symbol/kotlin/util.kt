@@ -783,7 +783,17 @@ internal fun KSNode.findParentDeclaration(): KSDeclaration? {
 
 internal fun KaAnnotationValue.toValue(parent: KSNode? = null, origin: Origin? = null): Any? = when (this) {
     is KaAnnotationValue.ArrayValue -> this.values.map { it.toValue(parent, origin) }
-    is KaAnnotationValue.NestedAnnotationValue -> KSAnnotationResolvedImpl.getCached(this.annotation, parent, origin)
+    is KaAnnotationValue.NestedAnnotationValue -> {
+        this.annotation.classId?.let { classId ->
+            val fqName = classId.asFqNameString()
+            if (fqName.isNotEmpty() && !fqName.startsWith("__KSP_unresolved_") && "<error>" !in fqName && classId.toKtClassSymbol() != null) {
+                parent?.let { ctx ->
+                    recordClassReferenceLookup(fqName, ctx)
+                }
+            }
+        }
+        KSAnnotationResolvedImpl.getCached(this.annotation, parent, origin)
+    }
     // TODO: Enum entry should return a type, use declaration as a placeholder.
     is KaAnnotationValue.EnumEntryValue -> this.callableId?.classId?.let { classId ->
         analyze {
@@ -796,8 +806,8 @@ internal fun KaAnnotationValue.toValue(parent: KSNode? = null, origin: Origin? =
     } ?: KSErrorType
 
     is KaAnnotationValue.ClassLiteralValue -> {
-        parent?.findParentDeclaration()?.let { decl ->
-            recordClassReferenceLookup(type, decl)
+        parent?.let { ctx ->
+            recordClassReferenceLookup(type, ctx)
         }
         KSTypeImpl.getCached(type)
     }

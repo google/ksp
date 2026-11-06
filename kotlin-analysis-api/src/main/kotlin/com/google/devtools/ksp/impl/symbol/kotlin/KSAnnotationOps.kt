@@ -28,7 +28,6 @@ import com.intellij.psi.PsiAnnotationMethod
 import com.intellij.psi.PsiClass
 import com.intellij.psi.impl.compiled.ClsClassImpl
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
-import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotationValue
 import org.jetbrains.kotlin.analysis.api.annotations.KaNamedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.impl.base.annotations.KaBaseNamedAnnotationValue
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassSymbol
@@ -94,7 +93,7 @@ internal object KSAnnotationOps {
         ksAnnotation: KSAnnotation,
         presentArgs: List<KSValueArgument>
     ): List<KSValueArgument> {
-        val presentNames = presentArgs.mapNotNull { it.name?.asString() }
+        val presentNames = presentArgs.mapNotNullTo(hashSetOf()) { it.name?.asString() }
         return ksAnnotation.defaultArguments.filter { arg ->
             arg.name?.asString() !in presentNames
         }
@@ -103,9 +102,10 @@ internal object KSAnnotationOps {
     /**
      * Resolves and returns all default argument values defined on an annotation declaration.
      *
-     * For Java source annotations ([PsiClass]), default values are extracted from [PsiAnnotationMethod.defaultValue].
-     * For Kotlin annotations, default values are retrieved from the primary constructor value parameters,
-     * and class reference lookups are recorded for incremental processing when default values contain class literals.
+     * Records a class-reference lookup on the annotation declaration for incremental processing so
+     * changes to the annotation's default values invalidate consumers. Default values themselves are
+     * evaluated lazily when [KSValueArgument.value] is accessed, so overridden defaults do not pollute
+     * the lookup graph with unreferenced class literals or nested annotations.
      *
      * @param ksAnnotation The [KSAnnotation] call site / instance to which the resolved default arguments will belong.
      * @param classId The [ClassId] of the annotation class declaration, or `null`.
@@ -115,15 +115,18 @@ internal object KSAnnotationOps {
     @JvmStatic
     fun findDefaultArguments(ksAnnotation: KSAnnotation, classId: ClassId?): List<KSValueArgument> {
         if (classId == null) return emptyList()
+        val fqName = classId.asFqNameString()
+        if (fqName.startsWith("__KSP_unresolved_") || "<error>" in fqName) return emptyList()
         return analyze {
             classId.toKtClassSymbol()?.let { symbol ->
+                recordClassReferenceLookup(fqName, ksAnnotation)
                 if (isJavaSource(symbol)) {
                     (symbol.psi as PsiClass).allMethods.filterIsInstance<PsiAnnotationMethod>()
                         .mapNotNull { annoMethod ->
                             annoMethod.defaultValue?.let { value ->
                                 KSValueArgumentLiteImpl(
                                     KSNameImpl.getCached(annoMethod.name),
-                                    calcValue(value, ksAnnotation),
+                                    { arg -> calcValue(value, arg, Origin.SYNTHETIC) },
                                     ksAnnotation,
                                     Origin.SYNTHETIC,
                                     value.toLocation()
@@ -135,11 +138,6 @@ internal object KSAnnotationOps {
                         it.valueParameters.mapNotNull { valueParameterSymbol ->
                             if (!valueParameterSymbol.hasDefaultValue) return@mapNotNull null
                             val constantValue = valueParameterSymbol.getDefaultValue() ?: return@mapNotNull null
-                            if (constantValue is KaAnnotationValue.ClassLiteralValue) {
-                                ksAnnotation.findParentDeclaration()?.let { decl ->
-                                    recordClassReferenceLookup(constantValue.type, decl)
-                                }
-                            }
                             KSValueArgumentImpl.getCached(
                                 KaBaseNamedAnnotationValue(
                                     valueParameterSymbol.name,
@@ -149,7 +147,7 @@ internal object KSAnnotationOps {
                                 Origin.SYNTHETIC
                             )
                         }
-                    }
+                    } ?: emptyList()
                 }
             } ?: emptyList()
         }

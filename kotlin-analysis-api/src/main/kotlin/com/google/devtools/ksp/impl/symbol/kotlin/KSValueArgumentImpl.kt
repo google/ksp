@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.symbol.*
@@ -27,9 +28,9 @@ class KSValueArgumentImpl private constructor(
     override val parent: KSNode?,
     override val origin: Origin
 ) : AbstractKSValueArgumentImpl(), Deferrable {
-    companion object : KSObjectCache<KaNamedAnnotationValue, KSValueArgumentImpl>() {
+    companion object : KSObjectCache<IdKeyPair<KaNamedAnnotationValue, KSNode?>, KSValueArgumentImpl>() {
         fun getCached(namedAnnotationValue: KaNamedAnnotationValue, parent: KSNode?, origin: Origin) =
-            cache.getOrPut(namedAnnotationValue) {
+            cache.getOrPut(IdKeyPair(namedAnnotationValue, parent)) {
                 KSValueArgumentImpl(namedAnnotationValue, parent, origin)
             }
     }

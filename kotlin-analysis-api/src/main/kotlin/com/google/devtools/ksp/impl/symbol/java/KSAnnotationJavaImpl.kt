@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.impl.symbol.java
 
+import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.getClassDeclarationByName
@@ -11,7 +12,6 @@ import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationEnumEntryImp
 import com.google.devtools.ksp.impl.symbol.kotlin.KSErrorType
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.impl.symbol.kotlin.classifierSymbol
-import com.google.devtools.ksp.impl.symbol.kotlin.findParentDeclaration
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.toKaType
 import com.google.devtools.ksp.impl.symbol.kotlin.toLocation
@@ -49,7 +49,7 @@ class KSAnnotationJavaImpl private constructor(
     override val parent: KSNode?,
     override val origin: Origin
 ) : KSAnnotation {
-    companion object : KSObjectCache<PsiAnnotation, KSAnnotationJavaImpl>() {
+    companion object : KSObjectCache<IdKeyPair<PsiAnnotation, KSNode?>, KSAnnotationJavaImpl>() {
         fun getCached(
             psi: PsiAnnotation,
             parent: KSNode?,
@@ -58,7 +58,7 @@ class KSAnnotationJavaImpl private constructor(
                 psi.containingFile is ClsFileImpl -> Origin.JAVA_LIB
                 else -> Origin.JAVA
             }
-        ) = KSAnnotationJavaImpl.cache.getOrPut(psi) { KSAnnotationJavaImpl(psi, parent, origin) }
+        ) = KSAnnotationJavaImpl.cache.getOrPut(IdKeyPair(psi, parent)) { KSAnnotationJavaImpl(psi, parent, origin) }
     }
 
     private val classId: ClassId by lazy {
@@ -79,6 +79,11 @@ class KSAnnotationJavaImpl private constructor(
     private val type: KaType by lazy {
         analyze {
             buildClassType(classId)
+        }.also {
+            val fqn = classId.asFqNameString()
+            if (!fqn.startsWith("__KSP_unresolved_")) {
+                recordClassReferenceLookup(fqn, this)
+            }
         }
     }
 
@@ -96,7 +101,7 @@ class KSAnnotationJavaImpl private constructor(
                 val name = it.name ?: annotationConstructor?.valueParameters?.getOrNull(index)?.name?.asString()
                 KSValueArgumentLiteImpl(
                     name?.let { KSNameImpl.getCached(it) },
-                    calcValue(it.value, this@KSAnnotationJavaImpl),
+                    { arg -> calcValue(it.value, arg, presentOrigin) },
                     this@KSAnnotationJavaImpl,
                     presentOrigin,
                     it.toLocation()
@@ -128,19 +133,26 @@ class KSAnnotationJavaImpl private constructor(
     }
 }
 
-fun calcValue(value: PsiAnnotationMemberValue?, parent: KSNode?): Any? {
+fun calcValue(value: PsiAnnotationMemberValue?, parent: KSNode? = null, origin: Origin? = null): Any? {
     if (value is PsiArrayInitializerMemberValue) {
         return value.initializers.map {
-            calcValue(it, parent)
+            calcValue(it, parent, origin)
         }
     }
     if (value is PsiAnnotation) {
-        value.qualifiedName?.let { fqn ->
-            parent?.findParentDeclaration()?.let { decl ->
-                recordClassReferenceLookup(fqn, decl)
+        val nestedOrigin = origin ?: when {
+            parent == null -> Origin.SYNTHETIC
+            value.containingFile is ClsFileImpl -> Origin.JAVA_LIB
+            else -> Origin.JAVA
+        }
+        val nestedAnnotation = KSAnnotationJavaImpl.getCached(value, parent, nestedOrigin)
+        parent?.let { ctx ->
+            val fqn = value.resolveAnnotationType()?.qualifiedName
+            if (fqn != null) {
+                recordClassReferenceLookup(fqn, ctx)
             }
         }
-        return KSAnnotationJavaImpl.getCached(value, null)
+        return nestedAnnotation
     }
     val result = when (value) {
         is PsiReference -> value.resolve()?.let { resolved ->
@@ -172,8 +184,8 @@ fun calcValue(value: PsiAnnotationMemberValue?, parent: KSNode?): Any? {
                         .getClassDeclarationByName(component.canonicalText)?.asStarProjectedType()
                         ?.also { ksType ->
                             ksType.toKaType()?.let { kaType ->
-                                parent?.findParentDeclaration()?.let { decl ->
-                                    recordClassReferenceLookup(kaType, decl)
+                                parent?.let { ctx ->
+                                    recordClassReferenceLookup(kaType, ctx)
                                 }
                             }
                         }
@@ -191,8 +203,8 @@ fun calcValue(value: PsiAnnotationMemberValue?, parent: KSNode?): Any? {
                 .getClassDeclarationByName(result.canonicalText)?.asStarProjectedType()
                 ?.also { ksType ->
                     ksType.toKaType()?.let { kaType ->
-                        parent?.findParentDeclaration()?.let { decl ->
-                            recordClassReferenceLookup(kaType, decl)
+                        parent?.let { ctx ->
+                            recordClassReferenceLookup(kaType, ctx)
                         }
                     }
                 }

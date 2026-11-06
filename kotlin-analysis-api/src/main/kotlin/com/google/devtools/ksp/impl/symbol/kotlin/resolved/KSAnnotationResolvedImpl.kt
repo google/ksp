@@ -19,11 +19,13 @@ package com.google.devtools.ksp.impl.symbol.kotlin.resolved
 import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.impl.recordClassReferenceLookup
 import com.google.devtools.ksp.impl.symbol.kotlin.KSAnnotationOps
 import com.google.devtools.ksp.impl.symbol.kotlin.KSAnnotationOps.findAbsentDefaultArguments
 import com.google.devtools.ksp.impl.symbol.kotlin.KSAnnotationOps.findDefaultArguments
 import com.google.devtools.ksp.impl.symbol.kotlin.KSValueArgumentImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
+import com.google.devtools.ksp.impl.symbol.kotlin.toKtClassSymbol
 import com.google.devtools.ksp.symbol.AnnotationUseSiteTarget
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSName
@@ -81,6 +83,12 @@ class KSAnnotationResolvedImpl private constructor(
 
     override val annotationType: KSTypeReference by lazy {
         analyze {
+            annotationApplication.classId?.let { id ->
+                val fqName = id.asFqNameString()
+                if (fqName.isNotEmpty() && !fqName.startsWith("__KSP_unresolved_") && "<error>" !in fqName && id.toKtClassSymbol() != null) {
+                    recordClassReferenceLookup(fqName, this@KSAnnotationResolvedImpl)
+                }
+            }
             KSTypeReferenceResolvedImpl.getCached(
                 buildClassType(annotationApplication.classId!!),
                 parent = this@KSAnnotationResolvedImpl
