@@ -66,8 +66,13 @@ open class TestProcessor(
                     val associatedJavaLib = environment.options["associateJavaLibClass"]
                         ?.takeIf { it.isNotEmpty() }
                         ?.let { resolver.getClassDeclarationByName(it) }
+                    val viaContainingFile = environment.options["associateJavaLibViaContainingFile"] == "true"
+                    val originatingFiles = listOfNotNull(
+                        sym.containingFile,
+                        associatedJavaLib?.containingFile?.takeIf { viaContainingFile }
+                    ).toTypedArray()
                     val file = environment.codeGenerator.createNewFile(
-                        Dependencies(false, sym.containingFile!!),
+                        Dependencies(false, *originatingFiles),
                         "",
                         fileName
                     )
@@ -79,7 +84,7 @@ open class TestProcessor(
                         " { val members = \"$members\" }"
                     } ?: ""
                     file.write("class ${sym.simpleName.asString()}Generated$suffix".toByteArray())
-                    if (associatedJavaLib != null) {
+                    if (associatedJavaLib != null && !viaContainingFile) {
                         environment.codeGenerator.associateWithClasses(
                             listOf(associatedJavaLib),
                             "",

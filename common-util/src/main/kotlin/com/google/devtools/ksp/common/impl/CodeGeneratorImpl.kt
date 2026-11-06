@@ -17,13 +17,17 @@
 
 package com.google.devtools.ksp.common.impl
 
+import com.google.devtools.ksp.common.KSVirtualFile
 import com.google.devtools.ksp.common.NoSourceFile
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
+import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.Origin
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -87,6 +91,25 @@ class CodeGeneratorImpl(
         associate(sources, path + extension, extensionToDirectory(extensionName))
     }
 
+    private fun KSFile.isLibraryFile(): Boolean =
+        this !is KSVirtualFile && (
+            origin == Origin.KOTLIN_LIB ||
+                origin == Origin.JAVA_LIB ||
+                fileName.endsWith(".class")
+            )
+
+    private fun collectLibraryClasses(declarations: Sequence<KSDeclaration>): Sequence<KSClassDeclaration> =
+        declarations.filterIsInstance<KSClassDeclaration>()
+            .filter { it.classKind != ClassKind.ENUM_ENTRY }
+            .flatMap { cls -> sequenceOf(cls) + collectLibraryClasses(cls.declarations) }
+
+    private val KSDeclaration.sourceFileOrNull: KSFile?
+        get() = containingFile?.takeUnless {
+            origin == Origin.KOTLIN_LIB ||
+                origin == Origin.JAVA_LIB ||
+                it.isLibraryFile()
+        }
+
     override fun associateWithClasses(
         classes: List<KSClassDeclaration>,
         packageName: String,
@@ -94,8 +117,12 @@ class CodeGeneratorImpl(
         extensionName: String
     ) {
         val path = pathOf(packageName, fileName, extensionName)
-        val files = classes.map {
-            it.containingFile ?: NoSourceFile(projectBase, it.qualifiedName?.asString().toString())
+        val files = classes.map { cls ->
+            var owner: KSClassDeclaration = cls
+            while (owner.classKind == ClassKind.ENUM_ENTRY) {
+                owner = (owner.parentDeclaration as? KSClassDeclaration) ?: break
+            }
+            owner.sourceFileOrNull ?: NoSourceFile(projectBase, owner.qualifiedName?.asString().toString())
         }
         associate(files, path, extensionToDirectory(extensionName))
     }
@@ -113,7 +140,7 @@ class CodeGeneratorImpl(
     ) {
         val path = pathOf(packageName, fileName, extensionName)
         val files = functions.map {
-            it.containingFile ?: anyChangesWildcard
+            it.sourceFileOrNull ?: anyChangesWildcard
         }
         associate(files, path, extensionToDirectory(extensionName))
     }
@@ -131,7 +158,7 @@ class CodeGeneratorImpl(
     ) {
         val path = pathOf(packageName, fileName, extensionName)
         val files = properties.map {
-            it.containingFile ?: anyChangesWildcard
+            it.sourceFileOrNull ?: anyChangesWildcard
         }
         associate(files, path, extensionToDirectory(extensionName))
     }
@@ -196,7 +223,19 @@ class CodeGeneratorImpl(
             return
 
         val output = outputPath.relativeTo(projectBase)
-        sources.forEach { source ->
+        val normalizedSources = sources.flatMap { source ->
+            if (source.isLibraryFile()) {
+                collectLibraryClasses(source.declarations)
+                    .mapNotNull { cls ->
+                        cls.qualifiedName?.asString()?.let { NoSourceFile(projectBase, it) }
+                    }
+                    .toList()
+                    .ifEmpty { listOf(anyChangesWildcard) }
+            } else {
+                listOf(source)
+            }
+        }
+        normalizedSources.forEach { source ->
             sourceToOutputs.getOrPut(File(source.filePath).relativeTo(projectBase)) { mutableSetOf() }.add(output)
         }
     }

@@ -41,4 +41,8 @@ ksp {
     arg("followDefaultArguments", project.findProperty("followDefaultArguments")?.toString() ?: "false")
     arg("callGetAllMembers", project.findProperty("callGetAllMembers")?.toString() ?: "false")
     arg("associateJavaLibClass", project.findProperty("associateJavaLibClass")?.toString() ?: "")
+    arg(
+        "associateJavaLibViaContainingFile",
+        project.findProperty("associateJavaLibViaContainingFile")?.toString() ?: "false"
+    )
 }
