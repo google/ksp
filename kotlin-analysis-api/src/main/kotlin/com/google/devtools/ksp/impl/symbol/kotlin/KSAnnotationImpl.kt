@@ -41,7 +41,7 @@ class KSAnnotationImpl private constructor(
     private val ktAnnotationEntry: KtAnnotationEntry,
     override val parent: KSNode?,
     private val resolveToAnnotationApplication: () -> KaAnnotation
-) : KSAnnotation {
+) : KSAnnotation, DeferrableAnnotation {
     companion object : KSObjectCache<IdKeyPair<KtAnnotationEntry, KSNode?>, KSAnnotationImpl>() {
         fun getCached(
             ktAnnotationEntry: KtAnnotationEntry,
@@ -112,6 +112,11 @@ class KSAnnotationImpl private constructor(
     override val location: Location by lazy {
         annotationApplication.psi?.toLocation() ?: NonExistLocation
     }
+
+    override val annotationFqName: String?
+        get() = annotationApplication.classId.resolvedAnnotationFqName()
+
+    override fun deferAnnotation(): (() -> KSAnnotation?)? = deferAnnotationByOrdinal()
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitAnnotation(this, data)

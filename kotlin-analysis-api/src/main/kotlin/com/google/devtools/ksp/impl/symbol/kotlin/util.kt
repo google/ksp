@@ -784,12 +784,9 @@ internal fun KSNode.findParentDeclaration(): KSDeclaration? {
 internal fun KaAnnotationValue.toValue(parent: KSNode? = null, origin: Origin? = null): Any? = when (this) {
     is KaAnnotationValue.ArrayValue -> this.values.map { it.toValue(parent, origin) }
     is KaAnnotationValue.NestedAnnotationValue -> {
-        this.annotation.classId?.let { classId ->
-            val fqName = classId.asFqNameString()
-            if (fqName.isNotEmpty() && !fqName.startsWith("__KSP_unresolved_") && "<error>" !in fqName && classId.toKtClassSymbol() != null) {
-                parent?.let { ctx ->
-                    recordClassReferenceLookup(fqName, ctx)
-                }
+        this.annotation.classId.resolvedAnnotationFqName()?.let { fqName ->
+            parent?.let { ctx ->
+                recordClassReferenceLookup(fqName, ctx)
             }
         }
         KSAnnotationResolvedImpl.getCached(this.annotation, parent, origin)
@@ -1417,4 +1414,91 @@ internal fun separateQualifierAndName(fqn: String): Pair<String, String> {
     val scope = fqn.substringBeforeLast('.', "<anonymous>")
     val name = fqn.substringAfterLast('.')
     return scope to name
+}
+
+internal interface DeferrableAnnotation : KSAnnotation {
+    val annotationFqName: String?
+    val callSiteShortName: String
+        get() = shortName.asString()
+    fun deferAnnotation(): (() -> KSAnnotation?)?
+}
+
+internal fun ClassId?.resolvedAnnotationFqName(): String? {
+    val id = this ?: return null
+    val fqName = id.asFqNameString()
+    if (fqName.isEmpty() || fqName.startsWith("__KSP_unresolved_") || "<error>" in fqName) {
+        return null
+    }
+    return if (id.toKtClassSymbol() != null) fqName else null
+}
+
+private fun KSAnnotation.knownAnnotationFqName(): String? =
+    if (this is DeferrableAnnotation) {
+        annotationFqName
+    } else {
+        annotationType.resolve().declaration.qualifiedName?.asString()
+    }
+
+private fun KSAnnotation.knownCallSiteShortName(): String =
+    if (this is DeferrableAnnotation) {
+        callSiteShortName
+    } else {
+        shortName.asString()
+    }
+
+private fun KSAnnotated.ownerAnnotations(): Sequence<KSAnnotation> =
+    if (this is KSFileJavaImpl) {
+        with(ResolverAAImpl.instance) { getPackageAnnotations().asSequence() }
+    } else {
+        annotations
+    }
+
+internal fun DeferrableAnnotation.deferAnnotationByOrdinal(): (() -> KSAnnotation?)? {
+    when (val p = parent) {
+        is AbstractKSValueArgumentImpl -> {
+            val parentRestorable = p.defer() ?: return null
+            val listIndex = (p.value as? List<*>)?.indexOfFirst { it === this } ?: -1
+            return {
+                val restoredArg = parentRestorable.restore() as? KSValueArgument
+                when (val restoredVal = restoredArg?.value) {
+                    is KSAnnotation -> restoredVal
+                    is List<*> -> restoredVal.getOrNull(listIndex) as? KSAnnotation
+                    else -> null
+                }
+            }
+        }
+        is KSAnnotated -> {
+            val parentRestorable = (p as? Deferrable)?.defer() ?: return null
+            val fqName = annotationFqName
+            val target = useSiteTarget
+            val matchingBefore = p.ownerAnnotations().toList().also { list ->
+                if (list.none { it === this }) return null
+            }
+            if (fqName != null) {
+                val ordinal = matchingBefore.filter {
+                    it.useSiteTarget == target && it.knownAnnotationFqName() == fqName
+                }.indexOfFirst { it === this }
+                if (ordinal < 0) return null
+                return {
+                    val restoredParent = parentRestorable.restore()
+                    restoredParent?.ownerAnnotations()?.filter {
+                        it.useSiteTarget == target && it.knownAnnotationFqName() == fqName
+                    }?.elementAtOrNull(ordinal)
+                }
+            } else {
+                val shortNameStr = callSiteShortName
+                val ordinal = matchingBefore.filter {
+                    it.useSiteTarget == target && it.knownCallSiteShortName() == shortNameStr
+                }.indexOfFirst { it === this }
+                if (ordinal < 0) return null
+                return {
+                    val restoredParent = parentRestorable.restore()
+                    restoredParent?.ownerAnnotations()?.filter {
+                        it.useSiteTarget == target && it.knownCallSiteShortName() == shortNameStr
+                    }?.elementAtOrNull(ordinal)
+                }
+            }
+        }
+        else -> return null
+    }
 }

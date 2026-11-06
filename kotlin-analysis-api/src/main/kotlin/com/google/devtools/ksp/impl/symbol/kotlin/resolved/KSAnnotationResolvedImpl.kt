@@ -20,12 +20,14 @@ import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.impl.recordClassReferenceLookup
+import com.google.devtools.ksp.impl.symbol.kotlin.DeferrableAnnotation
 import com.google.devtools.ksp.impl.symbol.kotlin.KSAnnotationOps
 import com.google.devtools.ksp.impl.symbol.kotlin.KSAnnotationOps.findAbsentDefaultArguments
 import com.google.devtools.ksp.impl.symbol.kotlin.KSAnnotationOps.findDefaultArguments
 import com.google.devtools.ksp.impl.symbol.kotlin.KSValueArgumentImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
-import com.google.devtools.ksp.impl.symbol.kotlin.toKtClassSymbol
+import com.google.devtools.ksp.impl.symbol.kotlin.deferAnnotationByOrdinal
+import com.google.devtools.ksp.impl.symbol.kotlin.resolvedAnnotationFqName
 import com.google.devtools.ksp.symbol.AnnotationUseSiteTarget
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSName
@@ -36,8 +38,11 @@ import com.google.devtools.ksp.symbol.KSVisitor
 import com.google.devtools.ksp.symbol.Location
 import com.google.devtools.ksp.symbol.NonExistLocation
 import com.google.devtools.ksp.symbol.Origin
+import com.intellij.psi.PsiAnnotation
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget as KaAnnotationUseSiteTarget
+import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtFile
 
 /**
@@ -63,7 +68,7 @@ class KSAnnotationResolvedImpl private constructor(
     private val annotationApplication: KaAnnotation,
     override val parent: KSNode?,
     override val origin: Origin,
-) : KSAnnotation {
+) : KSAnnotation, DeferrableAnnotation {
 
     companion object :
         KSObjectCache<IdKeyPair<KaAnnotation, KSNode?>, KSAnnotationResolvedImpl>() {
@@ -83,14 +88,16 @@ class KSAnnotationResolvedImpl private constructor(
 
     override val annotationType: KSTypeReference by lazy {
         analyze {
-            annotationApplication.classId?.let { id ->
-                val fqName = id.asFqNameString()
-                if (fqName.isNotEmpty() && !fqName.startsWith("__KSP_unresolved_") && "<error>" !in fqName && id.toKtClassSymbol() != null) {
-                    recordClassReferenceLookup(fqName, this@KSAnnotationResolvedImpl)
-                }
+            val fqName = annotationApplication.classId.resolvedAnnotationFqName()
+            val type = if (fqName != null) {
+                recordClassReferenceLookup(fqName, this@KSAnnotationResolvedImpl)
+                buildClassType(annotationApplication.classId!!)
+            } else {
+                val fallbackName = shortName.asString().takeUnless { it == "<error>" } ?: "error"
+                buildClassType(ClassId.fromString("__KSP_unresolved_$fallbackName"))
             }
             KSTypeReferenceResolvedImpl.getCached(
-                buildClassType(annotationApplication.classId!!),
+                type,
                 parent = this@KSAnnotationResolvedImpl
             )
         }
@@ -120,7 +127,11 @@ class KSAnnotationResolvedImpl private constructor(
     }
 
     override val shortName: KSName by lazy {
-        KSNameImpl.getCached(annotationApplication.classId!!.shortClassName.asString())
+        val short = annotationApplication.classId?.shortClassName?.asString()?.takeUnless { it == "<error>" }
+            ?: (annotationApplication.psi as? KtAnnotationEntry)?.shortName?.asString()
+            ?: (annotationApplication.psi as? PsiAnnotation)?.nameReferenceElement?.referenceName
+            ?: "<error>"
+        KSNameImpl.getCached(short)
     }
 
     override val useSiteTarget: AnnotationUseSiteTarget? by lazy {
@@ -147,6 +158,16 @@ class KSAnnotationResolvedImpl private constructor(
     override val location: Location by lazy {
         NonExistLocation
     }
+
+    override val annotationFqName: String?
+        get() = annotationApplication.classId.resolvedAnnotationFqName()
+
+    override val callSiteShortName: String
+        get() = (annotationApplication.psi as? KtAnnotationEntry)?.shortName?.asString()
+            ?: (annotationApplication.psi as? PsiAnnotation)?.nameReferenceElement?.referenceName
+            ?: shortName.asString()
+
+    override fun deferAnnotation(): (() -> KSAnnotation?)? = deferAnnotationByOrdinal()
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitAnnotation(this, data)

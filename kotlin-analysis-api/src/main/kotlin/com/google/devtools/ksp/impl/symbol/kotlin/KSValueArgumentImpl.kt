@@ -27,7 +27,7 @@ class KSValueArgumentImpl private constructor(
     private val namedAnnotationValue: KaNamedAnnotationValue,
     override val parent: KSNode?,
     override val origin: Origin
-) : AbstractKSValueArgumentImpl(), Deferrable {
+) : AbstractKSValueArgumentImpl() {
     companion object : KSObjectCache<IdKeyPair<KaNamedAnnotationValue, KSNode?>, KSValueArgumentImpl>() {
         fun getCached(namedAnnotationValue: KaNamedAnnotationValue, parent: KSNode?, origin: Origin) =
             cache.getOrPut(IdKeyPair(namedAnnotationValue, parent)) {
@@ -50,14 +50,40 @@ class KSValueArgumentImpl private constructor(
     override val location: Location by lazy {
         namedAnnotationValue.expression.sourcePsi?.toLocation() ?: NonExistLocation
     }
-
-    override fun defer(): Restorable {
-        val parent = if (parent is Deferrable) parent.defer() else null
-        return Restorable { getCached(namedAnnotationValue, parent?.restore(), origin) }
-    }
 }
 
-abstract class AbstractKSValueArgumentImpl : KSValueArgument {
+abstract class AbstractKSValueArgumentImpl : KSValueArgument, Deferrable {
+    override fun defer(): Restorable? {
+        val parentAnno = parent as? KSAnnotation
+        val annotationRestorer = (parent as? DeferrableAnnotation)?.deferAnnotation() ?: return null
+        val argName = name?.asString()
+        val argIndex = parentAnno?.arguments?.indexOfFirst { it === this } ?: -1
+        val defaultArgIndex =
+            if (argIndex < 0) parentAnno?.defaultArguments?.indexOfFirst { it === this } ?: -1 else -1
+        val isSynthetic = origin == Origin.SYNTHETIC
+        return Restorable {
+            val restoredAnnotation = annotationRestorer() ?: return@Restorable null
+            if (argName != null) {
+                if (isSynthetic) {
+                    if (argIndex >= 0) {
+                        restoredAnnotation.arguments.firstOrNull {
+                            it.origin == Origin.SYNTHETIC && it.name?.asString() == argName
+                        }
+                    } else {
+                        restoredAnnotation.defaultArguments.firstOrNull { it.name?.asString() == argName }
+                    }
+                } else {
+                    restoredAnnotation.arguments.firstOrNull { it.name?.asString() == argName }
+                }
+            } else {
+                when {
+                    argIndex >= 0 -> restoredAnnotation.arguments.getOrNull(argIndex)
+                    defaultArgIndex >= 0 -> restoredAnnotation.defaultArguments.getOrNull(defaultArgIndex)
+                    else -> null
+                }
+            }
+        }
+    }
     override fun hashCode(): Int {
         return name.hashCode() * 31 + value.hashCode()
     }

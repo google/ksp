@@ -7,12 +7,14 @@ import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.recordClassReferenceLookup
 import com.google.devtools.ksp.impl.recordLookup
+import com.google.devtools.ksp.impl.symbol.kotlin.DeferrableAnnotation
 import com.google.devtools.ksp.impl.symbol.kotlin.KSAnnotationOps.findAbsentDefaultArguments
 import com.google.devtools.ksp.impl.symbol.kotlin.KSAnnotationOps.findDefaultArguments
 import com.google.devtools.ksp.impl.symbol.kotlin.KSClassDeclarationEnumEntryImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSErrorType
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.impl.symbol.kotlin.classifierSymbol
+import com.google.devtools.ksp.impl.symbol.kotlin.deferAnnotationByOrdinal
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.toKaType
 import com.google.devtools.ksp.impl.symbol.kotlin.toLocation
@@ -50,7 +52,7 @@ class KSAnnotationJavaImpl private constructor(
     private val psi: PsiAnnotation,
     override val parent: KSNode?,
     override val origin: Origin
-) : KSAnnotation {
+) : KSAnnotation, DeferrableAnnotation {
     companion object : KSObjectCache<IdKeyPair<PsiAnnotation, KSNode?>, KSAnnotationJavaImpl>() {
         fun getCached(
             psi: PsiAnnotation,
@@ -128,6 +130,11 @@ class KSAnnotationJavaImpl private constructor(
 
     override val location: Location
         get() = psi.toLocation()
+
+    override val annotationFqName: String?
+        get() = classId.asFqNameString().takeUnless { it.startsWith("__KSP_unresolved_") }
+
+    override fun deferAnnotation(): (() -> KSAnnotation?)? = deferAnnotationByOrdinal()
 
     override fun <D, R> accept(visitor: KSVisitor<D, R>, data: D): R {
         return visitor.visitAnnotation(this, data)
