@@ -1080,10 +1080,12 @@ abstract class KSPUnitTestSuite(
         runKSPTest("deferredJavaSymbols.kt")
     }
 
-    @Bug("https://github.com/google/ksp/issues/3297", BugState.OPEN)
+    @Bug("https://github.com/google/ksp/issues/3297", BugState.FIXED)
     @TestMetadata("deferredBackingFields.kt")
     @Test
-    abstract fun testDeferredBackingFields()
+    fun testDeferredBackingFields() {
+        runKSPTest("deferredBackingFields.kt")
+    }
 
     @Disabled
     @TestMetadata("deferredTypeRefs.kt")

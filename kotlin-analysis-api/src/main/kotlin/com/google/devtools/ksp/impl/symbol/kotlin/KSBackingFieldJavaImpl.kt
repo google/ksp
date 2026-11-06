@@ -21,7 +21,6 @@ import com.google.devtools.ksp.InternalKSPException
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.common.toKSModifiers
-import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationJavaImpl.Companion.getCached
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.symbol.KSBackingField
 import com.google.devtools.ksp.symbol.KSDeclaration
@@ -119,5 +118,7 @@ class KSBackingFieldJavaImpl private constructor(
         else -> visitor.visitDeclaration(this, data)
     }
 
-    override fun defer(): Restorable = ktJavaFieldSymbol.defer(::getCached)
+    override fun defer(): Restorable = ktJavaFieldSymbol.defer {
+        getCached(it to KSPropertyDeclarationJavaImpl.getCached(it))
+    }
 }
