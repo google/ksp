@@ -246,13 +246,7 @@ class KotlinSymbolProcessing(
                 addModuleDependencies(moduleName)
 
                 // Single file java source roots are added in reinitJavaFileManager() later.
-                val roots = mutableListOf<File>()
-                roots.addAll(kspConfig.sourceRoots)
-                roots.addAll(kspConfig.commonSourceRoots)
-                if (kspConfig is KSPJvmConfig) {
-                    roots.addAll(kspConfig.javaSourceRoots)
-                }
-                addSourceRoots(roots.map { it.toPath() })
+                addSourceRoots(allSourceRoots().map { it.toPath() })
             }.apply(::addModule)
 
             this.platform = platform
@@ -495,6 +489,25 @@ class KotlinSymbolProcessing(
             javaFiles.map { KSFileJavaImpl.getCached(it) }
     }
 
+    private fun allSourceRoots(): List<File> = buildList {
+        addAll(kspConfig.sourceRoots)
+        addAll(kspConfig.commonSourceRoots)
+        if (kspConfig is KSPJvmConfig) {
+            addAll(kspConfig.javaSourceRoots)
+        }
+    }
+
+    // The files that prepareAllKSFiles would see, without creating a session. Only used for logging.
+    private fun listAllSourceFiles(): List<File> {
+        val isJvm = kspConfig is KSPJvmConfig
+        return allSourceRoots().flatMap { root ->
+            root.walkTopDown().filter {
+                val ext = it.extension.lowercase()
+                it.isFile && (ext == "kt" || ext == "kts" || (isJvm && ext == "java"))
+            }
+        }.distinct()
+    }
+
     // TODO: performance
     @OptIn(KaImplementationDetail::class)
     fun execute(): ExitCode {
@@ -511,6 +524,24 @@ class KotlinSymbolProcessing(
                     hasError = true
                 logger.warn(message, symbol)
             }
+        }
+
+        val anyChangesWildcard = AnyChanges(kspConfig.projectBaseDir)
+        val dualLookupTracker = DualLookupTracker()
+        val incrementalContext = IncrementalContextAA(
+            kspConfig.incremental,
+            dualLookupTracker,
+            File(anyChangesWildcard.filePath).relativeTo(kspConfig.projectBaseDir),
+            kspConfig.incrementalContextLoggingOptions,
+            kspConfig.projectBaseDir,
+            kspConfig.cachesDir,
+            kspConfig.outputBaseDir,
+            kspConfig.modifiedSources,
+            kspConfig.removedSources,
+            kspConfig.changedClasses,
+        )
+        if (incrementalContext.tryEarlyExitIfClean(::listAllSourceFiles)) {
+            return ExitCode.OK
         }
 
         val projectDisposable: Disposable = Disposer.newDisposable("StandaloneAnalysisAPISession.project")
@@ -540,7 +571,6 @@ class KotlinSymbolProcessing(
 
             val allKSFiles =
                 prepareAllKSFiles(env, modules, javaFileManager)
-            val anyChangesWildcard = AnyChanges(kspConfig.projectBaseDir)
             val codeGenerator = CodeGeneratorImpl(
                 kspConfig.classOutputDir,
                 { if (kspConfig is KSPJvmConfig) kspConfig.javaOutputDir else kspConfig.kotlinOutputDir },
@@ -552,19 +582,6 @@ class KotlinSymbolProcessing(
                 kspConfig.incremental
             )
 
-            val dualLookupTracker = DualLookupTracker()
-            val incrementalContext = IncrementalContextAA(
-                kspConfig.incremental,
-                dualLookupTracker,
-                File(anyChangesWildcard.filePath).relativeTo(kspConfig.projectBaseDir),
-                kspConfig.incrementalContextLoggingOptions,
-                kspConfig.projectBaseDir,
-                kspConfig.cachesDir,
-                kspConfig.outputBaseDir,
-                kspConfig.modifiedSources,
-                kspConfig.removedSources,
-                kspConfig.changedClasses,
-            )
             var allDirtyKSFiles = incrementalContext.calcDirtyFiles(allKSFiles).toList()
             var newKSFiles = allDirtyKSFiles
 
@@ -687,6 +704,7 @@ class KotlinSymbolProcessing(
             dropCaches()
             codeGenerator.closeFiles()
         } finally {
+            incrementalContext.closeFiles()
             KSObjectCacheManager.clear()
             ResolverAAImpl.tearDown()
             KSPCoreEnvironment.tearDown()
