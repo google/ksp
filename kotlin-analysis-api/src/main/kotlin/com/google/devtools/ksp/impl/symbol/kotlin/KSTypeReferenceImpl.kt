@@ -20,6 +20,7 @@ import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.lazyMemoizedSequence
 import com.google.devtools.ksp.impl.recordLookup
+import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSAnnotationResolvedImpl
 import com.google.devtools.ksp.impl.symbol.util.toKSModifiers
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSNode
@@ -41,19 +42,27 @@ import org.jetbrains.kotlin.psi.KtUserType
 class KSTypeReferenceImpl(
     private val ktTypeReference: KtTypeReference,
     override val parent: KSNode?,
-    private val additionalAnnotations: List<KaAnnotation>
+    additionalAnnotationsProvider: () -> List<KaAnnotation>
 ) : KSTypeReference, Deferrable {
+    constructor(
+        ktTypeReference: KtTypeReference,
+        parent: KSNode?,
+        additionalAnnotations: List<KaAnnotation>
+    ) : this(ktTypeReference, parent, { additionalAnnotations })
+
     companion object : KSObjectCache<IdKeyPair<KtTypeReference, KSNode?>, KSTypeReference>() {
         fun getCached(
             ktTypeReference: KtTypeReference,
             parent: KSNode? = null,
-            additionalAnnotations: List<KaAnnotation> = emptyList()
+            additionalAnnotations: () -> List<KaAnnotation> = { emptyList() }
         ): KSTypeReference {
             return cache.getOrPut(IdKeyPair(ktTypeReference, parent)) {
                 KSTypeReferenceImpl(ktTypeReference, parent, additionalAnnotations)
             }
         }
     }
+
+    private val additionalAnnotations: List<KaAnnotation> by lazy(additionalAnnotationsProvider)
 
     // Remember to recordLookup if the usage is beyond a type reference.
     private val ktType: KaType by lazy {
@@ -83,14 +92,27 @@ class KSTypeReferenceImpl(
             innerAnnotations.add(it.annotationEntries.asSequence())
         }
 
-        (ktTypeReference.annotationEntries.asSequence() + innerAnnotations.asSequence().flatten())
-            .map { annotationEntry ->
-                KSAnnotationImpl.getCached(annotationEntry, this@KSTypeReferenceImpl) {
-                    (ktType.annotations + additionalAnnotations).single {
-                        it.psi == annotationEntry
-                    }
+        val typeRefEntries =
+            (ktTypeReference.annotationEntries.asSequence() + innerAnnotations.asSequence().flatten()).toList()
+        val seenEntries = typeRefEntries.toSet()
+        val directAnnotations = typeRefEntries.asSequence().map { annotationEntry ->
+            KSAnnotationImpl.getCached(annotationEntry, this@KSTypeReferenceImpl) {
+                (ktType.annotations + additionalAnnotations).single {
+                    it.psi == annotationEntry
                 }
             }
+        }
+        val extraAnnotations = additionalAnnotations.asSequence()
+            .filter { it.psi !in seenEntries }
+            .map { kaAnnotation ->
+                val entry = kaAnnotation.psi as? KtAnnotationEntry
+                if (entry != null && entry.typeReference != null && entry.useSiteTarget != null) {
+                    KSAnnotationImpl.getCached(entry, this@KSTypeReferenceImpl) { kaAnnotation }
+                } else {
+                    KSAnnotationResolvedImpl.getCached(kaAnnotation, this@KSTypeReferenceImpl, origin)
+                }
+            }
+        directAnnotations + extraAnnotations
     }
 
     override val origin: Origin = parent?.origin ?: Origin.SYNTHETIC

@@ -52,6 +52,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifier
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.KaSession
+import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
 import org.jetbrains.kotlin.analysis.api.symbols.KaConstructorSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaDestructuringDeclarationSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaFunctionSymbol
@@ -69,6 +70,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.contextParameters
 import org.jetbrains.kotlin.analysis.api.symbols.name
 import org.jetbrains.kotlin.analysis.api.symbols.receiverType
 import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget as KaAnnotationUseSiteTarget
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtFunction
@@ -133,6 +135,12 @@ sealed class KSFunctionDeclarationImpl : KSFunctionDeclaration, AbstractKSDeclar
         }
     }
 
+    private fun computeReceiverAnnotations(): List<KaAnnotation> =
+        (
+            ktFunctionSymbol.receiverParameter?.annotations.orEmpty() +
+                ktFunctionSymbol.annotations.filter { it.useSiteTarget == KaAnnotationUseSiteTarget.RECEIVER }
+            ).distinctBy { it.psi ?: it }
+
     override val extensionReceiver: KSTypeReference? by lazy {
         analyze {
             if (!ktFunctionSymbol.isExtension) {
@@ -145,7 +153,7 @@ sealed class KSFunctionDeclarationImpl : KSFunctionDeclaration, AbstractKSDeclar
                         KSTypeReferenceImpl.getCached(
                             it,
                             this@KSFunctionDeclarationImpl,
-                            ktFunctionSymbol.receiverParameter?.annotations ?: emptyList()
+                            ::computeReceiverAnnotations
                         )
                     }
                     ?: ktFunctionSymbol.receiverType?.abbreviationOrSelf?.let {
@@ -153,7 +161,7 @@ sealed class KSFunctionDeclarationImpl : KSFunctionDeclaration, AbstractKSDeclar
                             it,
                             this@KSFunctionDeclarationImpl,
                             -2,
-                            ktFunctionSymbol.receiverParameter?.annotations ?: emptyList()
+                            ::computeReceiverAnnotations
                         )
                     }
             }

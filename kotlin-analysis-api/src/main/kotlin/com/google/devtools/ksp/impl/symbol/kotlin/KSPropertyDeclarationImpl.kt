@@ -130,6 +130,12 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
         }
     }
 
+    private fun computeReceiverAnnotations(): List<KaAnnotation> =
+        (
+            ktPropertySymbol.receiverParameter?.annotations.orEmpty() +
+                ktPropertySymbol.annotations.filter { it.useSiteTarget == AnnotationUseSiteTarget.RECEIVER }
+            ).distinctBy { it.psi ?: it }
+
     override val extensionReceiver: KSTypeReference? by lazy {
         (ktPropertySymbol.psiIfSource() as? KtProperty)?.receiverTypeReference
             ?.let {
@@ -138,7 +144,7 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
                 KSTypeReferenceImpl.getCached(
                     it,
                     this,
-                    ktPropertySymbol.receiverParameter?.annotations ?: emptyList()
+                    ::computeReceiverAnnotations
                 )
             }
             ?: ktPropertySymbol.receiverType?.abbreviationOrSelf?.let {
@@ -146,7 +152,7 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
                     it,
                     this@KSPropertyDeclarationImpl,
                     -2,
-                    ktPropertySymbol.receiverParameter?.annotations ?: emptyList()
+                    ::computeReceiverAnnotations
                 )
             }
     }

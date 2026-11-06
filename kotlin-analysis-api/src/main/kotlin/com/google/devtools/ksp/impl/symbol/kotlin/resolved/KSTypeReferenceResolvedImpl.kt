@@ -49,15 +49,17 @@ import org.jetbrains.kotlin.psi.KtTypeParameter
  * @param index The 0-based positional index of this type reference within a list of references on the [parent]
  * (e.g., supertypes or type parameter bounds), used to pinpoint the exact source location, or a negative sentinel
  * (defaults to -1; -2 is used for extension/callable receiver type references to disambiguate cache keys from return/value types).
- * @param additionalAnnotations Additional annotations to include on this type reference beyond what is
- * directly attached to [ktType] (e.g., annotations on an extension receiver such as `fun @Anno Receiver.foo()`).
+ * @param additionalAnnotationsProvider Lazy provider of additional annotations to include on this type reference beyond
+ * what is directly attached to [ktType] (e.g., annotations on an extension receiver such as `fun @Anno Receiver.foo()`).
  */
 class KSTypeReferenceResolvedImpl private constructor(
     private val ktType: KaType,
     override val parent: KSNode?,
     internal val index: Int,
-    private val additionalAnnotations: List<KaAnnotation>
+    additionalAnnotationsProvider: () -> List<KaAnnotation>
 ) : KSTypeReference, Deferrable {
+
+    private val additionalAnnotations: List<KaAnnotation> by lazy(additionalAnnotationsProvider)
 
     companion object : KSObjectCache<IdKeyTriple<KaType, KSNode?, Int>, KSTypeReference>() {
 
@@ -69,14 +71,14 @@ class KSTypeReferenceResolvedImpl private constructor(
          * @param index The 0-based positional index of this type reference within a list of references on the [parent]
          * (e.g., supertypes or type parameter bounds), used to pinpoint the exact source location, or a negative sentinel
          * (defaults to -1; -2 is used for extension/callable receiver type references to disambiguate cache keys from return/value types).
-         * @param additionalAnnotations Additional annotations to include on this type reference beyond what is
-         * directly attached to [type] (e.g., annotations on an extension receiver such as `fun @Anno Receiver.foo()`).
+         * @param additionalAnnotations Lazy provider of additional annotations to include on this type reference beyond
+         * what is directly attached to [type] (e.g., annotations on an extension receiver such as `fun @Anno Receiver.foo()`).
          */
         fun getCached(
             type: KaType,
             parent: KSNode? = null,
             index: Int = -1,
-            additionalAnnotations: List<KaAnnotation> = emptyList()
+            additionalAnnotations: () -> List<KaAnnotation> = { emptyList() }
         ): KSTypeReference =
             cache.getOrPut(IdKeyTriple(type, parent, index)) {
                 KSTypeReferenceResolvedImpl(type, parent, index, additionalAnnotations)

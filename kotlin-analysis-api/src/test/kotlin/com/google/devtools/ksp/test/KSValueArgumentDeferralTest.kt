@@ -21,6 +21,7 @@ import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.buildApiFeatures
 import com.google.devtools.ksp.getClassDeclarationByName
+import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.impl.CommandLineKSPLogger
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
 import com.google.devtools.ksp.impl.ResolverAAImpl
@@ -43,10 +44,12 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSClassifierReference
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyGetter
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSValueArgument
+import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.Origin
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.KaPlatformInterface
@@ -65,11 +68,13 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNotSame
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
+import javax.tools.ToolProvider
 
 class KSValueArgumentDeferralTest {
 
@@ -1336,6 +1341,330 @@ class KSValueArgumentDeferralTest {
         assertFalse(
             "<anonymous>.UnresolvedSyntheticNestedAnno" in lookups,
             "Expected unresolved NestedAnnotationValue ClassId not to be recorded, got: $lookups"
+        )
+    }
+
+    @Test
+    fun testSyntheticSourceSymbolsDeferredAcrossRoundsAA(@TempDir tempDir: File) {
+        runSyntheticSourceSymbolsDeferredTest(experimentalPsiResolution = false, tempDir = tempDir)
+    }
+
+    @Test
+    fun testSyntheticSourceSymbolsDeferredAcrossRoundsPsi(@TempDir tempDir: File) {
+        runSyntheticSourceSymbolsDeferredTest(experimentalPsiResolution = true, tempDir = tempDir)
+    }
+
+    private fun runSyntheticSourceSymbolsDeferredTest(experimentalPsiResolution: Boolean, tempDir: File) {
+        val kotlinSrc = File(tempDir, "kotlinSrc").apply { mkdirs() }
+        val javaLibSrc = File(tempDir, "javaLibSrc").apply { mkdirs() }
+        val javaLibClasses = File(tempDir, "javaLibClasses").apply { mkdirs() }
+
+        val javaLibClassAnnoFile = File(javaLibSrc, "lib/JavaLibClassAnno.java").apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                package lib;
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.RetentionPolicy;
+                @Retention(RetentionPolicy.RUNTIME)
+                public @interface JavaLibClassAnno {}
+                """.trimIndent() + "\n"
+            )
+        }
+        val javaLibPropAnnoFile = File(javaLibSrc, "lib/JavaLibPropAnno.java").apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                package lib;
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.RetentionPolicy;
+                @Retention(RetentionPolicy.RUNTIME)
+                public @interface JavaLibPropAnno {}
+                """.trimIndent() + "\n"
+            )
+        }
+        val javaLibTypeAnnoFile = File(javaLibSrc, "lib/JavaLibTypeAnno.java").apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                package lib;
+                import java.lang.annotation.ElementType;
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.RetentionPolicy;
+                import java.lang.annotation.Target;
+                @Retention(RetentionPolicy.RUNTIME)
+                @Target(ElementType.TYPE_USE)
+                public @interface JavaLibTypeAnno {}
+                """.trimIndent() + "\n"
+            )
+        }
+        val javaLibAnnotatedAnnoFile = File(javaLibSrc, "lib/JavaLibAnnotatedAnno.java").apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                package lib;
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.RetentionPolicy;
+                @Retention(RetentionPolicy.RUNTIME)
+                @JavaLibClassAnno
+                public @interface JavaLibAnnotatedAnno {
+                    @JavaLibPropAnno
+                    @JavaLibTypeAnno
+                    String value() default "";
+                }
+                """.trimIndent() + "\n"
+            )
+        }
+        val compileResult = ToolProvider.getSystemJavaCompiler().run(
+            null,
+            null,
+            null,
+            "-d",
+            javaLibClasses.absolutePath,
+            javaLibClassAnnoFile.absolutePath,
+            javaLibPropAnnoFile.absolutePath,
+            javaLibTypeAnnoFile.absolutePath,
+            javaLibAnnotatedAnnoFile.absolutePath,
+        )
+        assertEquals(0, compileResult, "Expected javac compilation of Java library fixture to succeed")
+
+        File(kotlinSrc, "SyntheticDeferred.kt").writeText(
+            """
+            import kotlin.reflect.KClass
+
+            @Target(
+                AnnotationTarget.TYPE,
+                AnnotationTarget.PROPERTY_GETTER,
+                AnnotationTarget.VALUE_PARAMETER,
+                AnnotationTarget.CLASS,
+            )
+            annotation class DeferAnno(val target: KClass<*> = Any::class)
+
+            class ReceiverPropTarget
+            class ReceiverDeclFunTarget
+            class ReceiverFunTarget
+
+            class Holder {
+                val implicitGetterProp: @DeferAnno(GeneratedTarget::class) String = ""
+
+                @get:DeferAnno(GeneratedTarget::class)
+                val annotatedImplicitGetter: String = ""
+
+                @setparam:DeferAnno(GeneratedTarget::class)
+                var annotatedSetterParam: String = ""
+
+                @receiver:DeferAnno(GeneratedTarget::class)
+                val ReceiverPropTarget.annotatedReceiverProp: Int
+                    get() = 0
+
+                @receiver:DeferAnno(GeneratedTarget::class)
+                fun ReceiverDeclFunTarget.annotatedReceiverDeclFun() {}
+
+                fun @receiver:DeferAnno(GeneratedTarget::class) ReceiverFunTarget.annotatedReceiverFun() {}
+            }
+            """.trimIndent()
+        )
+
+        File(kotlinSrc, "LazyReceiverCheck.kt").writeText(
+            """
+            annotation class NonExtPropAnno
+            annotation class ExtPropAnno
+            annotation class ExtFunAnno
+            class LazyExtRecv
+
+            class LazyReceiverHolder {
+                @NonExtPropAnno
+                val normalProp: Int = 1
+
+                @ExtPropAnno
+                val LazyExtRecv.extProp: Int
+                    get() = 1
+
+                @ExtFunAnno
+                fun LazyExtRecv.extFun(): Int = 1
+            }
+            """.trimIndent() + "\n"
+        )
+
+        var roundCount = 0
+        var preScanLookups: Map<String, List<String>> = emptyMap()
+        var postResolveLookups: Map<String, List<String>> = emptyMap()
+        val round2Summaries = mutableListOf<String>()
+        var round2LibCount = -1
+
+        val provider = SymbolProcessorProvider { environment ->
+            object : SymbolProcessor {
+                override fun process(resolver: Resolver): List<KSAnnotated> {
+                    roundCount++
+                    if (roundCount == 1) {
+                        val lazyHolder = resolver.getClassDeclarationByName("LazyReceiverHolder")!!
+                        val normalProp = lazyHolder.declarations
+                            .filterIsInstance<KSPropertyDeclaration>()
+                            .single { it.simpleName.asString() == "normalProp" }
+                        assertNull(normalProp.extensionReceiver)
+
+                        val extProp = lazyHolder.declarations
+                            .filterIsInstance<KSPropertyDeclaration>()
+                            .single { it.simpleName.asString() == "extProp" }
+                        assertEquals("LazyExtRecv", extProp.extensionReceiver!!.toString())
+
+                        val extFun = lazyHolder.declarations
+                            .filterIsInstance<KSFunctionDeclaration>()
+                            .single { it.simpleName.asString() == "extFun" }
+                        assertEquals("LazyExtRecv", extFun.extensionReceiver!!.toString())
+
+                        preScanLookups = ResolverAAImpl.instance.incrementalContext.dumpLookupRecords()
+
+                        assertEquals(
+                            "LazyExtRecv",
+                            extProp.extensionReceiver!!.resolve().declaration.simpleName.asString()
+                        )
+                        assertEquals(
+                            "LazyExtRecv",
+                            extFun.extensionReceiver!!.resolve().declaration.simpleName.asString()
+                        )
+                        postResolveLookups = ResolverAAImpl.instance.incrementalContext.dumpLookupRecords()
+
+                        val holder = resolver.getClassDeclarationByName("Holder")!!
+                        val implicitGetterReturnType = holder.getDeclaredProperties()
+                            .single { it.simpleName.asString() == "implicitGetterProp" }
+                            .getter!!.returnType!!
+                        assertEquals(Origin.SYNTHETIC, implicitGetterReturnType.origin)
+                        val explicitReceiverFunType = holder.declarations
+                            .filterIsInstance<KSFunctionDeclaration>()
+                            .single { it.simpleName.asString() == "annotatedReceiverFun" }
+                            .extensionReceiver!!
+
+                        val annotatedSymbols = resolver.getSymbolsWithAnnotation("DeferAnno").toList()
+                        val annotatedGetter = annotatedSymbols.filterIsInstance<KSPropertyGetter>().single()
+                        val annotatedSetParam = annotatedSymbols.filterIsInstance<KSValueParameter>().single()
+                        val annotatedReceivers = annotatedSymbols.filterIsInstance<KSTypeReference>()
+                        assertEquals(2, annotatedReceivers.size)
+                        assertEquals(Origin.SYNTHETIC, annotatedGetter.origin)
+                        assertEquals(Origin.SYNTHETIC, annotatedSetParam.origin)
+
+                        val kotlinLibDecl = resolver.getClassDeclarationByName("kotlin.Deprecated")!!
+                        val javaLibDecl = resolver.getClassDeclarationByName("lib.JavaLibAnnotatedAnno")!!
+                        val javaLibSyntheticProp = javaLibDecl
+                            .getDeclaredProperties().single { it.simpleName.asString() == "value" }
+                        val javaLibSyntheticGetter = javaLibSyntheticProp.getter!!
+                        val javaLibSyntheticTypeRef = javaLibSyntheticProp.type
+                        assertEquals(Origin.KOTLIN_LIB, kotlinLibDecl.origin)
+                        assertTrue(kotlinLibDecl.annotations.any { it.shortName.asString() == "MustBeDocumented" })
+                        assertEquals(Origin.JAVA_LIB, javaLibDecl.origin)
+                        assertTrue(
+                            javaLibDecl.annotations.any { it.shortName.asString() == "JavaLibClassAnno" },
+                            "Expected compiled Java library annotation class to carry @JavaLibClassAnno"
+                        )
+                        assertEquals(Origin.SYNTHETIC, javaLibSyntheticProp.origin)
+                        assertEquals(Origin.SYNTHETIC, javaLibSyntheticGetter.origin)
+                        assertTrue(
+                            javaLibSyntheticGetter.annotations.any { it.shortName.asString() == "JavaLibPropAnno" },
+                            "Expected compiled Java synthetic annotation getter to carry @JavaLibPropAnno"
+                        )
+                        assertEquals(Origin.SYNTHETIC, javaLibSyntheticTypeRef.origin)
+                        assertTrue(
+                            javaLibSyntheticTypeRef.annotations.any { it.shortName.asString() == "JavaLibTypeAnno" },
+                            "Expected compiled Java synthetic property type reference to carry @JavaLibTypeAnno"
+                        )
+
+                        environment.codeGenerator.createNewFile(
+                            Dependencies(false, holder.containingFile!!),
+                            "",
+                            "GeneratedTarget"
+                        ).writer().use {
+                            it.write("class GeneratedTarget\n")
+                        }
+
+                        return listOf(
+                            annotatedGetter,
+                            annotatedSetParam,
+                            implicitGetterReturnType,
+                            explicitReceiverFunType,
+                            kotlinLibDecl,
+                            javaLibDecl,
+                            javaLibSyntheticProp,
+                            javaLibSyntheticGetter,
+                            javaLibSyntheticTypeRef,
+                        ) + annotatedReceivers
+                    } else if (roundCount == 2) {
+                        val restored = resolver.getSymbolsWithAnnotation("DeferAnno").toList()
+                        restored.forEach { sym ->
+                            val targetDeclName = (
+                                sym.annotations.single { it.shortName.asString() == "DeferAnno" }
+                                    .arguments.single().value as? KSType
+                                )?.takeIf { !it.isError }?.declaration?.simpleName?.asString() ?: "ERROR"
+                            val kind = when (sym) {
+                                is KSPropertyGetter -> "getter:${sym.receiver.simpleName.asString()}"
+                                is KSValueParameter -> "setparam:${sym}"
+                                is KSTypeReference -> "typeRef:${sym}"
+                                else -> "other:${sym::class.simpleName}"
+                            }
+                            round2Summaries += "$kind->$targetDeclName"
+                        }
+                        round2LibCount =
+                            resolver.getSymbolsWithAnnotation("kotlin.annotation.MustBeDocumented").count() +
+                            resolver.getSymbolsWithAnnotation("lib.JavaLibClassAnno").count() +
+                            resolver.getSymbolsWithAnnotation("lib.JavaLibPropAnno").count() +
+                            resolver.getSymbolsWithAnnotation("lib.JavaLibTypeAnno").count()
+                    }
+                    return emptyList()
+                }
+            }
+        }
+
+        val kspConfig = KSPJvmConfig.Builder().apply {
+            moduleName = "main"
+            sourceRoots = listOf(kotlinSrc)
+            javaSourceRoots = emptyList()
+            jdkHome = File(System.getProperty("java.home"))
+            jvmTarget = JvmTarget.DEFAULT.description
+            languageVersion = "2.0"
+            apiVersion = "2.0"
+            libraries = listOf(File("dist/kotlinc/lib/kotlin-stdlib.jar"), javaLibClasses)
+            projectBaseDir = tempDir
+            classOutputDir = File(tempDir, "out/classes")
+            javaOutputDir = File(tempDir, "out/java")
+            kotlinOutputDir = File(tempDir, "out/kotlin")
+            resourceOutputDir = File(tempDir, "out/resources")
+            cachesDir = File(tempDir, "out/caches")
+            outputBaseDir = File(tempDir, "out")
+            incremental = true
+            this.experimentalPsiResolution = experimentalPsiResolution
+        }.build()
+
+        val exitCode = KotlinSymbolProcessing(kspConfig, listOf(provider), CommandLineKSPLogger()).execute()
+        assertEquals(KotlinSymbolProcessing.ExitCode.OK, exitCode)
+        assertEquals(2, roundCount)
+        assertEquals(0, round2LibCount)
+        assertTrue(
+            "kotlinSrc/LazyReceiverCheck.kt" in (postResolveLookups["<anonymous>.LazyExtRecv"] ?: emptyList()),
+            "Expected LazyExtRecv lookup when resolving extensionReceiver, got: $postResolveLookups"
+        )
+        assertFalse(
+            "<anonymous>.NonExtPropAnno" in postResolveLookups,
+            "Expected NonExtPropAnno NOT to be resolved even after resolving sibling extension receivers, got: $postResolveLookups"
+        )
+        for (unusedAnno in listOf(
+            "NonExtPropAnno",
+            "ExtPropAnno",
+            "ExtFunAnno",
+        )) {
+            assertFalse(
+                "<anonymous>.$unusedAnno" in preScanLookups,
+                "Expected declaration annotation $unusedAnno NOT to be eagerly resolved when reading extensionReceiver without .annotations, got: $preScanLookups"
+            )
+        }
+        assertEquals(
+            setOf(
+                "getter:annotatedImplicitGetter->GeneratedTarget",
+                "setparam:value->GeneratedTarget",
+                "typeRef:String->GeneratedTarget",
+                "typeRef:ReceiverPropTarget->GeneratedTarget",
+                "typeRef:ReceiverDeclFunTarget->GeneratedTarget",
+                "typeRef:ReceiverFunTarget->GeneratedTarget",
+            ),
+            round2Summaries.toSet()
         )
     }
 }
