@@ -798,6 +798,9 @@ internal fun KaAnnotationValue.toValue(parent: KSNode? = null, origin: Origin? =
     is KaAnnotationValue.EnumEntryValue -> this.callableId?.classId?.let { classId ->
         analyze {
             classId.toKtClassSymbol()?.let { classSymbol ->
+                parent?.let { ctx ->
+                    recordClassReferenceLookup(classId.asFqNameString(), ctx)
+                }
                 classSymbol.declarations().filterIsInstance<KSClassDeclarationEnumEntryImpl>().singleOrNull {
                     it.simpleName.asString() == this@toValue.callableId?.callableName?.asString()
                 }
