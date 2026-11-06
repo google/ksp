@@ -545,7 +545,8 @@ class KotlinSymbolProcessing(
                 kspConfig.projectBaseDir,
                 anyChangesWildcard,
                 allKSFiles,
-                kspConfig.incremental
+                kspConfig.incremental,
+                logger
             )
 
             val dualLookupTracker = DualLookupTracker()
