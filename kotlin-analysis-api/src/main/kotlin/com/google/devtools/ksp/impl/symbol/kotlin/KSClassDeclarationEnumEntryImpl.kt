@@ -82,7 +82,7 @@ class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntr
     override val typeParameters: List<KSTypeParameter> = emptyList()
 
     override val packageName: KSName by lazy {
-        ktEnumEntrySymbol.toContainingFile()!!.packageName
+        ktEnumEntrySymbol.toContainingFile()?.packageName ?: parentDeclaration!!.packageName
     }
 
     override val parentDeclaration: KSDeclaration? by lazy {

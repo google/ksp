@@ -20,6 +20,7 @@ package com.google.devtools.ksp.test
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.impl.CommandLineKSPLogger
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
+import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSPJvmConfig
 import com.google.devtools.ksp.processing.Resolver
@@ -28,11 +29,13 @@ import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.Origin
 import org.jetbrains.kotlin.config.JvmTarget
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertSame
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
@@ -59,6 +62,30 @@ class JavaLibContainingFileTest {
         val rootJavaFile = File(javaLibSrc, "RootJavaLib.java").apply {
             writeText("public class RootJavaLib {}\n")
         }
+        val javaLibMarkerFile = File(javaLibSrc, "pkg/JavaLibMarker.java").apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                package pkg;
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.RetentionPolicy;
+                @Retention(RetentionPolicy.RUNTIME)
+                public @interface JavaLibMarker {}
+                """.trimIndent() + "\n"
+            )
+        }
+        val javaLibParamMarkerFile = File(javaLibSrc, "pkg/JavaLibParamMarker.java").apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                package pkg;
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.RetentionPolicy;
+                @Retention(RetentionPolicy.RUNTIME)
+                public @interface JavaLibParamMarker {}
+                """.trimIndent() + "\n"
+            )
+        }
         val packagedJavaFile = File(javaLibSrc, "pkg/PackagedJavaLib.java").apply {
             parentFile.mkdirs()
             writeText(
@@ -66,6 +93,18 @@ class JavaLibContainingFileTest {
                 package pkg;
                 public class PackagedJavaLib {
                     public static class Nested {}
+                }
+                """.trimIndent() + "\n"
+            )
+        }
+        val annotatedJavaFile = File(javaLibSrc, "pkg/AnnotatedJavaLib.java").apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                package pkg;
+                @JavaLibMarker
+                public class AnnotatedJavaLib {
+                    public void libMethod(@JavaLibParamMarker String p) {}
                 }
                 """.trimIndent() + "\n"
             )
@@ -91,7 +130,10 @@ class JavaLibContainingFileTest {
             "-d",
             javaLibClasses.absolutePath,
             rootJavaFile.absolutePath,
+            javaLibMarkerFile.absolutePath,
+            javaLibParamMarkerFile.absolutePath,
             packagedJavaFile.absolutePath,
+            annotatedJavaFile.absolutePath,
             onlyNestedJavaFile.absolutePath,
         )
         assertEquals(0, compileResult, "Expected javac compilation of test Java library classes to succeed")
@@ -107,6 +149,7 @@ class JavaLibContainingFileTest {
         var directNestedFileName: String? = null
         var directNestedDecls: List<String>? = null
         var directNestedMemberDecls: List<String>? = null
+        var lookups: Map<String, List<String>> = emptyMap()
 
         val provider = SymbolProcessorProvider { environment: SymbolProcessorEnvironment ->
             object : SymbolProcessor {
@@ -171,6 +214,33 @@ class JavaLibContainingFileTest {
                         it.write("class GeneratedFromJavaLib\n")
                     }
 
+                    // Resolve library annotationType WITHOUT touching .arguments or .defaultArguments:
+                    val annotatedLib = resolver.getClassDeclarationByName("pkg.AnnotatedJavaLib")!!
+                    // 1) KSAnnotationJavaImpl (Origin.JAVA_LIB) on AnnotatedJavaLib
+                    assertEquals(
+                        "pkg.JavaLibMarker",
+                        annotatedLib.annotations.single().annotationType.resolve().declaration.qualifiedName?.asString()
+                    )
+                    // 2) KSAnnotationResolvedImpl (Origin.JAVA_LIB) on AnnotatedJavaLib.libMethod parameter
+                    val libMethod = annotatedLib.declarations.filterIsInstance<KSFunctionDeclaration>()
+                        .single { it.simpleName.asString() == "libMethod" }
+                    assertEquals(
+                        "pkg.JavaLibParamMarker",
+                        libMethod.parameters.single().annotations.single()
+                            .annotationType.resolve().declaration.qualifiedName?.asString()
+                    )
+                    // 3) KSAnnotationResolvedImpl (Origin.KOTLIN_LIB) on kotlin.PublishedApi
+                    val publishedApi = resolver.getClassDeclarationByName("kotlin.PublishedApi")!!
+                    assertEquals(Origin.KOTLIN_LIB, publishedApi.origin)
+                    val mustBeDocumented = publishedApi.annotations
+                        .first { it.shortName.asString() == "MustBeDocumented" }
+                    assertEquals(
+                        "kotlin.annotation.MustBeDocumented",
+                        mustBeDocumented.annotationType.resolve().declaration.qualifiedName?.asString()
+                    )
+
+                    lookups = ResolverAAImpl.instance.incrementalContext.dumpLookupRecords()
+
                     return emptyList()
                 }
             }
@@ -206,5 +276,17 @@ class JavaLibContainingFileTest {
         assertEquals("OnlyNestedOuter.class", directNestedFileName)
         assertEquals(listOf("pkg.OnlyNestedOuter"), directNestedDecls)
         assertEquals(listOf("pkg.OnlyNestedOuter.OnlyNested"), directNestedMemberDecls)
+        assertTrue(
+            (lookups["pkg.JavaLibMarker"] ?: emptyList()).any { "AnnotatedJavaLib" in it },
+            "Expected NoSourceFile lookup for pkg.JavaLibMarker from AnnotatedJavaLib, got: ${lookups["pkg.JavaLibMarker"]}"
+        )
+        assertTrue(
+            (lookups["pkg.JavaLibParamMarker"] ?: emptyList()).any { "AnnotatedJavaLib" in it },
+            "Expected NoSourceFile lookup for pkg.JavaLibParamMarker from AnnotatedJavaLib, got: ${lookups["pkg.JavaLibParamMarker"]}"
+        )
+        assertTrue(
+            (lookups["kotlin.annotation.MustBeDocumented"] ?: emptyList()).any { "kotlin.PublishedApi" in it },
+            "Expected NoSourceFile lookup for MustBeDocumented from kotlin.PublishedApi, got: ${lookups["kotlin.annotation.MustBeDocumented"]}"
+        )
     }
 }
