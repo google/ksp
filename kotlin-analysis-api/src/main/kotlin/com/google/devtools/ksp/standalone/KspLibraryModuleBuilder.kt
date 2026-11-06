@@ -84,16 +84,27 @@ inline fun KtModuleProviderBuilder.buildKspLibraryModule(init: KspLibraryModuleB
 
 internal class LibraryRootsSearchScope(roots: List<VirtualFile>) : GlobalSearchScope() {
     private val rootFiles: Set<VirtualFile> = roots.toSet()
+    private val rootUrls: Set<String> = roots.mapTo(HashSet()) { it.url }
 
     override fun contains(file: VirtualFile): Boolean {
         var current: VirtualFile? = file
+        var prev: VirtualFile = file
         while (current != null) {
-            if (rootFiles.contains(current)) {
+            if (current in rootFiles) {
                 return true
             }
+            prev = current
             current = current.parent
         }
-        return false
+        // This is needed because CoreJarVirtualFile.equals compares the identity so
+        // it misses finding a root when the CoreJarVirtualFile instance has changed for
+        // that root. This can happen when multiple KSP executions are running in parallel
+        // because the CoreJarFileSystem instance is shared between all KSP executions,
+        // and each KSP execution clears the file handler cache after it's finished executing.
+        // To fix this, we fall back to checking if the url is in rootUrls. We use this only as a
+        // fallback since it can be expensive since CoreJarVirtualFile.getUrl() is not cached.
+        // See https://github.com/google/ksp/issues/3286.
+        return prev.url in rootUrls
     }
 
     override fun isSearchInModuleContent(aModule: Module): Boolean = false

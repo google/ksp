@@ -515,6 +515,9 @@ class KotlinSymbolProcessing(
         val projectDisposable: Disposable = Disposer.newDisposable("StandaloneAnalysisAPISession.project")
         var kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment? = null
 
+        synchronized(activeExecutionsLock) {
+            activeExecutions++
+        }
         try {
             val (project, env, modules) = createAASession(projectDisposable)
             kotlinCoreProjectEnvironment = env
@@ -592,8 +595,8 @@ class KotlinSymbolProcessing(
                 maybeRunInWriteAction {
                     project.publishGlobalSourceModuleStateModificationEvent()
                     psiManager.dropPsiCaches()
-                    KSObjectCacheManager.clear()
                 }
+                KSObjectCacheManager.clear()
             }
 
             // Run processors until either
@@ -684,11 +687,16 @@ class KotlinSymbolProcessing(
             codeGenerator.closeFiles()
         } finally {
             KSObjectCacheManager.clear()
+            ResolverAAImpl.tearDown()
+            KSPCoreEnvironment.tearDown()
             maybeRunInWriteAction {
-                (kotlinCoreProjectEnvironment?.environment?.jarFileSystem as? CoreJarFileSystem)?.clearHandlersCache()
                 Disposer.dispose(projectDisposable)
-                ResolverAAImpl.tearDown()
-                KSPCoreEnvironment.tearDown()
+            }
+            synchronized(activeExecutionsLock) {
+                if (--activeExecutions == 0) {
+                    (kotlinCoreProjectEnvironment?.environment?.jarFileSystem as? CoreJarFileSystem)
+                        ?.clearHandlersCache()
+                }
             }
         }
 
@@ -745,6 +753,9 @@ class KotlinSymbolProcessing(
     }
 
     companion object {
+        private val activeExecutionsLock = Any()
+        private var activeExecutions = 0
+
         fun List<KSFile>.toKtFiles(project: Project): List<KtFile> =
             getPsiFilesFromPaths<KtFile>(project, this.toPathSet())
 
