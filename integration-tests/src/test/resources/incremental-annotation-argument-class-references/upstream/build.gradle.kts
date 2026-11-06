@@ -31,5 +31,7 @@ repositories {
 }
 
 dependencies {
+    implementation(project(":transitive"))
+    implementation(project(":annotations"))
     ksp(project(":processor"))
 }

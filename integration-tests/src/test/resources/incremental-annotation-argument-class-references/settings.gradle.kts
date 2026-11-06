@@ -32,6 +32,8 @@ pluginManagement {
 
 rootProject.name = "incremental-test-annotation-argument-class-references"
 
+include(":transitive")
+include(":annotations")
 include(":downstream")
 include(":upstream")
 include(":processor")
