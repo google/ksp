@@ -129,6 +129,14 @@ class AnnotationArgumentProcessor(override val apiFeatures: ApiFeatures) : Abstr
             }
         }
 
+        resolver.getClassDeclarationByName("TestEmptyVararg")?.let { cls ->
+            cls.annotations.forEach { anno ->
+                results.add(
+                    "${cls.simpleName.asString()}: $anno: args=${anno.arguments}, defaults=${anno.defaultArguments}"
+                )
+            }
+        }
+
         return emptyList()
     }
 

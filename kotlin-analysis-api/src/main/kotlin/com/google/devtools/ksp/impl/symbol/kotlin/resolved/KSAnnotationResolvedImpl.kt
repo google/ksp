@@ -22,6 +22,7 @@ import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSValueArgumentImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
 import com.google.devtools.ksp.impl.symbol.kotlin.getAbsentDefaultArguments
+import com.google.devtools.ksp.impl.symbol.kotlin.getAbsentImplicitArguments
 import com.google.devtools.ksp.impl.symbol.kotlin.getDefaultArguments
 import com.google.devtools.ksp.symbol.AnnotationUseSiteTarget
 import com.google.devtools.ksp.symbol.KSAnnotation
@@ -104,7 +105,10 @@ class KSAnnotationResolvedImpl private constructor(
             } else origin
             KSValueArgumentImpl.getCached(arg, this, argOrigin)
         }
-        presentArgs + getAbsentDefaultArguments(presentArgs)
+        val absentDefaultArgs = getAbsentDefaultArguments(presentArgs)
+        presentArgs +
+            getAbsentImplicitArguments(annotationApplication.classId, presentArgs + absentDefaultArgs) +
+            absentDefaultArgs
     }
 
     override val defaultArguments: List<KSValueArgument> by lazy {

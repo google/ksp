@@ -19,6 +19,7 @@
 // TEST PROCESSOR: AnnotationArgumentProcessor
 // EXPECTED:
 // defaultInNested
+// []
 // SomeClass$WithDollarSign
 // Str
 // 42
@@ -60,6 +61,10 @@
 // @KotlinAnnotationWithDefaults(value:hij) == @KotlinAnnotationWithDefaultsInSource(value:hij): true
 // @KotlinAnnotationWithDefaults(value:hij) == @JavaAnnotationWithDefaults(value:def): false
 // @KotlinAnnotationWithDefaults(value:hij) == @KotlinAnnotationWithDefaults(value:hij): true
+// TestEmptyVararg: @Default: args=[value:[]], defaults=[]
+// TestEmptyVararg: @JavaVarargInSource: args=[value:[]], defaults=[]
+// TestEmptyVararg: @KotlinVarargInLib: args=[value:[]], defaults=[]
+// TestEmptyVararg: @KotlinVarargInSource: args=[value:[]], defaults=[]
 // END
 // MODULE: module1
 // FILE: placeholder.kt
@@ -95,6 +100,10 @@ public @interface JavaAnnotationWithDefaults {
 
 // FILE: KotlinAnnotationWithDefaults.kt
 annotation class KotlinAnnotationWithDefaults(val otherAnnotation: OtherAnnotation = OtherAnnotation("hij"))
+
+// FILE: KotlinVarargInLib.kt
+import kotlin.reflect.KClass
+annotation class KotlinVarargInLib(vararg val value: KClass<*>)
 
 // MODULE: main(module1)
 // FILE: a.kt
@@ -200,3 +209,19 @@ class TestValueArgEquals {}
 // FILE: IsEmailClass.kt
 @Email(value = "user@example.com")
 class IsEmailClass
+
+// FILE: JavaVarargInSource.java
+public @interface JavaVarargInSource {
+    Class<?>[] value();
+}
+
+// FILE: TestEmptyVararg.kt
+import kotlin.reflect.KClass
+
+annotation class KotlinVarargInSource(vararg val value: KClass<*>)
+
+@Default
+@JavaVarargInSource
+@KotlinVarargInLib
+@KotlinVarargInSource
+class TestEmptyVararg

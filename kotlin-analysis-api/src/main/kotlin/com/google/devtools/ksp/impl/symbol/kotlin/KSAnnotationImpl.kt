@@ -72,7 +72,10 @@ class KSAnnotationImpl private constructor(
         val presentArgs = annotationApplication.arguments.map {
             KSValueArgumentImpl.getCached(it, this, origin)
         }
-        presentArgs + getAbsentDefaultArguments(presentArgs)
+        val absentDefaultArgs = getAbsentDefaultArguments(presentArgs)
+        presentArgs +
+            getAbsentImplicitArguments(annotationApplication.classId, presentArgs + absentDefaultArgs) +
+            absentDefaultArgs
     }
 
     override val defaultArguments: List<KSValueArgument> by lazy {
@@ -120,6 +123,31 @@ internal fun KSAnnotation.getAbsentDefaultArguments(
     val presentNames = presentArgs.mapNotNull { it.name?.asString() }
     return defaultArguments.filter { arg ->
         arg.name?.asString() !in presentNames
+    }
+}
+
+internal fun KSAnnotation.getAbsentImplicitArguments(
+    classId: ClassId?,
+    presentAndDefaultArgs: List<KSValueArgument>,
+): List<KSValueArgument> {
+    if (classId == null) return emptyList()
+    val presentNames = presentAndDefaultArgs.mapNotNull { it.name?.asString() }
+    return analyze {
+        classId.toKtClassSymbol()?.memberScope?.constructors?.singleOrNull()?.let { constructor ->
+            constructor.valueParameters.mapNotNull { valueParameterSymbol ->
+                val name = valueParameterSymbol.name.asString()
+                if (!valueParameterSymbol.isVararg || valueParameterSymbol.hasDefaultValue || name in presentNames) {
+                    return@mapNotNull null
+                }
+                KSValueArgumentLiteImpl(
+                    KSNameImpl.getCached(name),
+                    emptyList<Any?>(),
+                    this@getAbsentImplicitArguments,
+                    this@getAbsentImplicitArguments.origin,
+                    NonExistLocation
+                )
+            }
+        } ?: emptyList()
     }
 }
 
