@@ -56,25 +56,49 @@ class AAConfiguredDefaultFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(
         enableBackingFields = false
         enableContextParameters = false
     }
-)
+) {
+    @TestMetadata("deferredBackingFields.kt")
+    @Test
+    override fun testDeferredBackingFields() {
+        runKSPTest("deferredBackingFields.kt")
+    }
+}
 
 class AAConfiguredBackingFieldsUnitTestSuite : AAConfiguredUnitTestSuiteBase(
     buildApiFeatures {
         enableBackingFields = true
         enableContextParameters = false
     }
-)
+) {
+    @TestMetadata("deferredBackingFields.kt")
+    @Test
+    override fun testDeferredBackingFields() {
+        runFailingKSPTest("deferredBackingFields.kt")
+    }
+}
 
 class AAConfiguredContextParametersUnitTestSuite : AAConfiguredUnitTestSuiteBase(
     buildApiFeatures {
         enableBackingFields = false
         enableContextParameters = true
     }
-)
+) {
+    @TestMetadata("deferredBackingFields.kt")
+    @Test
+    override fun testDeferredBackingFields() {
+        runKSPTest("deferredBackingFields.kt")
+    }
+}
 
 class AAConfiguredAllFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(
     buildApiFeatures {
         enableBackingFields = true
         enableContextParameters = true
     }
-)
+) {
+    @TestMetadata("deferredBackingFields.kt")
+    @Test
+    override fun testDeferredBackingFields() {
+        runFailingKSPTest("deferredBackingFields.kt")
+    }
+}
