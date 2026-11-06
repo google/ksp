@@ -145,7 +145,7 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
                 KSTypeReferenceResolvedImpl.getCached(
                     it,
                     this@KSPropertyDeclarationImpl,
-                    -1,
+                    -2,
                     ktPropertySymbol.receiverParameter?.annotations ?: emptyList()
                 )
             }

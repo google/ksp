@@ -17,7 +17,9 @@
 
 package com.google.devtools.ksp.test
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.buildApiFeatures
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.impl.CommandLineKSPLogger
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
@@ -26,6 +28,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.Deferrable
 import com.google.devtools.ksp.impl.symbol.kotlin.DeferrableAnnotation
 import com.google.devtools.ksp.impl.symbol.kotlin.KSErrorType
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
+import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.toValue
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSPJvmConfig
@@ -35,10 +38,14 @@ import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSCallableReference
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSClassifierReference
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeArgument
+import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSValueArgument
 import com.google.devtools.ksp.symbol.Origin
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
@@ -57,6 +64,7 @@ import org.jetbrains.kotlin.psi.KtCallElement
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNotSame
 import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -219,6 +227,426 @@ class KSValueArgumentDeferralTest {
         assertTrue("kotlinSrc/KotlinDefaultConsumer.kt" in (round2Lookups["<anonymous>.TargetKotlinDefault"] ?: emptyList()))
         assertTrue("javaSrc/JavaConsumer.java" in (round2Lookups["<anonymous>.TargetJavaExplicit"] ?: emptyList()))
         assertTrue("javaSrc/JavaConsumer.java" in (round2Lookups["<anonymous>.TargetJavaDefault"] ?: emptyList()))
+    }
+
+    @Test
+    fun testDeferredTypeAnnotationValueArgumentsAA(@TempDir tempDir: File) {
+        runDeferredTypeAnnotationValueArgumentsTest(experimentalPsiResolution = false, tempDir = tempDir)
+    }
+
+    @Test
+    fun testDeferredTypeAnnotationValueArgumentsPsi(@TempDir tempDir: File) {
+        runDeferredTypeAnnotationValueArgumentsTest(experimentalPsiResolution = true, tempDir = tempDir)
+    }
+
+    private fun runDeferredTypeAnnotationValueArgumentsTest(
+        experimentalPsiResolution: Boolean,
+        tempDir: File,
+    ) {
+        val kotlinSrc = File(tempDir, "kotlinSrc").apply { mkdirs() }
+        val javaSrc = File(tempDir, "javaSrc").apply { mkdirs() }
+
+        File(kotlinSrc, "TypeAnnotations.kt").writeText(
+            """
+            import kotlin.reflect.KClass
+
+            class TargetParamType
+            class TargetParamTypeArg
+            class TargetReturnType
+            class TargetReturnTypeArg
+            class TargetPropType
+            class TargetReceiverType
+            class TargetBoundType
+            class TargetAliasBoundType
+            class TargetSuperType
+            class TargetFnReceiver
+            class TargetFnParam
+            class TargetFnReturn
+            class TargetKtBackingField
+            class TargetContextParamType
+            class TargetContextParamTypeArg
+            class TargetOuterQual
+            class TargetInnerQual
+            class TargetOuterOnlyQual
+            class TargetPropTypeArg
+            class TargetJavaFieldType
+            class TargetJavaFieldTypeArg
+            class TargetJavaOuterQual
+            class TargetJavaInnerQual
+
+            @Target(AnnotationTarget.TYPE)
+            annotation class TypeRef(val value: KClass<*>)
+
+            @Target(AnnotationTarget.VALUE_PARAMETER)
+            annotation class ReceiverParamAnno
+
+            interface DelegatedExtIface {
+                val @receiver:ReceiverParamAnno Int.delegatedExtProp: Int
+                fun @receiver:ReceiverParamAnno Int.delegatedExtFun(): Int
+            }
+
+            class DelegatedExtHolder(private val delegate: DelegatedExtIface) : DelegatedExtIface by delegate
+
+            interface BoundIface
+            typealias BoundAlias = BoundIface
+
+            class AliasBoundHolder<U : @TypeRef(TargetAliasBoundType::class) BoundAlias>
+
+            class OuterGeneric<A> {
+                inner class InnerGeneric<B>
+                inner class NonGenericInner
+            }
+
+            class TypeAnnotatedKotlin<T : @TypeRef(TargetBoundType::class) BoundIface> :
+                @TypeRef(TargetSuperType::class) BoundIface {
+                val @receiver:TypeRef(TargetReceiverType::class) String.extProp: @TypeRef(TargetPropType::class) Int
+                    get() = 0
+
+                val backedProp: @TypeRef(TargetKtBackingField::class) String = ""
+
+                val genericProp: List<@TypeRef(TargetPropTypeArg::class) String> = emptyList()
+
+                @GeneratedTypeTestAnno
+                val annoTypeDeferredProp: Int = 0
+
+                val fnProp: (@TypeRef(TargetFnReceiver::class) String).(@TypeRef(TargetFnParam::class) Int) -> @TypeRef(TargetFnReturn::class) Boolean =
+                    { true }
+
+                fun compute(
+                    param: @TypeRef(TargetParamType::class) List<@TypeRef(TargetParamTypeArg::class) String>
+                ): @TypeRef(TargetReturnType::class) List<@TypeRef(TargetReturnTypeArg::class) String> = param
+
+                context(ctx: @TypeRef(TargetContextParamType::class) List<@TypeRef(TargetContextParamTypeArg::class) String>)
+                fun withContextParam(): Int = 1
+
+                fun qualifiedParams(
+                    both: OuterGeneric<@TypeRef(TargetOuterQual::class) String>.InnerGeneric<@TypeRef(TargetInnerQual::class) Int>,
+                    outerOnly: OuterGeneric<@TypeRef(TargetOuterOnlyQual::class) String>.NonGenericInner,
+                ) {}
+            }
+            """.trimIndent() + "\n"
+        )
+        File(javaSrc, "JavaTypeRef.java").writeText(
+            """
+            import java.lang.annotation.ElementType;
+            import java.lang.annotation.Target;
+
+            @Target(ElementType.TYPE_USE)
+            public @interface JavaTypeRef {
+                Class<?> value();
+            }
+            """.trimIndent() + "\n"
+        )
+        File(javaSrc, "TypeAnnotatedJava.java").writeText(
+            """
+            import java.util.List;
+
+            public class TypeAnnotatedJava {
+                public static class JavaOuter<A> {
+                    public class JavaInner<B> {}
+                }
+
+                public @JavaTypeRef(TargetJavaFieldType.class) List<@JavaTypeRef(TargetJavaFieldTypeArg.class) String> field;
+                public JavaOuter<@JavaTypeRef(TargetJavaOuterQual.class) String>.JavaInner<@JavaTypeRef(TargetJavaInnerQual.class) Integer> qualifiedField;
+            }
+            """.trimIndent() + "\n"
+        )
+
+        var roundCount = 0
+        var round2Lookups: Map<String, List<String>> = emptyMap()
+        val restoredSummaries = mutableListOf<String>()
+
+        val provider = SymbolProcessorProvider { env: SymbolProcessorEnvironment ->
+            object : SymbolProcessor {
+                override val apiFeatures: ApiFeatures = buildApiFeatures {
+                    enableBackingFields = true
+                    enableContextParameters = true
+                }
+
+                private val deferredArgs = linkedMapOf<String, Restorable?>()
+                private var deferredDelegatedPropType: Restorable? = null
+                private var deferredDelegatedFunReturnType: Restorable? = null
+                private var deferredPropTypeArgElem: Restorable? = null
+                private var deferredUnresolvedAnnoTypeRef: Restorable? = null
+
+                override fun process(resolver: Resolver): List<KSAnnotated> {
+                    if (roundCount++ == 0) {
+                        val ktCls = resolver.getClassDeclarationByName("TypeAnnotatedKotlin")!!
+                        val boundArg = ktCls.typeParameters.single().bounds.single()
+                            .annotations.single().arguments.single()
+                        val aliasHolder = resolver.getClassDeclarationByName("AliasBoundHolder")!!
+                        val aliasBoundArg = aliasHolder.typeParameters.single().bounds.single()
+                            .annotations.single().arguments.single()
+                        val superArg = ktCls.superTypes.single()
+                            .annotations.single().arguments.single()
+                        val extProp = ktCls.declarations.single { it.simpleName.asString() == "extProp" }
+                            as KSPropertyDeclaration
+                        val receiverArg = extProp.extensionReceiver!!
+                            .annotations.single().arguments.single()
+                        val propTypeArg = extProp.type
+                            .annotations.single().arguments.single()
+                        val backedProp = ktCls.declarations.single { it.simpleName.asString() == "backedProp" }
+                            as KSPropertyDeclaration
+                        val ktBackingFieldArg = backedProp.backingField!!.type
+                            .annotations.single().arguments.single()
+                        val fnProp = ktCls.declarations.single { it.simpleName.asString() == "fnProp" }
+                            as KSPropertyDeclaration
+                        val fnCallable = fnProp.type.element as KSCallableReference
+                        val fnReceiverArg = fnCallable.receiverType!!
+                            .annotations.single().arguments.single()
+                        val fnParamArg = fnCallable.functionParameters.single().type
+                            .annotations.single().arguments.single()
+                        val fnReturnArg = fnCallable.returnType
+                            .annotations.single().arguments.single()
+                        val fnTypeArg0 = fnCallable.typeArguments.first().type!!
+                            .annotations.single().arguments.single()
+                        val fn = ktCls.declarations.single { it.simpleName.asString() == "compute" }
+                            as KSFunctionDeclaration
+                        val paramTypeRef = fn.parameters.single().type
+                        val paramArg = paramTypeRef.annotations.single().arguments.single()
+                        val paramTypeArgArg = (paramTypeRef.element as KSClassifierReference)
+                            .typeArguments.single().type!!.annotations.single().arguments.single()
+                        val returnTypeRef = fn.returnType!!
+                        val returnArg = returnTypeRef.annotations.single().arguments.single()
+                        val returnTypeArgArg = (returnTypeRef.element as KSClassifierReference)
+                            .typeArguments.single().type!!.annotations.single().arguments.single()
+                        val ctxFn = ktCls.declarations.single { it.simpleName.asString() == "withContextParam" }
+                            as KSFunctionDeclaration
+                        val ctxTypeRef = ctxFn.contextParameters.single().type
+                        val ctxParamArg = ctxTypeRef.annotations.single().arguments.single()
+                        val ctxParamTypeArgArg = (ctxTypeRef.element as KSClassifierReference)
+                            .typeArguments.single().type!!.annotations.single().arguments.single()
+                        val qualFn = ktCls.declarations.single { it.simpleName.asString() == "qualifiedParams" }
+                            as KSFunctionDeclaration
+                        val bothInnerRef = qualFn.parameters[0].type.element as KSClassifierReference
+                        val innerQualArg = bothInnerRef.typeArguments.single().type!!
+                            .annotations.single().arguments.single()
+                        val outerQualArg = bothInnerRef.qualifier!!.typeArguments.single().type!!
+                            .annotations.single().arguments.single()
+                        val outerOnlyRef = qualFn.parameters[1].type.element as KSClassifierReference
+                        val outerOnlyQualArg = outerOnlyRef.qualifier!!.typeArguments.single().type!!
+                            .annotations.single().arguments.single()
+
+                        val javaCls = resolver.getClassDeclarationByName("TypeAnnotatedJava")!!
+                        val javaField = javaCls.declarations.single { it.simpleName.asString() == "field" }
+                            as KSPropertyDeclaration
+                        val javaFieldTypeArg = javaField.type.annotations.single().arguments.single()
+                        val javaFieldTypeArgInner = (javaField.type.element as KSClassifierReference)
+                            .typeArguments.single().type!!.annotations.single().arguments.single()
+                        val javaBackingFieldArg = javaField.backingField!!.type
+                            .annotations.single().arguments.single()
+                        val javaQualField = javaCls.declarations.single { it.simpleName.asString() == "qualifiedField" }
+                            as KSPropertyDeclaration
+                        val javaQualInnerRef = javaQualField.type.element as KSClassifierReference
+                        val javaInnerQualArg = javaQualInnerRef.typeArguments.single().type!!
+                            .annotations.single().arguments.single()
+                        val javaOuterQualArg = javaQualInnerRef.qualifier!!.typeArguments.single().type!!
+                            .annotations.single().arguments.single()
+
+                        val rawArgs = linkedMapOf(
+                            "bound" to boundArg,
+                            "aliasBound" to aliasBoundArg,
+                            "super" to superArg,
+                            "receiver" to receiverArg,
+                            "propType" to propTypeArg,
+                            "ktBackingField" to ktBackingFieldArg,
+                            "fnReceiver" to fnReceiverArg,
+                            "fnParam" to fnParamArg,
+                            "fnReturn" to fnReturnArg,
+                            "fnTypeArg0" to fnTypeArg0,
+                            "param" to paramArg,
+                            "paramTypeArg" to paramTypeArgArg,
+                            "return" to returnArg,
+                            "returnTypeArg" to returnTypeArgArg,
+                            "ctxParam" to ctxParamArg,
+                            "ctxParamTypeArg" to ctxParamTypeArgArg,
+                            "outerQual" to outerQualArg,
+                            "innerQual" to innerQualArg,
+                            "outerOnlyQual" to outerOnlyQualArg,
+                            "javaField" to javaFieldTypeArg,
+                            "javaFieldTypeArg" to javaFieldTypeArgInner,
+                            "javaBackingField" to javaBackingFieldArg,
+                            "javaOuterQual" to javaOuterQualArg,
+                            "javaInnerQual" to javaInnerQualArg,
+                        )
+                        for ((k, v) in rawArgs) {
+                            deferredArgs[k] = (v as? Deferrable)?.defer()
+                        }
+
+                        val delegatedHolder = resolver.getClassDeclarationByName("DelegatedExtHolder")!!
+                        val delegatedProp = delegatedHolder.getAllProperties()
+                            .single { it.simpleName.asString() == "delegatedExtProp" }
+                        val delegatedFun = delegatedHolder.getAllFunctions()
+                            .single { it.simpleName.asString() == "delegatedExtFun" }
+                        // Read returnType / type BEFORE extensionReceiver to test KSTypeReferenceResolvedImpl cache keys.
+                        val delegatedPropType = delegatedProp.type
+                        val delegatedPropRecv = delegatedProp.extensionReceiver!!
+                        assertNotSame(delegatedPropType, delegatedPropRecv)
+                        assertEquals(-1, (delegatedPropType as KSTypeReferenceResolvedImpl).index)
+                        assertEquals(-2, (delegatedPropRecv as KSTypeReferenceResolvedImpl).index)
+                        assertEquals(emptyList<String>(), delegatedPropType.annotations.map { it.shortName.asString() }.toList())
+                        assertEquals(listOf("ReceiverParamAnno"), delegatedPropRecv.annotations.map { it.shortName.asString() }.toList())
+
+                        val delegatedFunRet = delegatedFun.returnType!!
+                        val delegatedFunRecv = delegatedFun.extensionReceiver!!
+                        assertNotSame(delegatedFunRet, delegatedFunRecv)
+                        assertEquals(-1, (delegatedFunRet as KSTypeReferenceResolvedImpl).index)
+                        assertEquals(-2, (delegatedFunRecv as KSTypeReferenceResolvedImpl).index)
+                        assertEquals(emptyList<String>(), delegatedFunRet.annotations.map { it.shortName.asString() }.toList())
+                        assertEquals(listOf("ReceiverParamAnno"), delegatedFunRecv.annotations.map { it.shortName.asString() }.toList())
+
+                        deferredDelegatedPropType = (delegatedPropType as? Deferrable)?.defer()
+                        deferredDelegatedFunReturnType = (delegatedFunRet as? Deferrable)?.defer()
+
+                        val genericProp = ktCls.declarations.single { it.simpleName.asString() == "genericProp" }
+                            as KSPropertyDeclaration
+                        // Populate getter.returnType.element.typeArguments BEFORE prop.type.element.typeArguments
+                        val getterTypeElem = genericProp.getter!!.returnType!!.element as KSClassifierReference
+                        val getterTypeArg = getterTypeElem.typeArguments.single()
+                        val propTypeElem = genericProp.type.element as KSClassifierReference
+                        val propTypeArgElem = propTypeElem.typeArguments.single()
+                        assertNotSame(getterTypeArg, propTypeArgElem)
+                        assertEquals(Origin.SYNTHETIC, getterTypeArg.origin)
+                        assertEquals(Origin.KOTLIN, propTypeArgElem.origin)
+                        assertSame(getterTypeElem, getterTypeArg.parent)
+                        assertSame(propTypeElem, propTypeArgElem.parent)
+                        deferredPropTypeArgElem = (propTypeArgElem as? Deferrable)?.defer()
+                        deferredArgs["genericPropTypeArg"] =
+                            (propTypeArgElem.type!!.annotations.single().arguments.single() as? Deferrable)?.defer()
+
+                        val annoTypeDeferredProp = ktCls.declarations
+                            .single { it.simpleName.asString() == "annoTypeDeferredProp" } as KSPropertyDeclaration
+                        val unresolvedAnnoTypeRef = annoTypeDeferredProp.annotations.single().annotationType
+                        assertTrue(unresolvedAnnoTypeRef.resolve().isError)
+                        deferredUnresolvedAnnoTypeRef = (unresolvedAnnoTypeRef as? Deferrable)?.defer()
+
+                        env.codeGenerator.createNewFile(Dependencies(false), "", "Round2TriggerType", "kt").use {
+                            it.write(
+                                """
+                                class Round2TriggerType
+                                annotation class GeneratedTypeTestAnno
+                                """.trimIndent().toByteArray() + "\n".toByteArray()
+                            )
+                        }
+                        // Round 2 is triggered by file generation above; rawArgs are restored manually via Deferrable.defer().
+                        return emptyList()
+                    } else if (roundCount == 2) {
+                        for ((key, restorable) in deferredArgs) {
+                            assertNotNull(restorable, "Expected Deferrable.defer() to be non-null for $key")
+                            val restored = restorable!!.restore() as? KSValueArgument
+                            assertNotNull(restored, "Expected Restorable.restore() to return KSValueArgument for $key")
+                            val typeName = (restored!!.value as KSType).declaration.simpleName.asString()
+                            restoredSummaries.add("$key->$typeName")
+                        }
+                        val delegatedHolderR2 = resolver.getClassDeclarationByName("DelegatedExtHolder")!!
+                        val delegatedPropR2 = delegatedHolderR2.getAllProperties()
+                            .single { it.simpleName.asString() == "delegatedExtProp" }
+                        val delegatedFunR2 = delegatedHolderR2.getAllFunctions()
+                            .single { it.simpleName.asString() == "delegatedExtFun" }
+                        // Read extensionReceiver BEFORE restore() in Round 2 to verify the reverse cache-population order too.
+                        assertEquals(listOf("ReceiverParamAnno"), delegatedPropR2.extensionReceiver!!.annotations.map { it.shortName.asString() }.toList())
+                        assertEquals(listOf("ReceiverParamAnno"), delegatedFunR2.extensionReceiver!!.annotations.map { it.shortName.asString() }.toList())
+                        val restoredDelegatedPropType = deferredDelegatedPropType!!.restore() as KSTypeReference
+                        val restoredDelegatedFunRet = deferredDelegatedFunReturnType!!.restore() as KSTypeReference
+                        assertSame(delegatedPropR2.type, restoredDelegatedPropType)
+                        assertSame(delegatedFunR2.returnType, restoredDelegatedFunRet)
+                        assertEquals(emptyList<String>(), restoredDelegatedPropType.annotations.map { it.shortName.asString() }.toList())
+                        assertEquals(emptyList<String>(), restoredDelegatedFunRet.annotations.map { it.shortName.asString() }.toList())
+
+                        val ktClsR2 = resolver.getClassDeclarationByName("TypeAnnotatedKotlin")!!
+                        val genericPropR2 = ktClsR2.declarations.single { it.simpleName.asString() == "genericProp" }
+                            as KSPropertyDeclaration
+                        // Populate getter typeArguments first in Round 2 too before restoring prop.type's typeArgument.
+                        val getterTypeArgR2 =
+                            (genericPropR2.getter!!.returnType!!.element as KSClassifierReference).typeArguments.single()
+                        val restoredPropTypeArg = deferredPropTypeArgElem!!.restore() as KSTypeArgument
+                        assertNotSame(getterTypeArgR2, restoredPropTypeArg)
+                        assertSame(genericPropR2.type.element, restoredPropTypeArg.parent)
+                        assertEquals(Origin.KOTLIN, restoredPropTypeArg.origin)
+
+                        val restoredAnnoTypeRef = deferredUnresolvedAnnoTypeRef!!.restore() as KSTypeReference
+                        assertEquals(
+                            "GeneratedTypeTestAnno",
+                            restoredAnnoTypeRef.resolve().declaration.simpleName.asString()
+                        )
+                        round2Lookups = ResolverAAImpl.instance.incrementalContext.dumpLookupRecords()
+                    }
+                    return emptyList()
+                }
+            }
+        }
+
+        val kspConfig = KSPJvmConfig.Builder().apply {
+            moduleName = "main"
+            sourceRoots = listOf(kotlinSrc)
+            javaSourceRoots = listOf(javaSrc)
+            jdkHome = File(System.getProperty("java.home"))
+            jvmTarget = JvmTarget.DEFAULT.description
+            languageVersion = "2.0"
+            apiVersion = "2.0"
+            libraries = listOf(File("dist/kotlinc/lib/kotlin-stdlib.jar"))
+            projectBaseDir = tempDir
+            classOutputDir = File(tempDir, "out/classes")
+            javaOutputDir = File(tempDir, "out/java")
+            kotlinOutputDir = File(tempDir, "out/kotlin")
+            resourceOutputDir = File(tempDir, "out/resources")
+            cachesDir = File(tempDir, "out/caches")
+            outputBaseDir = File(tempDir, "out")
+            incremental = true
+            this.experimentalPsiResolution = experimentalPsiResolution
+        }.build()
+
+        val exitCode = KotlinSymbolProcessing(kspConfig, listOf(provider), CommandLineKSPLogger()).execute()
+        assertEquals(KotlinSymbolProcessing.ExitCode.OK, exitCode)
+        assertEquals(2, roundCount)
+        assertEquals(
+            listOf(
+                "bound->TargetBoundType",
+                "aliasBound->TargetAliasBoundType",
+                "super->TargetSuperType",
+                "receiver->TargetReceiverType",
+                "propType->TargetPropType",
+                "ktBackingField->TargetKtBackingField",
+                "fnReceiver->TargetFnReceiver",
+                "fnParam->TargetFnParam",
+                "fnReturn->TargetFnReturn",
+                "fnTypeArg0->TargetFnReceiver",
+                "param->TargetParamType",
+                "paramTypeArg->TargetParamTypeArg",
+                "return->TargetReturnType",
+                "returnTypeArg->TargetReturnTypeArg",
+                "ctxParam->TargetContextParamType",
+                "ctxParamTypeArg->TargetContextParamTypeArg",
+                "outerQual->TargetOuterQual",
+                "innerQual->TargetInnerQual",
+                "outerOnlyQual->TargetOuterOnlyQual",
+                "javaField->TargetJavaFieldType",
+                "javaFieldTypeArg->TargetJavaFieldTypeArg",
+                "javaBackingField->TargetJavaFieldType",
+                "javaOuterQual->TargetJavaOuterQual",
+                "javaInnerQual->TargetJavaInnerQual",
+                "genericPropTypeArg->TargetPropTypeArg",
+            ),
+            restoredSummaries
+        )
+        assertTrue("kotlinSrc/TypeAnnotations.kt" in (round2Lookups["<anonymous>.TargetAliasBoundType"] ?: emptyList()))
+        assertTrue("kotlinSrc/TypeAnnotations.kt" in (round2Lookups["<anonymous>.TargetKtBackingField"] ?: emptyList()))
+        assertTrue("kotlinSrc/TypeAnnotations.kt" in (round2Lookups["<anonymous>.TargetFnReceiver"] ?: emptyList()))
+        assertTrue("kotlinSrc/TypeAnnotations.kt" in (round2Lookups["<anonymous>.TargetFnParam"] ?: emptyList()))
+        assertTrue("kotlinSrc/TypeAnnotations.kt" in (round2Lookups["<anonymous>.TargetFnReturn"] ?: emptyList()))
+        assertTrue("kotlinSrc/TypeAnnotations.kt" in (round2Lookups["<anonymous>.TargetParamType"] ?: emptyList()))
+        assertTrue("kotlinSrc/TypeAnnotations.kt" in (round2Lookups["<anonymous>.TargetParamTypeArg"] ?: emptyList()))
+        assertTrue("kotlinSrc/TypeAnnotations.kt" in (round2Lookups["<anonymous>.TargetReturnType"] ?: emptyList()))
+        assertTrue("kotlinSrc/TypeAnnotations.kt" in (round2Lookups["<anonymous>.TargetReturnTypeArg"] ?: emptyList()))
+        assertTrue("kotlinSrc/TypeAnnotations.kt" in (round2Lookups["<anonymous>.TargetContextParamType"] ?: emptyList()))
+        assertTrue("kotlinSrc/TypeAnnotations.kt" in (round2Lookups["<anonymous>.TargetContextParamTypeArg"] ?: emptyList()))
+        assertTrue("kotlinSrc/TypeAnnotations.kt" in (round2Lookups["<anonymous>.TargetOuterQual"] ?: emptyList()))
+        assertTrue("kotlinSrc/TypeAnnotations.kt" in (round2Lookups["<anonymous>.TargetInnerQual"] ?: emptyList()))
+        assertTrue("kotlinSrc/TypeAnnotations.kt" in (round2Lookups["<anonymous>.TargetOuterOnlyQual"] ?: emptyList()))
+        assertTrue("javaSrc/TypeAnnotatedJava.java" in (round2Lookups["<anonymous>.TargetJavaFieldType"] ?: emptyList()))
+        assertTrue("javaSrc/TypeAnnotatedJava.java" in (round2Lookups["<anonymous>.TargetJavaFieldTypeArg"] ?: emptyList()))
+        assertTrue("javaSrc/TypeAnnotatedJava.java" in (round2Lookups["<anonymous>.TargetJavaOuterQual"] ?: emptyList()))
+        assertTrue("javaSrc/TypeAnnotatedJava.java" in (round2Lookups["<anonymous>.TargetJavaInnerQual"] ?: emptyList()))
     }
 
     @Test

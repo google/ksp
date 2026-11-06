@@ -80,6 +80,9 @@
 // parent of INVARIANT Int: List<INVARIANT Int>
 // parent of List<INVARIANT Int>: List<INVARIANT Int>
 // parent of List<INVARIANT Int>: topProp
+// parent of Int: Int
+// parent of Int: INVARIANT Int
+// parent of INVARIANT Int: List<INVARIANT Int>
 // parent of List<INVARIANT Int>: List<INVARIANT Int>
 // parent of List<INVARIANT Int>: topProp.getter()
 // parent of topProp.getter(): topProp

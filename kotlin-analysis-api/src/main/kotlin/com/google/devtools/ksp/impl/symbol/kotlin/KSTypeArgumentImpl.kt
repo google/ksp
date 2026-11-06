@@ -16,6 +16,7 @@
  */
 package com.google.devtools.ksp.impl.symbol.kotlin
 
+import com.google.devtools.ksp.common.IdKeyPair
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSNode
@@ -28,14 +29,18 @@ import com.google.devtools.ksp.symbol.Variance
 import org.jetbrains.kotlin.psi.KtProjectionKind
 import org.jetbrains.kotlin.psi.KtTypeProjection
 
-class KSTypeArgumentImpl(private val ktTypeArgument: KtTypeProjection, override val parent: KSNode) : KSTypeArgument {
-    companion object : KSObjectCache<KtTypeProjection, KSTypeArgument>() {
-        fun getCached(ktTypeArgument: KtTypeProjection, parent: KSNode) = cache.getOrPut(ktTypeArgument) {
-            KSTypeArgumentImpl(ktTypeArgument, parent)
-        }
+class KSTypeArgumentImpl(
+    private val ktTypeArgument: KtTypeProjection,
+    override val parent: KSNode
+) : KSTypeArgument, Deferrable {
+    companion object : KSObjectCache<IdKeyPair<KtTypeProjection, KSNode>, KSTypeArgument>() {
+        fun getCached(ktTypeArgument: KtTypeProjection, parent: KSNode) =
+            cache.getOrPut(IdKeyPair(ktTypeArgument, parent)) {
+                KSTypeArgumentImpl(ktTypeArgument, parent)
+            }
     }
 
-    override val origin = Origin.KOTLIN
+    override val origin: Origin = parent.origin
 
     override val location: Location by lazy {
         ktTypeArgument.toLocation()
@@ -66,5 +71,9 @@ class KSTypeArgumentImpl(private val ktTypeArgument: KtTypeProjection, override 
 
     override fun toString(): String {
         return "$variance $type"
+    }
+
+    override fun defer(): Restorable? {
+        return deferTypeArgument()
     }
 }

@@ -28,12 +28,19 @@ import com.google.devtools.ksp.impl.recordClassReferenceLookup
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSAnnotationResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSClassifierParameterImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSClassifierReferenceResolvedImpl
+import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.impl.symbol.util.getDocString
 import com.google.devtools.ksp.symbol.AnnotationUseSiteTarget
 import com.google.devtools.ksp.symbol.FileLocation
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSBackingField
+import com.google.devtools.ksp.symbol.KSCallableReference
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSClassifierReference
+import com.google.devtools.ksp.symbol.KSContextParameter
 import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSDefNonNullReference
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSNode
@@ -43,7 +50,9 @@ import com.google.devtools.ksp.symbol.KSPropertyGetter
 import com.google.devtools.ksp.symbol.KSPropertySetter
 import com.google.devtools.ksp.symbol.KSReferenceElement
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeAlias
 import com.google.devtools.ksp.symbol.KSTypeArgument
+import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSValueArgument
 import com.google.devtools.ksp.symbol.KSValueParameter
@@ -1500,5 +1509,141 @@ internal fun DeferrableAnnotation.deferAnnotationByOrdinal(): (() -> KSAnnotatio
             }
         }
         else -> return null
+    }
+}
+
+private fun deferReferenceElement(ref: KSReferenceElement): (() -> KSReferenceElement?)? {
+    return when (val p = ref.parent) {
+        is KSTypeReference -> {
+            val typeRefRestorable = (p as? Deferrable)?.defer() ?: return null
+            val unwrapDefNonNull = p.element is KSDefNonNullReference && p.element !== ref
+            var cur: KSReferenceElement? =
+                if (unwrapDefNonNull) (p.element as KSDefNonNullReference).enclosedType else p.element
+            var qualifierDepth = 0
+            while (cur is KSClassifierReference && cur !== ref) {
+                qualifierDepth++
+                cur = cur.qualifier
+            }
+            if (cur !== ref) return null
+            {
+                var restored: KSReferenceElement? = (typeRefRestorable.restore() as? KSTypeReference)?.element
+                if (unwrapDefNonNull) {
+                    restored = (restored as? KSDefNonNullReference)?.enclosedType
+                }
+                repeat(qualifierDepth) {
+                    restored = (restored as? KSClassifierReference)?.qualifier
+                }
+                restored
+            }
+        }
+        is KSDefNonNullReference -> {
+            if (p.enclosedType !== ref) return null
+            val outerRestorer = deferReferenceElement(p) ?: return null
+            {
+                (outerRestorer() as? KSDefNonNullReference)?.enclosedType
+            }
+        }
+        is KSClassifierReference -> {
+            if (p.qualifier !== ref) return null
+            val outerRestorer = deferReferenceElement(p) ?: return null
+            {
+                (outerRestorer() as? KSClassifierReference)?.qualifier
+            }
+        }
+        else -> null
+    }
+}
+
+internal fun KSTypeArgument.deferTypeArgument(): Restorable? {
+    val ref = parent as? KSReferenceElement ?: return null
+    val argIndex = ref.typeArguments.indexOfFirst { it === this }
+    if (argIndex < 0) return null
+    val refRestorer = deferReferenceElement(ref) ?: return null
+    return Restorable {
+        refRestorer()?.typeArguments?.getOrNull(argIndex)
+    }
+}
+
+internal fun KSTypeReference.deferTypeReference(): Restorable? {
+    return when (val p = parent) {
+        is KSValueParameter -> {
+            if (p.type !== this) return null
+            val parentRestorable = (p as? Deferrable)?.defer() ?: return null
+            Restorable { (parentRestorable.restore() as? KSValueParameter)?.type }
+        }
+        is KSContextParameter -> {
+            if (p.type !== this) return null
+            val parentRestorable = (p as? Deferrable)?.defer() ?: return null
+            Restorable { (parentRestorable.restore() as? KSContextParameter)?.type }
+        }
+        is KSFunctionDeclaration -> {
+            val isReceiver = p.extensionReceiver === this
+            val isReturn = !isReceiver && p.returnType === this
+            if (!isReceiver && !isReturn) return null
+            val parentRestorable = (p as? Deferrable)?.defer() ?: return null
+            Restorable {
+                val restored = parentRestorable.restore() as? KSFunctionDeclaration
+                if (isReceiver) restored?.extensionReceiver else restored?.returnType
+            }
+        }
+        is KSPropertyDeclaration -> {
+            val isReceiver = p.extensionReceiver === this
+            val isType = !isReceiver && p.type === this
+            if (!isReceiver && !isType) return null
+            val parentRestorable = (p as? Deferrable)?.defer() ?: return null
+            Restorable {
+                val restored = parentRestorable.restore() as? KSPropertyDeclaration
+                if (isReceiver) restored?.extensionReceiver else restored?.type
+            }
+        }
+        is KSPropertyGetter -> {
+            if (p.returnType !== this) return null
+            val parentRestorable = (p as? Deferrable)?.defer() ?: return null
+            Restorable { (parentRestorable.restore() as? KSPropertyGetter)?.returnType }
+        }
+        is KSBackingField -> {
+            if (p.type !== this) return null
+            val parentRestorable = (p as? Deferrable)?.defer() ?: return null
+            Restorable { (parentRestorable.restore() as? KSBackingField)?.type }
+        }
+        is KSTypeAlias -> {
+            if (p.type !== this) return null
+            val parentRestorable = (p as? Deferrable)?.defer() ?: return null
+            Restorable { (parentRestorable.restore() as? KSTypeAlias)?.type }
+        }
+        is KSClassDeclaration -> {
+            val index = p.superTypes.indexOfFirst { it === this }
+            if (index < 0) return null
+            val parentRestorable = (p as? Deferrable)?.defer() ?: return null
+            Restorable { (parentRestorable.restore() as? KSClassDeclaration)?.superTypes?.elementAtOrNull(index) }
+        }
+        is KSTypeParameter -> {
+            val resolvedIndex = (this as? KSTypeReferenceResolvedImpl)?.index?.takeIf { it >= 0 }
+            val index = resolvedIndex ?: p.bounds.indexOfFirst { it === this }
+            if (index < 0) return null
+            val parentRestorable = (p as? Deferrable)?.defer() ?: return null
+            Restorable { (parentRestorable.restore() as? KSTypeParameter)?.bounds?.elementAtOrNull(index) }
+        }
+        is KSAnnotation -> {
+            if (p.annotationType !== this) return null
+            val annoRestorer = (p as? DeferrableAnnotation)?.deferAnnotation() ?: return null
+            Restorable { annoRestorer()?.annotationType }
+        }
+        is KSTypeArgument -> {
+            if (p.type !== this) return null
+            val parentRestorable = (p as? Deferrable)?.defer() ?: return null
+            Restorable { (parentRestorable.restore() as? KSTypeArgument)?.type }
+        }
+        is KSCallableReference -> {
+            val isReceiver = p.receiverType === this
+            val isReturn = !isReceiver && p.returnType === this
+            if (!isReceiver && !isReturn) return null
+            val refRestorer = deferReferenceElement(p) ?: return null
+            Restorable {
+                val restored = refRestorer() as? KSCallableReference
+                if (isReceiver) restored?.receiverType else restored?.returnType
+            }
+        }
+        else -> null
     }
 }

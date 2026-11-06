@@ -27,6 +27,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSTypeParameterImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.Restorable
 import com.google.devtools.ksp.impl.symbol.kotlin.annotations
+import com.google.devtools.ksp.impl.symbol.kotlin.deferTypeReference
 import com.google.devtools.ksp.impl.symbol.kotlin.render
 import com.google.devtools.ksp.impl.symbol.kotlin.toClassifierReference
 import com.google.devtools.ksp.impl.symbol.kotlin.toLocation
@@ -46,14 +47,15 @@ import org.jetbrains.kotlin.psi.KtTypeParameter
  * @param ktType The underlying resolved Analysis API type representing this reference.
  * @param parent The parent AST node enclosing this type reference (e.g., class, function, property, type parameter, or type argument).
  * @param index The 0-based positional index of this type reference within a list of references on the [parent]
- * (e.g., supertypes or type parameter bounds), used to pinpoint the exact source location. Defaults to -1 when not applicable.
+ * (e.g., supertypes or type parameter bounds), used to pinpoint the exact source location, or a negative sentinel
+ * (defaults to -1; -2 is used for extension/callable receiver type references to disambiguate cache keys from return/value types).
  * @param additionalAnnotations Additional annotations to include on this type reference beyond what is
  * directly attached to [ktType] (e.g., annotations on an extension receiver such as `fun @Anno Receiver.foo()`).
  */
 class KSTypeReferenceResolvedImpl private constructor(
     private val ktType: KaType,
     override val parent: KSNode?,
-    private val index: Int,
+    internal val index: Int,
     private val additionalAnnotations: List<KaAnnotation>
 ) : KSTypeReference, Deferrable {
 
@@ -65,7 +67,8 @@ class KSTypeReferenceResolvedImpl private constructor(
          * @param type The underlying resolved Analysis API type representing this reference.
          * @param parent The parent AST node enclosing this type reference (e.g., class, function, property, type parameter, or type argument).
          * @param index The 0-based positional index of this type reference within a list of references on the [parent]
-         * (e.g., supertypes or type parameter bounds), used to pinpoint the exact source location. Defaults to -1 when not applicable.
+         * (e.g., supertypes or type parameter bounds), used to pinpoint the exact source location, or a negative sentinel
+         * (defaults to -1; -2 is used for extension/callable receiver type references to disambiguate cache keys from return/value types).
          * @param additionalAnnotations Additional annotations to include on this type reference beyond what is
          * directly attached to [type] (e.g., annotations on an extension receiver such as `fun @Anno Receiver.foo()`).
          */
@@ -145,6 +148,6 @@ class KSTypeReferenceResolvedImpl private constructor(
     }
 
     override fun defer(): Restorable? {
-        TODO("Not yet implemented")
+        return deferTypeReference()
     }
 }

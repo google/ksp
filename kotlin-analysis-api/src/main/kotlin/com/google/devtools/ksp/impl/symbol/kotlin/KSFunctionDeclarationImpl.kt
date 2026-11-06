@@ -152,7 +152,7 @@ sealed class KSFunctionDeclarationImpl : KSFunctionDeclaration, AbstractKSDeclar
                         KSTypeReferenceResolvedImpl.getCached(
                             it,
                             this@KSFunctionDeclarationImpl,
-                            -1,
+                            -2,
                             ktFunctionSymbol.receiverParameter?.annotations ?: emptyList()
                         )
                     }
