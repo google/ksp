@@ -80,6 +80,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KaClassKind
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassLikeSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassifierSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaContextParameterSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaDeclarationSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaEnumEntrySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaFileSymbol
@@ -135,7 +136,6 @@ import org.jetbrains.kotlin.fir.symbols.lazyResolveToPhase
 import org.jetbrains.kotlin.fir.types.abbreviatedType
 import org.jetbrains.kotlin.fir.types.classId
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotationArgument
-import org.jetbrains.kotlin.load.java.structure.impl.JavaUnknownAnnotationArgumentImpl
 import org.jetbrains.kotlin.load.kotlin.TypeMappingMode
 import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmProtoBufUtil
 import org.jetbrains.kotlin.name.ClassId
@@ -474,6 +474,7 @@ internal fun KaSymbol.getContainingKSSymbol(): KSDeclaration? {
 internal fun KaSymbol.toKSDeclaration(): KSDeclaration? = toKSAnnotated() as? KSDeclaration
 
 // For efficiency & simplicity, KaDestructuringDeclarationSymbol is handled by caller.
+@OptIn(KaExperimentalApi::class)
 internal fun KaSymbol.toKSAnnotated(): KSAnnotated = when (this) {
     is KaPropertySymbol -> toKSPropertyDeclaration()
     is KaBackingFieldSymbol -> toKSBackingField()
@@ -486,6 +487,7 @@ internal fun KaSymbol.toKSAnnotated(): KSAnnotated = when (this) {
     is KaTypeParameterSymbol -> toKSTypeParameter()
     is KaLocalVariableSymbol -> toKSPropertyDeclarationLocalVariable()
     is KaValueParameterSymbol -> toKSValueParameter()
+    is KaContextParameterSymbol -> toKSContextParameter()
     else -> throw InternalKSPException(
         "Unexpected class for KtSymbol",
         this.psi.toLocation(),
@@ -552,6 +554,18 @@ internal fun KaLocalVariableSymbol.toKSPropertyDeclarationLocalVariable(): KSPro
 
 internal fun KaValueParameterSymbol.toKSValueParameter(): KSValueParameterImpl =
     KSValueParameterImpl.getCached(this, this.getContainingKSSymbol()!!)
+
+@OptIn(KaExperimentalApi::class)
+internal fun KaContextParameterSymbol.toKSContextParameter(): KSContextParameterImpl =
+    KSContextParameterImpl.getCached(
+        kaContextParameterSymbol = this,
+        parent = this.getContainingKSSymbol()
+            ?: throw InternalKSPException(
+                message = "Unexpected null containingKSSymbol for context parameter ${name.asString()}",
+                location = psi.toLocation(),
+                originatingClass = javaClass
+            )
+    )
 
 internal fun AnnotationUseSiteTargetAA.toKSAnnotationUseSiteTarget(): AnnotationUseSiteTarget = when (this) {
     AnnotationUseSiteTargetAA.ALL -> AnnotationUseSiteTarget.ALL
@@ -802,21 +816,14 @@ internal fun getDefaultValueOnJvm(
         .getContainingClassSymbol()?.classId
         ?: return null
 
-    val defaultValue: JavaAnnotationArgument? = analyze {
+    val defaultValue: JavaAnnotationArgument = analyze {
         val jc = fileManager.findClass(classId, analysisScope) ?: return@analyze null
         jc.methods.firstOrNull { it.name == kaFirValueParameterSymbol.name }?.annotationParameterDefaultValue
-    }
+    } ?: return null
 
     val firSession = kaFirValueParameterSymbol.firSymbol.fir.moduleData.session
     val expectedTypeRef = kaFirValueParameterSymbol.firSymbol.fir.returnTypeRef
-    // when no default value is declared in the class file, ideally users should
-    // apply a value for such property at use site, therefore value obtained here should not be
-    // returned. In case of a user failed to do so, we try our best to return values
-    // to ensure no annotation argument is missing from KSP side.
-    // Supplying `JavaUnknownAnnotationArgumentImpl` as the expression base
-    // will produce empty array for array type values and `null` for the rest of value types.
-    val expression = (defaultValue ?: JavaUnknownAnnotationArgumentImpl(null))
-        .toFirExpression(firSession, JavaTypeParameterStack.EMPTY, expectedTypeRef, null)
+    val expression = defaultValue.toFirExpression(firSession, JavaTypeParameterStack.EMPTY, expectedTypeRef, null)
     return FirAnnotationValueConverter.toConstantValue(expression, kaFirValueParameterSymbol.builder)
 }
 

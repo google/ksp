@@ -29,25 +29,25 @@ abstract class AAConfiguredUnitTestSuiteBase(
     @TestMetadata("getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     @Test
     override fun testAllUseSiteTargetAppliedToAnnotationList() {
-        runFailingTest("$AA_PATH/getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
+        runFailingKSPTest("getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     }
 
     @TestMetadata("getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
     @Test
     override fun testGroupedAnnotationsWithUseSiteTargets() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
+        runKSPTest("getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
     }
 
     @TestMetadata("functionKindsJavaInheritsKotlin.kt")
     @Test
     override fun testFunctionKindsJavaInheritsKotlin() {
-        runThrowingTest("$AA_PATH/functionKindsJavaInheritsKotlin.kt")
+        runThrowingKSPTest("functionKindsJavaInheritsKotlin.kt")
     }
 
     @TestMetadata("javaSubtypeOfKotlinInterface.kt")
     @Test
     override fun testJavaSubtypeOfKotlinInterface() {
-        runTest("$AA_PATH/javaSubtypeOfKotlinInterface.kt")
+        runKSPTest("javaSubtypeOfKotlinInterface.kt")
     }
 }
 
@@ -60,13 +60,7 @@ class AAConfiguredDefaultFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(
     @TestMetadata("backingFieldsSignatureMapper.kt")
     @Test
     override fun testBackingFieldsSignatureMapper() {
-        runTest("$AA_PATH/backingFieldsSignatureMapper.kt")
-    }
-
-    @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
-    @Test
-    override fun testContextParameters() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
+        runKSPTest("backingFieldsSignatureMapper.kt")
     }
 }
 
@@ -79,13 +73,7 @@ class AAConfiguredBackingFieldsUnitTestSuite : AAConfiguredUnitTestSuiteBase(
     @TestMetadata("backingFieldsSignatureMapper.kt")
     @Test
     override fun testBackingFieldsSignatureMapper() {
-        runThrowingTest("$AA_PATH/backingFieldsSignatureMapper.kt", NotImplementedError::class)
-    }
-
-    @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
-    @Test
-    override fun testContextParameters() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
+        runThrowingKSPTest("backingFieldsSignatureMapper.kt", NotImplementedError::class)
     }
 }
 
@@ -98,13 +86,7 @@ class AAConfiguredContextParametersUnitTestSuite : AAConfiguredUnitTestSuiteBase
     @TestMetadata("backingFieldsSignatureMapper.kt")
     @Test
     override fun testBackingFieldsSignatureMapper() {
-        runTest("$AA_PATH/backingFieldsSignatureMapper.kt")
-    }
-
-    @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
-    @Test
-    override fun testContextParameters() {
-        runFailingTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
+        runKSPTest("backingFieldsSignatureMapper.kt")
     }
 }
 
@@ -117,12 +99,7 @@ class AAConfiguredAllFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(
     @TestMetadata("backingFieldsSignatureMapper.kt")
     @Test
     override fun testBackingFieldsSignatureMapper() {
-        runThrowingTest("$AA_PATH/backingFieldsSignatureMapper.kt", NotImplementedError::class)
-    }
-
-    @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
-    @Test
-    override fun testContextParameters() {
-        runFailingTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
+        runThrowingKSPTest("backingFieldsSignatureMapper.kt", NotImplementedError::class)
     }
 }
+

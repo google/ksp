@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.test
 
 import com.google.devtools.ksp.ApiFeatures
+import com.google.devtools.ksp.InternalKSPException
 import com.google.devtools.ksp.KSTypeNotPresentException
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.test.annotations.Bug
@@ -31,6 +32,7 @@ import org.junit.jupiter.api.condition.DisabledOnOs
 import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
+import kotlin.reflect.KClass
 
 @Execution(ExecutionMode.SAME_THREAD)
 @TestDataPath($$"$CONTENT_ROOT/testData")
@@ -43,47 +45,63 @@ abstract class KSPUnitTestSuite(
         internal const val AA_PATH: String = "../kotlin-analysis-api/testData"
     }
 
+    /**
+     * Runs a positive test.  Prefer calling this function instead of [runTest].
+     */
+    fun runKSPTest(path: String) = runTest("$AA_PATH/$path")
+
+    /**
+     * Runs a failing test. Prefer calling this function instead of [runFailingTest].
+     */
+    fun runFailingKSPTest(path: String) = runFailingTest("$AA_PATH/$path")
+
+    /**
+     * Runs a throwing test. Prefer calling this function instead of [runThrowingTest].
+     */
+    fun runThrowingKSPTest(path: String, expectedThrowableType: KClass<*> = InternalKSPException::class) =
+        runThrowingTest("$AA_PATH/$path", expectedThrowableType)
+
     @Bug("https://github.com/google/ksp/issues/2997", BugState.FIXED)
     @TestMetadata("getSymbolsWithAnnotation/aliasedAnnotation.kt")
     @Test
     fun testAliasedAnnotations() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/aliasedAnnotation.kt")
+        runKSPTest("getSymbolsWithAnnotation/aliasedAnnotation.kt")
     }
 
     @TestMetadata("annotatedUtil.kt")
     @Test
     fun testAnnotatedUtil() {
-        runTest("$AA_PATH/annotatedUtil.kt")
+        runKSPTest("annotatedUtil.kt")
     }
 
     @TestMetadata("javaAnnotatedUtil.kt")
     @Test
     fun testJavaAnnotatedUtil() {
-        runTest("$AA_PATH/javaAnnotatedUtil.kt")
+        runKSPTest("javaAnnotatedUtil.kt")
     }
 
     @TestMetadata("abstractFunctions.kt")
     @Test
     fun testAbstractFunctions() {
-        runTest("$AA_PATH/abstractFunctions.kt")
+        runKSPTest("abstractFunctions.kt")
     }
 
     @TestMetadata("allFunctions_java_inherits_kt.kt")
     @Test
     fun testAllFunctions_java_inherits_kt() {
-        runTest("$AA_PATH/allFunctions_java_inherits_kt.kt")
+        runKSPTest("allFunctions_java_inherits_kt.kt")
     }
 
     @TestMetadata("allFunctions_kotlin.kt")
     @Test
     fun testAllFunctions_kotlin() {
-        runTest("$AA_PATH/allFunctions_kotlin.kt")
+        runKSPTest("allFunctions_kotlin.kt")
     }
 
     @TestMetadata("allFunctions_kt_inherits_java.kt")
     @Test
     fun testAllFunctions_kt_inherits_java() {
-        runTest("$AA_PATH/allFunctions_kt_inherits_java.kt")
+        runKSPTest("allFunctions_kt_inherits_java.kt")
     }
 
     @Bug("https://github.com/google/ksp/issues/2912", BugState.OPEN)
@@ -94,37 +112,37 @@ abstract class KSPUnitTestSuite(
     @TestMetadata("annotationsInDependencies.kt")
     @Test
     fun testAnnotationsInDependencies() {
-        runTest("$AA_PATH/annotationsInDependencies.kt")
+        runKSPTest("annotationsInDependencies.kt")
     }
 
     @TestMetadata("annotationOnConstructorParameter.kt")
     @Test
     fun testAnnotationOnConstructorParameter() {
-        runTest("$AA_PATH/annotationOnConstructorParameter.kt")
+        runKSPTest("annotationOnConstructorParameter.kt")
     }
 
     @TestMetadata("annotationOnReceiver.kt")
     @Test
     fun testAnnotationOnReceiver() {
-        runTest("$AA_PATH/annotationOnReceiver.kt")
+        runKSPTest("annotationOnReceiver.kt")
     }
 
     @TestMetadata("annotationsRepeatable.kt")
     @Test
     fun testAnnotationsRepeatable() {
-        runTest("$AA_PATH/annotationsRepeatable.kt")
+        runKSPTest("annotationsRepeatable.kt")
     }
 
     @TestMetadata("annotationTargets.kt")
     @Test
     fun testAnnotationTargets() {
-        runTest("$AA_PATH/annotationTargets.kt")
+        runKSPTest("annotationTargets.kt")
     }
 
     @TestMetadata("annotationWithArbitraryClassValue.kt")
     @Test
     fun testAnnotationWithArbitraryClassValue() {
-        runTest("$AA_PATH/annotationWithArbitraryClassValue.kt")
+        runKSPTest("annotationWithArbitraryClassValue.kt")
     }
 
     @Bug("https://github.com/google/ksp/issues/1038", BugState.OPEN)
@@ -132,8 +150,8 @@ abstract class KSPUnitTestSuite(
     @Test
     @OptIn(KspExperimental::class)
     fun testIsAnnotationPresentWithArbitraryClassValue() {
-        runThrowingTest(
-            "$AA_PATH/isAnnotationPresentWithArbitraryClassValue.kt",
+        runThrowingKSPTest(
+            "isAnnotationPresentWithArbitraryClassValue.kt",
             KSTypeNotPresentException::class,
         )
     }
@@ -141,74 +159,74 @@ abstract class KSPUnitTestSuite(
     @TestMetadata("annotationWithNestedClassValue.kt")
     @Test
     fun testAnnotationWithNestedClassValue() {
-        runTest("$AA_PATH/annotationWithNestedClassValue.kt")
+        runKSPTest("annotationWithNestedClassValue.kt")
     }
 
     @TestMetadata("annotationValue/defaultKClassValue.kt")
     @Test
     fun testAnnotationValue_defaultKClassValue() {
-        runTest("$AA_PATH/annotationValue/defaultKClassValue.kt")
+        runKSPTest("annotationValue/defaultKClassValue.kt")
     }
 
     @TestMetadata("annotationValue/annotationValue_java.kt")
     @Test
     fun testAnnotationValue_java() {
-        runTest("$AA_PATH/annotationValue/annotationValue_java.kt")
+        runKSPTest("annotationValue/annotationValue_java.kt")
     }
 
     @TestMetadata("annotationValue/annotationValue_java2.kt")
     @Test
     fun testAnnotationValue_java2() {
-        runTest("$AA_PATH/annotationValue/annotationValue_java2.kt")
+        runKSPTest("annotationValue/annotationValue_java2.kt")
     }
 
     @TestMetadata("annotationValue/annotationValue_kt.kt")
     @Test
     fun testAnnotationValue_kt() {
-        runTest("$AA_PATH/annotationValue/annotationValue_kt.kt")
+        runKSPTest("annotationValue/annotationValue_kt.kt")
     }
 
     @TestMetadata("annotationWithArrayValue.kt")
     @Test
     fun testAnnotationWithArrayValue() {
-        runTest("$AA_PATH/annotationWithArrayValue.kt")
+        runKSPTest("annotationWithArrayValue.kt")
     }
 
     @Bug("https://github.com/google/ksp/issues/3008", BugState.OPEN)
     @TestMetadata("annotationArrayValueType.kt")
     @Test
     fun testAnnotationArrayValueType() {
-        runTest("$AA_PATH/annotationArrayValueType.kt")
+        runKSPTest("annotationArrayValueType.kt")
     }
 
     @TestMetadata("annotationWithDefault.kt")
     @Test
     fun testAnnotationWithDefault() {
-        runTest("$AA_PATH/annotationWithDefault.kt")
+        runKSPTest("annotationWithDefault.kt")
     }
 
     @TestMetadata("annotationWithDefaultValues.kt")
     @Test
     fun testAnnotationWithDefaultValues() {
-        runTest("$AA_PATH/annotationWithDefaultValues.kt")
+        runKSPTest("annotationWithDefaultValues.kt")
     }
 
     @TestMetadata("annotationWithJavaTypeValue.kt")
     @Test
     fun testAnnotationWithJavaTypeValue() {
-        runTest("$AA_PATH/annotationWithJavaTypeValue.kt")
+        runKSPTest("annotationWithJavaTypeValue.kt")
     }
 
     @TestMetadata("asMemberOf.kt")
     @Test
     fun testAsMemberOf() {
-        runTest("$AA_PATH/asMemberOf.kt")
+        runKSPTest("asMemberOf.kt")
     }
 
     @TestMetadata("backingFields.kt")
     @Test
     fun testBackingFields() {
-        runTest("$AA_PATH/backingFields.kt")
+        runKSPTest("backingFields.kt")
     }
 
     @Bug("https://github.com/google/ksp/issues/3222", BugState.OPEN)
@@ -223,25 +241,25 @@ abstract class KSPUnitTestSuite(
         "Minimal reproduction of error observed in integration test AndroidDataBindingIT"
     )
     fun testBackingFieldsLateinit() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/backingFieldsLateinit.kt")
+        runKSPTest("getSymbolsWithAnnotation/backingFieldsLateinit.kt")
     }
 
     @TestMetadata("builtInTypes.kt")
     @Test
     fun testBuiltInTypes() {
-        runTest("$AA_PATH/builtInTypes.kt")
+        runKSPTest("builtInTypes.kt")
     }
 
     @TestMetadata("objCacheA.kt")
     @Test
     fun testObjCacheA() {
-        runTest("$AA_PATH/objCacheA.kt")
+        runKSPTest("objCacheA.kt")
     }
 
     @TestMetadata("objCacheB.kt")
     @Test
     fun testObjCacheB() {
-        runTest("$AA_PATH/objCacheB.kt")
+        runKSPTest("objCacheB.kt")
     }
 
     @Bug(
@@ -253,7 +271,7 @@ abstract class KSPUnitTestSuite(
     @TestMetadata("changingBehavior.kt")
     @Test
     fun testChangingBehavior() {
-        runTest("$AA_PATH/changingBehavior.kt")
+        runKSPTest("changingBehavior.kt")
     }
 
     @Bug(
@@ -264,124 +282,164 @@ abstract class KSPUnitTestSuite(
     @TestMetadata("registerProcessorForNewFeatures.kt")
     @Test
     fun testRegisterProcessorForNewFeatures() {
-        runTest("$AA_PATH/registerProcessorForNewFeatures.kt")
+        runKSPTest("registerProcessorForNewFeatures.kt")
     }
 
     @TestMetadata("checkOverride.kt")
     @Test
     fun testCheckOverride() {
-        runTest("$AA_PATH/checkOverride.kt")
+        runKSPTest("checkOverride.kt")
     }
 
     @TestMetadata("classKinds.kt")
     @Test
     fun testClassKinds() {
-        runTest("$AA_PATH/classKinds.kt")
+        runKSPTest("classKinds.kt")
     }
 
     @TestMetadata("companion.kt")
     @Test
     fun testCompanion() {
-        runTest("$AA_PATH/companion.kt")
+        runKSPTest("companion.kt")
     }
 
     @TestMetadata("constProperties.kt")
     @Test
     fun testConstProperties() {
-        runTest("$AA_PATH/constProperties.kt")
+        runKSPTest("constProperties.kt")
     }
 
     @TestMetadata("constructorDeclarations.kt")
     @Test
     fun testConstructorDeclarations() {
-        runTest("$AA_PATH/constructorDeclarations.kt")
+        runKSPTest("constructorDeclarations.kt")
     }
 
     @TestMetadata("crossModuleTypeAlias.kt")
     @Test
     fun testCrossModuleTypeAlias() {
-        runTest("$AA_PATH/crossModuleTypeAlias.kt")
+        runKSPTest("crossModuleTypeAlias.kt")
     }
 
     @Bug(
         "https://github.com/google/ksp/issues/2472",
-        BugState.OPEN,
+        BugState.FIXED,
         "KEEP 367: Context parameters are stable in Kotlin 2.4.0"
     )
     @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
-    abstract fun testContextParameters()
+    @Test
+    fun testContextParameters() {
+        runKSPTest("getSymbolsWithAnnotation/contextParameters.kt")
+    }
+
+    @TestMetadata("contextParameterIdentity.kt")
+    @Test
+    fun testContextParameterIdentity() {
+        runKSPTest("contextParameterIdentity.kt")
+    }
+
+    @TestMetadata("contextParameterTypes.kt")
+    @Test
+    fun testContextParameterTypes() {
+        runKSPTest("contextParameterTypes.kt")
+    }
+
+    @TestMetadata("contextParameterTypeAlias.kt")
+    @Test
+    fun testContextParameterTypeAlias() {
+        runKSPTest("contextParameterTypeAlias.kt")
+    }
+
+    @TestMetadata("contextParameterNames.kt")
+    @Test
+    fun testContextParameterNames() {
+        runKSPTest("contextParameterNames.kt")
+    }
+
+    @TestMetadata("native/contextParameterNames.kt")
+    @Test
+    fun testNativeContextParameterNames() {
+        runKSPTest("native/contextParameterNames.kt")
+    }
+
+    @TestMetadata("getSymbolsWithAnnotation/negative/contextParameterDangling.kt")
+    @Test
+    @Negative("A dangling context(...) modifier list with no following declaration is a syntax error.")
+    fun testContextParameterDangling() {
+        runKSPTest("/getSymbolsWithAnnotation/negative/contextParameterDangling.kt")
+    }
 
     @TestMetadata("declarationInconsistency.kt")
     @Test
     fun testDeclarationInconsistency() {
-        runTest("$AA_PATH/declarationInconsistency.kt")
+        runKSPTest("declarationInconsistency.kt")
     }
 
     @TestMetadata("declarationPackageName.kt")
     @Test
     fun testDeclarationPackageName() {
-        runTest("$AA_PATH/declarationPackageName.kt")
+        runKSPTest("declarationPackageName.kt")
     }
 
     @TestMetadata("declarationsInAccessor.kt")
     @Test
     fun testDeclarationsInAccessor() {
-        runTest("$AA_PATH/declarationsInAccessor.kt")
+        runKSPTest("declarationsInAccessor.kt")
     }
 
     @TestMetadata("declarationsInClass.kt")
     @Test
     fun testDeclarationsInClass() {
-        runTest("$AA_PATH/declarationsInClass.kt")
+        runKSPTest("declarationsInClass.kt")
     }
 
     @TestMetadata("declarationOrder.kt")
     @Test
     fun testDeclarationOrder() {
-        runTest("$AA_PATH/declarationOrder.kt")
+        runKSPTest("declarationOrder.kt")
     }
 
     @TestMetadata("declarationUtil.kt")
     @Test
     fun testDeclarationUtil() {
-        runTest("$AA_PATH/declarationUtil.kt")
+        runKSPTest("declarationUtil.kt")
     }
 
     @TestMetadata("declared.kt")
     @Test
     fun testDeclared() {
-        runTest("$AA_PATH/declared.kt")
+        runKSPTest("declared.kt")
     }
 
     @TestMetadata("docString.kt")
     @Test
     fun testDocString() {
-        runTest("$AA_PATH/docString.kt")
+        runKSPTest("docString.kt")
     }
 
     @TestMetadata("equals.kt")
     @Test
     fun testEquals() {
-        runTest("$AA_PATH/equals.kt")
+        runKSPTest("equals.kt")
     }
 
     @TestMetadata("equivalentJavaWildcards.kt")
     @Test
     fun testEquivalentJavaWildcards() {
-        runTest("$AA_PATH/equivalentJavaWildcards.kt")
+        runKSPTest("equivalentJavaWildcards.kt")
     }
 
     @TestMetadata("enumModifiers.kt")
     @Test
     @Bug("https://github.com/google/ksp/issues/2271", BugState.OPEN)
     fun testEnumModifiers() {
-        runThrowingTest("$AA_PATH/enumModifiers.kt")
+        runThrowingKSPTest("enumModifiers.kt")
     }
 
     @TestMetadata("errorTypes.kt")
     @Test
     fun testErrorTypes() {
-        runTest("$AA_PATH/errorTypes.kt")
+        runKSPTest("errorTypes.kt")
     }
 
     @Bug(
@@ -392,7 +450,7 @@ abstract class KSPUnitTestSuite(
     @TestMetadata("getSymbolsWithAnnotation/explicitBackingFields.kt")
     @Test
     fun testExplicitBackingFields() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/explicitBackingFields.kt")
+        runKSPTest("getSymbolsWithAnnotation/explicitBackingFields.kt")
     }
 
     @Bug(
@@ -403,14 +461,14 @@ abstract class KSPUnitTestSuite(
     @TestMetadata("getSymbolsWithAnnotation/backingFieldsPackageName.kt")
     @Test
     fun testBackingFieldsPackageName() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/backingFieldsPackageName.kt")
+        runKSPTest("getSymbolsWithAnnotation/backingFieldsPackageName.kt")
     }
 
     @Bug("https://github.com/google/ksp/issues/2420", BugState.OPEN)
     @TestMetadata("fakeOverrideProperties.kt")
     @Test
     fun testFakeOverrideProperties() {
-        runFailingTest("$AA_PATH/fakeOverrideProperties.kt")
+        runFailingKSPTest("fakeOverrideProperties.kt")
     }
 
     @TestMetadata("getSymbolsWithAnnotation/negative/fieldAndPropertyUseSiteTargetOnConstructorParameters.kt")
@@ -418,9 +476,7 @@ abstract class KSPUnitTestSuite(
     @Bug("https://github.com/google/ksp/issues/2913", BugState.FIXED)
     @Negative("Constructor params not declared with val do not have generated properties or backing fields.")
     fun testFieldAndPropertyUseSiteTargetOnConstructorParameters() {
-        runTest(
-            "$AA_PATH/getSymbolsWithAnnotation/negative/fieldAndPropertyUseSiteTargetOnConstructorParameters.kt"
-        )
+        runKSPTest("getSymbolsWithAnnotation/negative/fieldAndPropertyUseSiteTargetOnConstructorParameters.kt")
     }
 
     @TestMetadata("explicitBackingFieldsSubtyping.kt")
@@ -431,31 +487,31 @@ abstract class KSPUnitTestSuite(
         "KEEP 430: Backing fields can be a subtype of the property."
     )
     fun testExplicitBackingFieldsSubtyping() {
-        runTest("$AA_PATH/explicitBackingFieldsSubtyping.kt")
+        runKSPTest("explicitBackingFieldsSubtyping.kt")
     }
 
     @TestMetadata("functionTypeAlias.kt")
     @Test
     fun testFunctionTypeAlias() {
-        runTest("$AA_PATH/functionTypeAlias.kt")
+        runKSPTest("functionTypeAlias.kt")
     }
 
     @TestMetadata("functionTypeAnnotation.kt")
     @Test
     fun testFunctionTypeAnnotation() {
-        runTest("$AA_PATH/functionTypeAnnotation.kt")
+        runKSPTest("functionTypeAnnotation.kt")
     }
 
     @TestMetadata("functionTypes.kt")
     @Test
     fun testFunctionTypes() {
-        runTest("$AA_PATH/functionTypes.kt")
+        runKSPTest("functionTypes.kt")
     }
 
     @TestMetadata("functionKinds.kt")
     @Test
     fun testFunctionKinds() {
-        runTest("$AA_PATH/functionKinds.kt")
+        runKSPTest("functionKinds.kt")
     }
 
     @Bug("https://github.com/google/ksp/issues/2496", BugState.OPEN)
@@ -465,37 +521,37 @@ abstract class KSPUnitTestSuite(
     @TestMetadata("getAnnotationByTypeWithInnerDefault.kt")
     @Test
     fun testGetAnnotationByTypeWithInnerDefault() {
-        runTest("$AA_PATH/getAnnotationByTypeWithInnerDefault.kt")
+        runKSPTest("getAnnotationByTypeWithInnerDefault.kt")
     }
 
     @TestMetadata("getPackage.kt")
     @Test
     fun testGetPackage() {
-        runTest("$AA_PATH/getPackage.kt")
+        runKSPTest("getPackage.kt")
     }
 
     @TestMetadata("getByName.kt")
     @Test
     fun testGetByName() {
-        runTest("$AA_PATH/getByName.kt")
+        runKSPTest("getByName.kt")
     }
 
     @TestMetadata("getSymbolsFromAnnotation.kt")
     @Test
     fun testGetSymbolsFromAnnotation() {
-        runTest("$AA_PATH/getSymbolsFromAnnotation.kt")
+        runKSPTest("getSymbolsFromAnnotation.kt")
     }
 
     @TestMetadata("getSymbolsFromAnnotationInLib.kt")
     @Test
     fun testGetSymbolsFromAnnotationInLib() {
-        runTest("$AA_PATH/getSymbolsFromAnnotationInLib.kt")
+        runKSPTest("getSymbolsFromAnnotationInLib.kt")
     }
 
     @TestMetadata("getSymbolsWithAnnotation/groupedAnnotations.kt")
     @Test
     fun testGroupedAnnotations() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/groupedAnnotations.kt")
+        runKSPTest("getSymbolsWithAnnotation/groupedAnnotations.kt")
     }
 
     @TestMetadata("getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
@@ -504,56 +560,56 @@ abstract class KSPUnitTestSuite(
     @TestMetadata("hello.kt")
     @Test
     fun testHello() {
-        runTest("$AA_PATH/hello.kt")
+        runKSPTest("hello.kt")
     }
 
     @TestMetadata("implicitElements.kt")
     @Test
     fun testImplicitElements() {
-        runTest("$AA_PATH/implicitElements.kt")
+        runKSPTest("implicitElements.kt")
     }
 
     @TestMetadata("implicitPropertyAccessors.kt")
     @Test
     fun testImplicitPropertyAccessors() {
-        runTest("$AA_PATH/implicitPropertyAccessors.kt")
+        runKSPTest("implicitPropertyAccessors.kt")
     }
 
     @TestMetadata("internalOfFriends.kt")
     @Test
     fun testInternalOfFriends() {
-        runTest("$AA_PATH/internalOfFriends.kt")
+        runKSPTest("internalOfFriends.kt")
     }
 
     @TestMetadata("inheritedTypeAlias.kt")
     @Test
     fun testInheritedTypeAlias() {
-        runTest("$AA_PATH/inheritedTypeAlias.kt")
+        runKSPTest("inheritedTypeAlias.kt")
     }
 
     @TestMetadata("innerTypes.kt")
     @Test
     fun testInnerTypes() {
-        runTest("$AA_PATH/innerTypes.kt")
+        runKSPTest("innerTypes.kt")
     }
 
     @TestMetadata("interfaceWithDefault.kt")
     @Test
     fun testInterfaceWithDefault() {
-        runTest("$AA_PATH/interfaceWithDefault.kt")
+        runKSPTest("interfaceWithDefault.kt")
     }
 
     @TestMetadata("isMutable.kt")
     @Test
     fun testIsMutable() {
-        runTest("$AA_PATH/isMutable.kt")
+        runKSPTest("isMutable.kt")
     }
 
     @Bug("https://github.com/google/ksp/issues/3191", BugState.FIXED)
     @TestMetadata("javaBackingFieldUsedInKotlin.kt")
     @Test
     fun testJavaBackingFieldUsedInKotlin() {
-        runTest("$AA_PATH/javaBackingFieldUsedInKotlin.kt")
+        runKSPTest("javaBackingFieldUsedInKotlin.kt")
     }
 
     @Bug("https://github.com/google/ksp/issues/3123", BugState.OPEN)
@@ -563,33 +619,33 @@ abstract class KSPUnitTestSuite(
     @TestMetadata("javaModifiers.kt")
     @Test
     fun testJavaModifiers() {
-        runTest("$AA_PATH/javaModifiers.kt")
+        runKSPTest("javaModifiers.kt")
     }
 
     @Bug("https://github.com/google/ksp/issues/3124", BugState.FIXED)
     @TestMetadata("javaModifiersJvmStaticAnnotation.kt")
     @Test
     fun testJavaModifiersJvmStaticAnnotation() {
-        runTest("$AA_PATH/javaModifiersJvmStaticAnnotation.kt")
+        runKSPTest("javaModifiersJvmStaticAnnotation.kt")
     }
 
     @TestMetadata("javaNonNullTypes.kt")
     @Test
     fun testJavaNonNullTypes() {
-        runTest("$AA_PATH/javaNonNullTypes.kt")
+        runKSPTest("javaNonNullTypes.kt")
     }
 
     @Bug("https://github.com/google/ksp/issues/3166", BugState.FIXED)
     @TestMetadata("getSymbolsWithAnnotation/javaBackingFieldsParents.kt")
     @Test
     fun testJavaBackingFieldsParents() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/javaBackingFieldsParents.kt")
+        runKSPTest("getSymbolsWithAnnotation/javaBackingFieldsParents.kt")
     }
 
     @TestMetadata("javaSubtype.kt")
     @Test
     fun testJavaSubtype() {
-        runTest("$AA_PATH/javaSubtype.kt")
+        runKSPTest("javaSubtype.kt")
     }
 
     @Bug("https://github.com/google/ksp/issues/2925", BugState.OPEN)
@@ -599,81 +655,81 @@ abstract class KSPUnitTestSuite(
     @TestMetadata("javaToKotlinMapper.kt")
     @Test
     fun testJavaToKotlinMapper() {
-        runTest("$AA_PATH/javaToKotlinMapper.kt")
+        runKSPTest("javaToKotlinMapper.kt")
     }
 
     @TestMetadata("javaTypes.kt")
     @Test
     fun testJavaTypes() {
-        runTest("$AA_PATH/javaTypes.kt")
+        runKSPTest("javaTypes.kt")
     }
 
     @TestMetadata("javaTypes2.kt")
     @Test
     fun testJavaTypes2() {
-        runTest("$AA_PATH/javaTypes2.kt")
+        runKSPTest("javaTypes2.kt")
     }
 
     @TestMetadata("javaWildcards2.kt")
     @Test
     fun testJavaWildcards2() {
-        runTest("$AA_PATH/javaWildcards2.kt")
+        runKSPTest("javaWildcards2.kt")
     }
 
     @TestMetadata("jvmName.kt")
     @Test
     fun testJvmName() {
-        runTest("$AA_PATH/jvmName.kt")
+        runKSPTest("jvmName.kt")
     }
 
     @TestMetadata("jvmNameRecord.kt")
     @Test
     @Bug("https://github.com/google/ksp/issues/2812", BugState.FIXED)
     fun testJvmNameRecord() {
-        runTest("$AA_PATH/jvmNameRecord.kt")
+        runKSPTest("jvmNameRecord.kt")
     }
 
     @Bug("https://github.com/google/ksp/issues/3125", BugState.FIXED)
     @TestMetadata("jvmModifiersCompanionObject.kt")
     @Test
     fun testJvmModifiersCompanionObject() {
-        runTest("$AA_PATH/jvmModifiersCompanionObject.kt")
+        runKSPTest("jvmModifiersCompanionObject.kt")
     }
 
     @TestMetadata("lateinitProperties.kt")
     @Test
     fun testLateinitProperties() {
-        runTest("$AA_PATH/lateinitProperties.kt")
+        runKSPTest("lateinitProperties.kt")
     }
 
     @TestMetadata("libOrigins.kt")
     @Test
     fun testLibOrigins() {
-        runTest("$AA_PATH/libOrigins.kt")
+        runKSPTest("libOrigins.kt")
     }
 
     @TestMetadata("getSymbolsWithAnnotation/localAnnotationClass.kt")
     @Test
     fun testLocalAnnotationClass() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/localAnnotationClass.kt")
+        runKSPTest("getSymbolsWithAnnotation/localAnnotationClass.kt")
     }
 
     @TestMetadata("getSymbolsWithAnnotation/localClasses.kt")
     @Test
     fun testLocalClasses() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/localClasses.kt")
+        runKSPTest("getSymbolsWithAnnotation/localClasses.kt")
     }
 
     @TestMetadata("locations.kt")
     @Test
     fun testLocations() {
-        runTest("$AA_PATH/locations.kt")
+        runKSPTest("locations.kt")
     }
 
     @TestMetadata("makeNullable.kt")
     @Test
     fun testMakeNullable() {
-        runTest("$AA_PATH/makeNullable.kt")
+        runKSPTest("makeNullable.kt")
     }
 
     @TestMetadata("mangledNames.kt")
@@ -684,61 +740,61 @@ abstract class KSPUnitTestSuite(
         "Module names have been aligned across platforms in Kotlin 2.4.0. See KT-69701."
     )
     fun testMangledNames() {
-        runTest("$AA_PATH/mangledNames.kt")
+        runKSPTest("mangledNames.kt")
     }
 
     @TestMetadata("getSymbolsWithAnnotation/metaAnnotations.kt")
     @Test
     fun testMetaAnnotations() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/metaAnnotations.kt")
+        runKSPTest("getSymbolsWithAnnotation/metaAnnotations.kt")
     }
 
     @TestMetadata("multipleModules.kt")
     @Test
     fun testMultipleModules() {
-        runTest("$AA_PATH/multipleModules.kt")
+        runKSPTest("multipleModules.kt")
     }
 
     @TestMetadata("nestedAnnotations.kt")
     @Test
     fun testNestedAnnotations() {
-        runTest("$AA_PATH/nestedAnnotations.kt")
+        runKSPTest("nestedAnnotations.kt")
     }
 
     @TestMetadata("nestedClassType.kt")
     @Test
     fun testNestedClassType() {
-        runTest("$AA_PATH/nestedClassType.kt")
+        runKSPTest("nestedClassType.kt")
     }
 
     @TestMetadata("nullableTypes.kt")
     @Test
     fun testNullableTypes() {
-        runTest("$AA_PATH/nullableTypes.kt")
+        runKSPTest("nullableTypes.kt")
     }
 
     @TestMetadata("overridee/conflictingOverride.kt")
     @Test
     fun testConflictingOverride() {
-        runTest("$AA_PATH/overridee/conflictingOverride.kt")
+        runKSPTest("overridee/conflictingOverride.kt")
     }
 
     @TestMetadata("overridee/javaAccessor.kt")
     @Test
     fun testJavaAccessor() {
-        runTest("$AA_PATH/overridee/javaAccessor.kt")
+        runKSPTest("overridee/javaAccessor.kt")
     }
 
     @TestMetadata("overridee/javaAnno.kt")
     @Test
     fun testJavaAnno() {
-        runTest("$AA_PATH/overridee/javaAnno.kt")
+        runKSPTest("overridee/javaAnno.kt")
     }
 
     @TestMetadata("overridee/javaOverrideInSource.kt")
     @Test
     fun testJavaOverrideInSource() {
-        runTest("$AA_PATH/overridee/javaOverrideInSource.kt")
+        runKSPTest("overridee/javaOverrideInSource.kt")
     }
 
     @Bug(
@@ -749,148 +805,148 @@ abstract class KSPUnitTestSuite(
     @TestMetadata("javaBackingFields.kt")
     @Test
     fun testJavaBackingFields() {
-        runTest("$AA_PATH/javaBackingFields.kt")
+        runKSPTest("javaBackingFields.kt")
     }
 
     @TestMetadata("overridee/noOverride.kt")
     @Test
     fun testNoOverride() {
-        runTest("$AA_PATH/overridee/noOverride.kt")
+        runKSPTest("overridee/noOverride.kt")
     }
 
     @TestMetadata("overridee/overrideInLib.kt")
     @Test
     fun testOverrideInLib() {
-        runTest("$AA_PATH/overridee/overrideInLib.kt")
+        runKSPTest("overridee/overrideInLib.kt")
     }
 
     @TestMetadata("overridee/overrideInSource.kt")
     @Test
     fun testOverrideInSource() {
-        runTest("$AA_PATH/overridee/overrideInSource.kt")
+        runKSPTest("overridee/overrideInSource.kt")
     }
 
     @TestMetadata("overridee/overrideOrder.kt")
     @Test
     fun testOverrideOrder() {
-        runTest("$AA_PATH/overridee/overrideOrder.kt")
+        runKSPTest("overridee/overrideOrder.kt")
     }
 
     @TestMetadata("packageAnnotations.kt")
     @Test
     fun testPackageAnnotation() {
-        runTest("$AA_PATH/packageAnnotations.kt")
+        runKSPTest("packageAnnotations.kt")
     }
 
     @TestMetadata("overridee/primaryConstructorOverride.kt")
     @Test
     fun testPrimaryConstructorOverride() {
-        runTest("$AA_PATH/overridee/primaryConstructorOverride.kt")
+        runKSPTest("overridee/primaryConstructorOverride.kt")
     }
 
     @TestMetadata("parameterTypes.kt")
     @Test
     fun testParameterTypes() {
-        runTest("$AA_PATH/parameterTypes.kt")
+        runKSPTest("parameterTypes.kt")
     }
 
     @Bug("https://github.com/google/ksp/issues/2498", BugState.OPEN)
     @TestMetadata("parentOfJavaMethodOverridingKotlinProperty.kt")
     @Test
     fun testParentOfJavaMethodOverridingKotlinProperty() {
-        runFailingTest("$AA_PATH/parentOfJavaMethodOverridingKotlinProperty.kt")
+        runFailingKSPTest("parentOfJavaMethodOverridingKotlinProperty.kt")
     }
 
     @TestMetadata("parent.kt")
     @Test
     fun testParent() {
-        runTest("$AA_PATH/parent.kt")
+        runKSPTest("parent.kt")
     }
 
     @Disabled
     @TestMetadata("platformDeclaration.kt")
     @Test
     fun testPlatformDeclaration() {
-        runTest("$AA_PATH/platformDeclaration.kt")
+        runKSPTest("platformDeclaration.kt")
     }
 
     @TestMetadata("rawTypes.kt")
     @Test
     fun testRawTypes() {
-        runTest("$AA_PATH/rawTypes.kt")
+        runKSPTest("rawTypes.kt")
     }
 
     @DisabledOnOs(OS.WINDOWS)
     @TestMetadata("recordJavaAnnotationTypes.kt")
     @Test
     fun testRecordJavaAnnotationTypes() {
-        runTest("$AA_PATH/recordJavaAnnotationTypes.kt")
+        runKSPTest("recordJavaAnnotationTypes.kt")
     }
 
     @DisabledOnOs(OS.WINDOWS)
     @TestMetadata("recordJavaAsMemberOf.kt")
     @Test
     fun testRecordJavaAsMemberOf() {
-        runTest("$AA_PATH/recordJavaAsMemberOf.kt")
+        runKSPTest("recordJavaAsMemberOf.kt")
     }
 
     @DisabledOnOs(OS.WINDOWS)
     @TestMetadata("recordJavaGetAllMembers.kt")
     @Test
     fun testRecordJavaGetAllMembers() {
-        runTest("$AA_PATH/recordJavaGetAllMembers.kt")
+        runKSPTest("recordJavaGetAllMembers.kt")
     }
 
     @DisabledOnOs(OS.WINDOWS)
     @TestMetadata("recordJavaOverrides.kt")
     @Test
     fun testRecordJavaOverrides() {
-        runTest("$AA_PATH/recordJavaOverrides.kt")
+        runKSPTest("recordJavaOverrides.kt")
     }
 
     @DisabledOnOs(OS.WINDOWS)
     @TestMetadata("recordJavaResolutions.kt")
     @Test
     fun testRecordJavaResolutions() {
-        runTest("$AA_PATH/recordJavaResolutions.kt")
+        runKSPTest("recordJavaResolutions.kt")
     }
 
     @DisabledOnOs(OS.WINDOWS)
     @TestMetadata("recordJavaSupertypes.kt")
     @Test
     fun testRecordJavaSupertypes() {
-        runTest("$AA_PATH/recordJavaSupertypes.kt")
+        runKSPTest("recordJavaSupertypes.kt")
     }
 
     @TestMetadata("referenceElement.kt")
     @Test
     fun testReferenceElement() {
-        runTest("$AA_PATH/referenceElement.kt")
+        runKSPTest("referenceElement.kt")
     }
 
     @TestMetadata("getSymbolsWithAnnotation/repeatedNonRepeatableAnnotations.kt")
     @Test
     @Bug("https://github.com/google/ksp/issues/2919", BugState.FIXED)
     fun testRepeatedNonRepeatableAnnotations() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/repeatedNonRepeatableAnnotations.kt")
+        runKSPTest("getSymbolsWithAnnotation/repeatedNonRepeatableAnnotations.kt")
     }
 
     @TestMetadata("replaceWithErrorTypeArgs.kt")
     @Test
     fun testReplaceWithErrorTypeArgs() {
-        runTest("$AA_PATH/replaceWithErrorTypeArgs.kt")
+        runKSPTest("replaceWithErrorTypeArgs.kt")
     }
 
     @TestMetadata("resolveJavaType.kt")
     @Test
     fun testResolveJavaType() {
-        runTest("$AA_PATH/resolveJavaType.kt")
+        runKSPTest("resolveJavaType.kt")
     }
 
     @TestMetadata("sealedClass.kt")
     @Test
     fun testSealedClass() {
-        runTest("$AA_PATH/sealedClass.kt")
+        runKSPTest("sealedClass.kt")
     }
 
     @TestMetadata("javaWildcardsSelfReferencing.kt")
@@ -898,159 +954,159 @@ abstract class KSPUnitTestSuite(
     @Bug("https://github.com/google/ksp/issues/1729", BugState.FIXED)
     @Bug("https://github.com/google/ksp/issues/1705", BugState.FIXED)
     fun testJavaWildcardsSelfReferencing() {
-        runTest("$AA_PATH/javaWildcardsSelfReferencing.kt")
+        runKSPTest("javaWildcardsSelfReferencing.kt")
     }
 
     @TestMetadata("getSymbolsWithAnnotation/shadowingAnnotations.kt")
     @Test
     fun testShadowingAnnotations() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/shadowingAnnotations.kt")
+        runKSPTest("getSymbolsWithAnnotation/shadowingAnnotations.kt")
     }
 
     @TestMetadata("signatureMapper.kt")
     @Test
     fun testSignatureMapper() {
-        runTest("$AA_PATH/signatureMapper.kt")
+        runKSPTest("signatureMapper.kt")
     }
 
     @TestMetadata("superTypes.kt")
     @Test
     fun testSuperTypes() {
-        runTest("$AA_PATH/superTypes.kt")
+        runKSPTest("superTypes.kt")
     }
 
     @TestMetadata("throwList.kt")
     @Test
     fun testThrowList() {
-        runTest("$AA_PATH/throwList.kt")
+        runKSPTest("throwList.kt")
     }
 
     @TestMetadata("topLevelMembers.kt")
     @Test
     fun testTopLevelMembers() {
-        runTest("$AA_PATH/topLevelMembers.kt")
+        runKSPTest("topLevelMembers.kt")
     }
 
     @TestMetadata("typeAlias.kt")
     @Test
     fun testTypeAlias() {
-        runTest("$AA_PATH/typeAlias.kt")
+        runKSPTest("typeAlias.kt")
     }
 
     @TestMetadata("nestedTypeAlias.kt")
     @Test
     fun testNestedTypeAlias() {
-        runTest("$AA_PATH/nestedTypeAlias.kt")
+        runKSPTest("nestedTypeAlias.kt")
     }
 
     @TestMetadata("typeAliasComparison.kt")
     @Test
     fun testTypeAliasComparison() {
-        runTest("$AA_PATH/typeAliasComparison.kt")
+        runKSPTest("typeAliasComparison.kt")
     }
 
     @TestMetadata("typeComposure.kt")
     @Test
     fun testTypeComposure() {
-        runTest("$AA_PATH/typeComposure.kt")
+        runKSPTest("typeComposure.kt")
     }
 
     @TestMetadata("typeComparison2.kt")
     @Test
     fun testTypeComparison2() {
-        runTest("$AA_PATH/typeComparison2.kt")
+        runKSPTest("typeComparison2.kt")
     }
 
     @TestMetadata("typeParameterReference.kt")
     @Test
     fun testTypeParameterReference() {
-        runTest("$AA_PATH/typeParameterReference.kt")
+        runKSPTest("typeParameterReference.kt")
     }
 
     @TestMetadata("typeParameterVariance.kt")
     @Test
     fun testTypeParameterVariance() {
-        runTest("$AA_PATH/typeParameterVariance.kt")
+        runKSPTest("typeParameterVariance.kt")
     }
 
     @TestMetadata("getSymbolsWithAnnotation/useSiteTargets.kt")
     @Test
     fun testUseSiteTargets() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/useSiteTargets.kt")
+        runKSPTest("getSymbolsWithAnnotation/useSiteTargets.kt")
     }
 
     @TestMetadata("valueParameter.kt")
     @Test
     fun testValueParameter() {
-        runTest("$AA_PATH/valueParameter.kt")
+        runKSPTest("valueParameter.kt")
     }
 
-    @Bug("https://github.com/google/ksp/issues/3271", BugState.OPEN)
+    @Bug("https://github.com/google/ksp/issues/3271", BugState.FIXED)
     @TestMetadata("varargAnnotationApplication.kt")
     @Test
     fun testVarargAnnotationApplication() {
-        runFailingTest("$AA_PATH/varargAnnotationApplication.kt")
+        runKSPTest("varargAnnotationApplication.kt")
     }
 
     @TestMetadata("varianceTypeCheck.kt")
     @Test
     fun testVarianceTypeCheck() {
-        runTest("$AA_PATH/varianceTypeCheck.kt")
+        runKSPTest("varianceTypeCheck.kt")
     }
 
     @TestMetadata("validateTypes.kt")
     @Test
     fun testValidateTypes() {
-        runTest("$AA_PATH/validateTypes.kt")
+        runKSPTest("validateTypes.kt")
     }
 
     @TestMetadata("vararg.kt")
     @Test
     fun testVararg() {
-        runTest("$AA_PATH/vararg.kt")
+        runKSPTest("vararg.kt")
     }
 
     @TestMetadata("visibilities.kt")
     @Test
     fun testVisibilities() {
-        runTest("$AA_PATH/visibilities.kt")
+        runKSPTest("visibilities.kt")
     }
 
     @TestMetadata("multipleround.kt")
     @Test
     fun testMultipleround() {
-        runTest("$AA_PATH/multipleround.kt")
+        runKSPTest("multipleround.kt")
     }
 
     @TestMetadata("deferredSymbols.kt")
     @Test
     fun testDeferredSymbols() {
-        runTest("$AA_PATH/deferredSymbols.kt")
+        runKSPTest("deferredSymbols.kt")
     }
 
     @TestMetadata("deferredJavaSymbols.kt")
     @Test
     fun testDeferredJavaSymbols() {
-        runTest("$AA_PATH/deferredJavaSymbols.kt")
+        runKSPTest("deferredJavaSymbols.kt")
     }
 
     @Disabled
     @TestMetadata("deferredTypeRefs.kt")
     @Test
     fun testDeferredTypeRefs() {
-        runTest("$AA_PATH/deferredTypeRefs.kt")
+        runKSPTest("deferredTypeRefs.kt")
     }
 
     @TestMetadata("exitCode.kt")
     @Test
     fun testExitCode() {
-        runTest("$AA_PATH/exitCode.kt")
+        runKSPTest("exitCode.kt")
     }
 
     @TestMetadata("packageProviderForGenerated.kt")
     @Test
     fun testPackageProviderForGenerated() {
-        runTest("$AA_PATH/packageProviderForGenerated.kt")
+        runKSPTest("packageProviderForGenerated.kt")
     }
 
     @TestMetadata("typeAnnotationClassReference.kt")
@@ -1062,41 +1118,65 @@ abstract class KSPUnitTestSuite(
         "The toString method of KSValueArgument has a circular call chain leading to a stack overflow."
     )
     fun testTypeAnnotationClassReference() {
-        runTest("$AA_PATH/typeAnnotationClassReference.kt")
+        runKSPTest("typeAnnotationClassReference.kt")
     }
 
-    @Bug("https://github.com/google/ksp/issues/3242", BugState.OPEN)
+    @Bug("https://github.com/google/ksp/issues/3242", BugState.FIXED)
     @TestMetadata("typeParameterBoundTypeAlias.kt")
     @Test
     fun testTypeParameterBoundTypeAlias() {
-        runFailingTest("$AA_PATH/typeParameterBoundTypeAlias.kt")
+        runKSPTest("typeParameterBoundTypeAlias.kt")
     }
 
     @TestMetadata("native/nativeTest.kt")
     @Test
     fun testNativeTest() {
-        runTest("$AA_PATH/native/nativeTest.kt")
+        runKSPTest("native/nativeTest.kt")
     }
 
     @Bug("https://github.com/google/ksp/issues/2396", BugState.FIXED)
     @TestMetadata("native/packageDeclarations.kt")
     @Test
     fun testNativePackageDeclarations() {
-        runTest("$AA_PATH/native/packageDeclarations.kt")
+        runKSPTest("native/packageDeclarations.kt")
     }
 
     @Bug("https://github.com/google/ksp/issues/2396", BugState.FIXED)
     @TestMetadata("native/packageDeclarationsMultiRound.kt")
     @Test
     fun testNativePackageDeclarationsMultiRound() {
-        runTest("$AA_PATH/native/packageDeclarationsMultiRound.kt")
+        runKSPTest("native/packageDeclarationsMultiRound.kt")
     }
 
     @Bug("https://github.com/google/ksp/issues/2356", BugState.FIXED)
     @TestMetadata("native/annotationDefaultValue.kt")
     @Test
     fun testNativeAnnotationDefaultValue() {
-        runTest("$AA_PATH/native/annotationDefaultValue.kt")
+        runKSPTest("native/annotationDefaultValue.kt")
+    }
+
+    @Bug(
+        "https://github.com/google/ksp/issues/3233",
+        BugState.FIXED,
+        "Covers the default value types of native/annotationDefaultValue.kt in depth, including parameters " +
+            "without default values and annotations applied inside the library"
+    )
+    @TestMetadata("native/annotationDefaultValueTypes.kt")
+    @Test
+    fun testNativeAnnotationDefaultValueTypes() {
+        runKSPTest("native/annotationDefaultValueTypes.kt")
+    }
+
+    @Bug(
+        "https://github.com/google/ksp/issues/3233",
+        BugState.FIXED,
+        "Asserts that on JVM, parameters without default values (including array parameters) are absent " +
+            "from defaultArguments, matching Native behavior."
+    )
+    @TestMetadata("annotationDefaultValueTypes.kt")
+    @Test
+    fun testAnnotationDefaultValueTypes() {
+        runKSPTest("annotationDefaultValueTypes.kt")
     }
 
     @Bug(
@@ -1107,20 +1187,20 @@ abstract class KSPUnitTestSuite(
     @TestMetadata("packageDeclarations.kt")
     @Test
     fun testPackageDeclarations() {
-        runTest("$AA_PATH/packageDeclarations.kt")
+        runKSPTest("packageDeclarations.kt")
     }
 
     @Bug("https://github.com/google/ksp/issues/3140", BugState.FIXED)
     @TestMetadata("pluginProblemReporter.kt")
     @Test
     fun testPluginProblemReporter() {
-        runTest("$AA_PATH/pluginProblemReporter.kt")
+        runKSPTest("pluginProblemReporter.kt")
     }
 
     @TestMetadata("expectDifferentOutput.kt")
     @Test
     fun testExpectDifferentOutput() {
-        runTest("$AA_PATH/expectDifferentOutput.kt")
+        runKSPTest("expectDifferentOutput.kt")
     }
 
     @TestMetadata("expectDifferentOutputFailingOnCurrent.kt")
@@ -1129,9 +1209,9 @@ abstract class KSPUnitTestSuite(
         // N.B.: This test is supposed to fail on one configuration.
         // It asserts that the test output actually varies depending on the configuration.
         if (!apiFeatures.enableBackingFields && !apiFeatures.enableContextParameters) {
-            runFailingTest("$AA_PATH/expectDifferentOutputFailingOnCurrent.kt")
+            runFailingKSPTest("expectDifferentOutputFailingOnCurrent.kt")
         } else {
-            runTest("$AA_PATH/expectDifferentOutputFailingOnCurrent.kt")
+            runKSPTest("expectDifferentOutputFailingOnCurrent.kt")
         }
     }
 
@@ -1141,9 +1221,9 @@ abstract class KSPUnitTestSuite(
         // N.B.: This test is supposed to fail on one configuration.
         // It asserts that the test output actually varies depending on the configuration.
         if (apiFeatures.enableBackingFields && !apiFeatures.enableContextParameters) {
-            runFailingTest("$AA_PATH/expectDifferentOutputFailingOnBackingFields.kt")
+            runFailingKSPTest("expectDifferentOutputFailingOnBackingFields.kt")
         } else {
-            runTest("$AA_PATH/expectDifferentOutputFailingOnBackingFields.kt")
+            runKSPTest("expectDifferentOutputFailingOnBackingFields.kt")
         }
     }
 
@@ -1153,9 +1233,9 @@ abstract class KSPUnitTestSuite(
         // N.B.: This test is supposed to fail on one configuration.
         // It asserts that the test output actually varies depending on the configuration.
         if (!apiFeatures.enableBackingFields && apiFeatures.enableContextParameters) {
-            runFailingTest("$AA_PATH/expectDifferentOutputFailingOnContextParameters.kt")
+            runFailingKSPTest("expectDifferentOutputFailingOnContextParameters.kt")
         } else {
-            runTest("$AA_PATH/expectDifferentOutputFailingOnContextParameters.kt")
+            runKSPTest("expectDifferentOutputFailingOnContextParameters.kt")
         }
     }
 
@@ -1165,9 +1245,9 @@ abstract class KSPUnitTestSuite(
         // N.B.: This test is supposed to fail on one configuration.
         // It asserts that the test output actually varies depending on the configuration.
         if (apiFeatures.enableBackingFields && apiFeatures.enableContextParameters) {
-            runFailingTest("$AA_PATH/expectDifferentOutputFailingOnNext.kt")
+            runFailingKSPTest("expectDifferentOutputFailingOnNext.kt")
         } else {
-            runTest("$AA_PATH/expectDifferentOutputFailingOnNext.kt")
+            runKSPTest("expectDifferentOutputFailingOnNext.kt")
         }
     }
 }
