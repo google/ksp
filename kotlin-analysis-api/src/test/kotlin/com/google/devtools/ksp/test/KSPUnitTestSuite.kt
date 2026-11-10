@@ -356,7 +356,7 @@ abstract class KSPUnitTestSuite(
     @Test
     @Negative("A dangling context(...) modifier list with no following declaration is a syntax error.")
     fun testContextParameterDangling() {
-        runKSPTest("/getSymbolsWithAnnotation/negative/contextParameterDangling.kt")
+        runKSPTest("getSymbolsWithAnnotation/negative/contextParameterDangling.kt")
     }
 
     @TestMetadata("declarationInconsistency.kt")
