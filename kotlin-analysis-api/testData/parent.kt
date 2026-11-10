@@ -33,9 +33,9 @@
 // parent of B: File: B.java
 // parent of T: (T..T?)
 // parent of (T..T?): t
-// EXPECT NEXT: parent of T: (T..T?)
-// EXPECT NEXT: parent of (T..T?): field
-// EXPECT NEXT: parent of field: t
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: parent of T: (T..T?)
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: parent of (T..T?): field
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: parent of field: t
 // parent of t: B
 // parent of T: (T..T?)
 // parent of (T..T?): t
@@ -83,12 +83,12 @@
 // parent of List<INVARIANT Int>: List<INVARIANT Int>
 // parent of List<INVARIANT Int>: topProp.getter()
 // parent of topProp.getter(): topProp
-// EXPECT NEXT: parent of Int: Int
-// EXPECT NEXT: parent of Int: INVARIANT Int
-// EXPECT NEXT: parent of INVARIANT Int: List<INVARIANT Int>
-// EXPECT NEXT: parent of List<INVARIANT Int>: List<Int>?
-// EXPECT NEXT: parent of List<Int>?: field
-// EXPECT NEXT: parent of field: topProp
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: parent of Int: Int
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: parent of Int: INVARIANT Int
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: parent of INVARIANT Int: List<INVARIANT Int>
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: parent of List<INVARIANT Int>: List<Int>?
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: parent of List<Int>?: field
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: parent of field: topProp
 // parent of Anno: Anno
 // parent of Anno: @Anno
 // parent of @Anno: topProp
@@ -101,6 +101,27 @@
 // parent of Anno: @Anno
 // parent of @Anno: topFun
 // parent of topFun: File: a.kt
+// parent of Int: Int
+// parent of Int: ctxFun
+// EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: parent of ITF: ITF
+// EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: parent of ITF: ctxFunParam
+// EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: parent of Anno: Anno
+// EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: parent of Anno: @Anno
+// EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: parent of @Anno: ctxFunParam
+// EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: parent of ctxFunParam: ctxFun
+// parent of ctxFun: File: a.kt
+// parent of Int: Int
+// parent of Int: ctxProp
+// parent of Int: Int
+// parent of Int: ctxProp.getter()
+// parent of ctxProp.getter(): ctxProp
+// EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: parent of ITF: ITF
+// EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: parent of ITF: ctxPropParam
+// EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: parent of Anno: Anno
+// EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: parent of Anno: @Anno
+// EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: parent of @Anno: ctxPropParam
+// EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: parent of ctxPropParam: ctxProp
+// parent of ctxProp: File: a.kt
 // parent of Annotation: Annotation
 // parent of Annotation: Anno
 // parent of Anno: File: a.kt
@@ -108,9 +129,9 @@
 // parent of String: param
 // parent of String: param.getter()
 // parent of param.getter(): param
-// EXPECT NEXT: parent of String: String
-// EXPECT NEXT: parent of String: field
-// EXPECT NEXT: parent of field: param
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: parent of String: String
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: parent of String: field
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: parent of field: param
 // parent of param: Anno
 // parent of String: String
 // parent of String: param
@@ -151,9 +172,9 @@
 // parent of Int: Int
 // parent of Int: a.getter()
 // parent of a.getter(): a
-// EXPECT NEXT: parent of Int: Int
-// EXPECT NEXT: parent of Int: field
-// EXPECT NEXT: parent of field: a
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: parent of Int: Int
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: parent of Int: field
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: parent of field: a
 // parent of a: topClass
 // parent of String: String
 // parent of String: b
@@ -163,9 +184,9 @@
 // parent of String: value
 // parent of value: b.setter()
 // parent of b.setter(): b
-// EXPECT NEXT: parent of String: String
-// EXPECT NEXT: parent of String: field
-// EXPECT NEXT: parent of field: b
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: parent of String: String
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: parent of String: field
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: parent of field: b
 // parent of b: topClass
 // parent of topClass: synthetic constructor for topClass
 // parent of synthetic constructor for topClass: topClass
@@ -310,6 +331,12 @@ class topClass: ITF {
 enum class CMYK {
     C, M, Y, K
 }
+
+context(@Anno ctxFunParam: ITF)
+fun ctxFun(): Int = 1
+
+context(@Anno ctxPropParam: ITF)
+val ctxProp: Int get() = 1
 
 // FILE: Bnno.kt
 package p

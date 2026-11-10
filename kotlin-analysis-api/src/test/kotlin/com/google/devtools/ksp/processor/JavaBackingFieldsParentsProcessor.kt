@@ -17,13 +17,14 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSNode
 
-class JavaBackingFieldsParentsProcessor(val annotationNames: List<String>, override val enableNewFeatures: Boolean) :
+class JavaBackingFieldsParentsProcessor(val annotationNames: List<String>, override val apiFeatures: ApiFeatures) :
     AbstractTestProcessor() {
     val results = mutableListOf<String>()
 

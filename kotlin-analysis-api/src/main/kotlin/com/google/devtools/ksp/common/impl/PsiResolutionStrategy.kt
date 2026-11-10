@@ -17,7 +17,9 @@
 
 package com.google.devtools.ksp.common.impl
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.InternalKSPException
+import com.google.devtools.ksp.buildApiFeatures
 import com.google.devtools.ksp.common.visitor.CollectAnnotatedSymbolsPsiVisitor
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.FileCache
@@ -45,6 +47,7 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.AnnotationUseSiteTarget
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSBackingField
+import com.google.devtools.ksp.symbol.KSContextParameter
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -77,8 +80,10 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
+import org.jetbrains.kotlin.psi.KtContextReceiverList
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.psiUtil.parameterIndex
 import org.jetbrains.kotlin.utils.addToStdlib.flatGroupBy
@@ -94,18 +99,32 @@ class PsiResolutionStrategy(
     override val deferredSymbols: Map<SymbolProcessor, List<Restorable>>
 ) : AnnotationResolutionStrategy {
 
+    data class CacheConfigurationKey(
+        override val enableBackingFields: Boolean,
+        override val enableContextParameters: Boolean
+    ) : ApiFeatures {
+        companion object {
+            @JvmStatic
+            fun from(apiFeatures: ApiFeatures): CacheConfigurationKey = CacheConfigurationKey(
+                // TODO: Memoize these configurations
+                enableBackingFields = apiFeatures.enableBackingFields,
+                enableContextParameters = apiFeatures.enableContextParameters
+            )
+        }
+    }
+
     /**
      * Returns all symbols annotated with [annotationName].
      */
     override fun getSymbolsWithAnnotation(
         annotationName: String,
         inDepth: Boolean,
-        enableNewFeatures: Boolean
+        apiFeatures: ApiFeatures
     ): Sequence<KSAnnotated> =
         if (inDepth)
-            aaResolutionStrategy.getSymbolsWithAnnotation(annotationName, inDepth = true, enableNewFeatures)
+            aaResolutionStrategy.getSymbolsWithAnnotation(annotationName, inDepth = true, apiFeatures = apiFeatures)
         else
-            getAnnotatedSymbols(annotationName, enableNewFeatures)
+            getAnnotatedSymbols(annotationName, CacheConfigurationKey.from(apiFeatures))
 
     /**
      * Calls to [getSymbolsWithAnnotation] with `inDepth = true` are
@@ -124,10 +143,10 @@ class PsiResolutionStrategy(
      */
     private fun getAnnotatedSymbols(
         annotationName: String,
-        enableNewFeatures: Boolean
+        cacheConfigurationKey: CacheConfigurationKey
     ): Sequence<KSAnnotated> =
-        getAnnotatedJavaSymbols(annotationName, enableNewFeatures) +
-            getAnnotatedKotlinSymbols(annotationName, enableNewFeatures) +
+        getAnnotatedJavaSymbols(annotationName, cacheConfigurationKey) +
+            getAnnotatedKotlinSymbols(annotationName, cacheConfigurationKey) +
             getRestoredSymbols(annotationName)
 
     /**
@@ -135,33 +154,24 @@ class PsiResolutionStrategy(
      */
     private fun getAnnotatedKotlinSymbols(
         annotationName: String,
-        enableNewFeatures: Boolean
-    ): Sequence<KSAnnotated> {
-        val cache = if (enableNewFeatures) {
-            annotatedKotlinSymbolsByFqnWithNewFeatures
-        } else {
-            annotatedKotlinSymbolsByFqn
-        }
-        val newKotlinSymbols = cache[annotationName]?.value ?: emptyList()
-        return newKotlinSymbols.asSequence()
-    }
+        cacheConfigurationKey: CacheConfigurationKey
+    ): Sequence<KSAnnotated> =
+        annotatedKotlinSymbolsByFqnCache.getOrPut(cacheConfigurationKey) {
+            resolveAnnotatedKotlinSymbols(apiFeatures = cacheConfigurationKey)
+        }[annotationName]?.value?.asSequence() ?: emptySequence()
 
     /**
      * Returns the Java symbols annotated with the fully qualified name [annotationName].
      */
     private fun getAnnotatedJavaSymbols(
         annotationName: String,
-        enableNewFeatures: Boolean
-    ): Sequence<KSAnnotated> {
-        val cache = if (enableNewFeatures) {
-            annotatedJavaElementsByFullyQualifiedNameWithNewFeatures
-        } else {
-            annotatedJavaElementsByFullyQualifiedName
-        }
-        return cache.getOrPut(annotationName) {
-            resolveJavaAnnotationByShortName(annotationName, enableNewFeatures)
-        }.asSequence()
-    }
+        cacheConfigurationKey: CacheConfigurationKey
+    ): Sequence<KSAnnotated> =
+        annotatedJavaElementsByFullyQualifiedNameCache
+            .getOrPut(cacheConfigurationKey, ::mutableMapOf)
+            .getOrPut(annotationName) {
+                resolveJavaAnnotationByShortName(annotationName, cacheConfigurationKey)
+            }.asSequence()
 
     /**
      * Returns the [deferredSymbols] that are annotated with [annotationName].
@@ -186,14 +196,14 @@ class PsiResolutionStrategy(
      */
     private fun resolveJavaAnnotationByShortName(
         annotationName: String,
-        enableNewFeatures: Boolean
+        apiFeatures: ApiFeatures
     ): Collection<KSAnnotated> {
         val annotationShortName = annotationName.substringAfterLast('.')
         return annotatedJavaElementsByShortName[annotationShortName]?.filter { element ->
             val annotationsForElement = fullyQualifiedJavaAnnotationNamesByElements[element] ?: emptyMap()
             annotationsForElement[annotationShortName]?.value?.contains(annotationName) ?: false
         }?.flatMap {
-            it.resolveToKSAnnotated(enableNewFeatures = enableNewFeatures)
+            it.resolveToKSAnnotated(apiFeatures = apiFeatures)
         } ?: emptyList()
     }
 
@@ -276,13 +286,7 @@ class PsiResolutionStrategy(
      *
      * @see [annotatedKotlinElementsByFullyQualifiedName] for further explanation.
      */
-    private val annotatedJavaElementsByFullyQualifiedName: MutableMap<String, Collection<KSAnnotated>> =
-        mutableMapOf()
-
-    /**
-     * This map is equivalent to [annotatedJavaElementsByFullyQualifiedName], but also has new features enabled.
-     */
-    private val annotatedJavaElementsByFullyQualifiedNameWithNewFeatures: MutableMap<String, Collection<KSAnnotated>> =
+    private val annotatedJavaElementsByFullyQualifiedNameCache: MutableMap<CacheConfigurationKey, MutableMap<String, Collection<KSAnnotated>>> =
         mutableMapOf()
 
     /**
@@ -331,25 +335,17 @@ class PsiResolutionStrategy(
         }
     }
 
-    private fun resolveAnnotatedKotlinSymbols(enableNewFeatures: Boolean): Map<String, Lazy<List<KSAnnotated>>> =
+    private fun resolveAnnotatedKotlinSymbols(apiFeatures: ApiFeatures): Map<String, Lazy<List<KSAnnotated>>> =
         annotatedKotlinElementsByFullyQualifiedName.mapValues { entry ->
             lazy {
                 entry.value.flatMap { (annotated, annotationEntry) ->
-                    annotated.resolveToKSAnnotated(annotationEntry, enableNewFeatures)
+                    annotated.resolveToKSAnnotated(annotationEntry, apiFeatures)
                 }.distinct()
             }
         }
 
-    private val annotatedKotlinSymbolsByFqn: Map<String, Lazy<List<KSAnnotated>>> by lazy {
-        resolveAnnotatedKotlinSymbols(enableNewFeatures = false)
-    }
-
-    /**
-     * This map is equivalent to [annotatedKotlinSymbolsByFqn], but also has new features enabled.
-     */
-    private val annotatedKotlinSymbolsByFqnWithNewFeatures: Map<String, Lazy<List<KSAnnotated>>> by lazy {
-        resolveAnnotatedKotlinSymbols(enableNewFeatures = true)
-    }
+    private val annotatedKotlinSymbolsByFqnCache: MutableMap<CacheConfigurationKey, Map<String, Lazy<List<KSAnnotated>>>> =
+        mutableMapOf()
 
     /**
      * Resolves the [ClassId] for a given [KtAnnotationEntry].
@@ -445,7 +441,7 @@ class PsiResolutionStrategy(
      */
     private fun PsiElement.resolveToKSAnnotated(
         annotation: KtAnnotationEntry? = null,
-        enableNewFeatures: Boolean,
+        apiFeatures: ApiFeatures
     ): Collection<KSAnnotated> =
         when (val element = this@resolveToKSAnnotated) {
             // Kotlin sources
@@ -457,7 +453,7 @@ class PsiResolutionStrategy(
                         javaClass
                     )
                 }
-                element.resolve(annotation, enableNewFeatures)
+                element.resolve(annotation, apiFeatures)
             }
 
             is KtFile ->
@@ -477,7 +473,7 @@ class PsiResolutionStrategy(
                 listOf(element.resolve())
 
             is PsiField -> element.resolveToProperty().let {
-                if (enableNewFeatures) {
+                if (apiFeatures.enableBackingFields) {
                     listOf(it, element.resolveToField(it))
                 } else {
                     listOf(it)
@@ -500,20 +496,34 @@ class PsiResolutionStrategy(
      */
     private fun KtDeclaration.resolve(
         annotationEntry: KtAnnotationEntry,
-        enableNewFeatures: Boolean
+        apiFeatures: ApiFeatures
     ): Collection<KSAnnotated> {
+        // N.B.: Context parameters are filtered on PSI *before* resolution, since resolving them is only
+        // well-defined when they belong to a declaration.
+        if (this is KtParameter && this.isContextParameter) {
+            if (!apiFeatures.enableContextParameters) {
+                return emptyList()
+            }
+            // N.B.: Mirror AA implementation: A dangling `context(...)` modifier list (erroneous code that is not
+            // followed by a declaration) is not a declaration, so the AA strategy never visits its parameters.
+            val isMissingOwningDeclaration = (parent as? KtContextReceiverList)?.ownerDeclaration == null
+            if (isMissingOwningDeclaration) {
+                return emptyList()
+            }
+        }
         // TODO: This should perform case distinction instead of getTargetedSymbol
         val ksSym = analyze { symbol.toKSAnnotated() }
-        return when {
-            ksSym is KSPropertyDeclaration && enableNewFeatures -> targetFieldFix.resolveKSPropertyDeclaration(
+        return when (ksSym) {
+            is KSPropertyDeclaration if apiFeatures.enableBackingFields -> targetFieldFix.resolveKSPropertyDeclaration(
                 ksSym,
-                annotationEntry
+                annotationEntry,
+                apiFeatures
             )
 
             // N.B.: Mirror AA implementation: Return the owning property of the backing field if the feature is disabled.
-            ksSym is KSBackingField && !enableNewFeatures -> listOf(ksSym.property)
-
-            else -> ksSym.findTargetedSymbol(annotationEntry.ksUseSiteTarget, enableNewFeatures)
+            is KSBackingField if !apiFeatures.enableBackingFields -> listOf(ksSym.property)
+            is KSContextParameter -> listOf(ksSym)
+            else -> ksSym.findTargetedSymbol(annotationEntry.ksUseSiteTarget, apiFeatures)
         }
     }
 
@@ -628,7 +638,7 @@ class PsiResolutionStrategy(
      */
     private fun KSAnnotated.findTargetedSymbol(
         useSiteTarget: AnnotationUseSiteTarget?,
-        enableNewFeatures: Boolean = false,
+        apiFeatures: ApiFeatures
     ): Collection<KSAnnotated> =
         when (useSiteTarget) {
             null -> when (this) {
@@ -685,7 +695,7 @@ class PsiResolutionStrategy(
 
             AnnotationUseSiteTarget.FIELD -> when (this) {
                 is KSValueParameter -> {
-                    if (enableNewFeatures) {
+                    if (apiFeatures.enableBackingFields) {
                         listOf(
                             this.getGeneratedProperty()?.backingField ?: throw InternalKSPException(
                                 "Unexpected missing backing field for parameter",
@@ -705,7 +715,7 @@ class PsiResolutionStrategy(
                 }
 
                 is KSPropertyDeclaration -> {
-                    if (enableNewFeatures) {
+                    if (apiFeatures.enableBackingFields) {
                         listOf(
                             this.backingField ?: throw InternalKSPException(
                                 "Unexpected missing backing field for property",
@@ -813,7 +823,7 @@ class PsiResolutionStrategy(
                     buildList {
                         add(this@findTargetedSymbol)
                         this@findTargetedSymbol.getGeneratedProperty()
-                            ?.findTargetedSymbol(useSiteTarget, enableNewFeatures)
+                            ?.findTargetedSymbol(useSiteTarget, apiFeatures)
                             ?.let { symbols ->
                                 symbols.forEach { addIfNotNull(it) }
                             }
@@ -827,7 +837,7 @@ class PsiResolutionStrategy(
                         addIfNotNull(this@findTargetedSymbol.getter)
                         addIfNotNull(this@findTargetedSymbol.setter)
                         addIfNotNull(this@findTargetedSymbol.setter?.parameter)
-                        if (enableNewFeatures) {
+                        if (apiFeatures.enableBackingFields) {
                             addIfNotNull(this@findTargetedSymbol.backingField)
                         }
                     }
@@ -962,12 +972,18 @@ class PsiResolutionStrategy(
          */
         fun resolveKSPropertyDeclaration(
             ksPropDecl: KSPropertyDeclaration,
-            annotation: KtAnnotationEntry
+            annotation: KtAnnotationEntry,
+            apiFeatures: ApiFeatures
         ): Collection<KSAnnotated> =
             when {
                 annotation.ksUseSiteTarget != null -> ksPropDecl.findTargetedSymbol(
                     annotation.ksUseSiteTarget,
-                    enableNewFeatures = true
+                    // apiFeatures = apiFeatures
+                    // TODO: Pass parameter instead of hardcoded literal or at least document why we are passing literal
+                    apiFeatures = buildApiFeatures {
+                        enableBackingFields = true
+                        enableContextParameters = true
+                    }
                 )
 
                 canBeAppliedTo(annotation, ANNOTATION_TARGET_PROPERTY_ENTRY) -> {

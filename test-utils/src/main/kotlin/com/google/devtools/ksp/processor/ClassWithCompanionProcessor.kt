@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
@@ -24,7 +25,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 
-class ClassWithCompanionProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
+class ClassWithCompanionProcessor(override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
     val results = mutableListOf<String>()
     val visitor = CompanionVisitor()
 
@@ -38,7 +39,7 @@ class ClassWithCompanionProcessor(override val enableNewFeatures: Boolean) : Abs
         return results
     }
 
-    inner class CompanionVisitor : KSVisitorVoid(enableNewFeatures) {
+    inner class CompanionVisitor : KSVisitorVoid(apiFeatures) {
         override fun visitFile(file: KSFile, data: Unit) {
             file.declarations.forEach { it.accept(this, Unit) }
         }

@@ -17,11 +17,12 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.visitor.KSTopDownVisitor
 
-class DeclarationPackageNameProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+class DeclarationPackageNameProcessor(override val apiFeatures: ApiFeatures): AbstractTestProcessor() {
     val result = mutableListOf<String>()
 
     override fun toResult(): List<String> {
@@ -29,7 +30,7 @@ class DeclarationPackageNameProcessor(override val enableNewFeatures: Boolean): 
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val visitor = NameCollector(enableNewFeatures)
+        val visitor = NameCollector(apiFeatures)
         resolver.getNewFiles().forEach { it.accept(visitor, result) }
         listOf("lib.H1", "K1", "J1").mapNotNull {
             resolver.getClassDeclarationByName(resolver.getKSNameFromString(it))
@@ -40,7 +41,7 @@ class DeclarationPackageNameProcessor(override val enableNewFeatures: Boolean): 
     }
 }
 
-class NameCollector(enableNewFeatures: Boolean) : KSTopDownVisitor<MutableCollection<String>, Unit>(enableNewFeatures) {
+class NameCollector(apiFeatures: ApiFeatures) : KSTopDownVisitor<MutableCollection<String>, Unit>(apiFeatures) {
 
     override fun defaultHandler(node: KSNode, data: MutableCollection<String>) {}
 

@@ -54,6 +54,12 @@ class SymbolProcessorEnvironment(
      * [SymbolProcessorProvider] immediately after creating the processor.
      * Once a processor has called this lambda, it cannot unregister again.
      */
+    @Deprecated(
+        message = "registerProcessorForNewFeatures is deprecated in favor of overriding SymbolProcessor.apiFeatures.\n" +
+            "Your SymbolProcessor should override its parent SymbolProcessor.apiFeatures property " +
+            "(e.g., using buildApiFeatures) to configure API features such as backing fields and context parameters, " +
+            "and share that property across all KSP interactions."
+    )
     val registerProcessorForNewFeatures: (SymbolProcessor) -> Unit
 ) {
 

@@ -17,9 +17,11 @@
 
 package com.google.devtools.ksp.common.visitor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSBackingField
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSContextParameter
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
@@ -31,8 +33,8 @@ import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 
 // TODO: Make visitor a generator
-class CollectAnnotatedSymbolsVisitor(private val inDepth: Boolean, enableNewFeatures: Boolean) :
-    KSVisitorVoid(enableNewFeatures) {
+class CollectAnnotatedSymbolsVisitor(private val inDepth: Boolean, apiFeatures: ApiFeatures) :
+    KSVisitorVoid(apiFeatures) {
 
     val symbols = arrayListOf<KSAnnotated>()
 
@@ -75,6 +77,9 @@ class CollectAnnotatedSymbolsVisitor(private val inDepth: Boolean, enableNewFeat
         visitAnnotated(function, data)
         function.typeParameters.forEach { it.accept(this, data) }
         function.parameters.forEach { it.accept(this, data) }
+        if (apiFeatures.enableContextParameters) {
+            function.contextParameters.forEach { it.accept(this, data) }
+        }
         if (inDepth) {
             function.declarations.forEach { it.accept(this, data) }
         }
@@ -85,17 +90,28 @@ class CollectAnnotatedSymbolsVisitor(private val inDepth: Boolean, enableNewFeat
         property.typeParameters.forEach { it.accept(this, data) }
         property.getter?.accept(this, data)
         property.setter?.accept(this, data)
-        if (enableNewFeatures) {
+        if (apiFeatures.enableBackingFields) {
             property.backingField?.accept(this, data)
+        }
+        if (apiFeatures.enableContextParameters) {
+            property.contextParameters.forEach { it.accept(this, data) }
         }
     }
 
     override fun visitBackingField(backingField: KSBackingField, data: Unit) {
-        if (!enableNewFeatures) {
+        if (!apiFeatures.enableBackingFields) {
             throw IllegalStateException("enableNewFeatures = false, but visitBackingField was reached")
         }
         visitAnnotated(backingField, data)
         backingField.type.accept(this, data)
+    }
+
+    override fun visitContextParameter(contextParameter: KSContextParameter, data: Unit) {
+        if (!apiFeatures.enableContextParameters) {
+            throw IllegalStateException("enableNewFeatures = false, but visitContextParameter was reached")
+        }
+        visitAnnotated(contextParameter, data)
+        contextParameter.type.accept(this, data)
     }
 
     override fun visitTypeParameter(typeParameter: KSTypeParameter, data: Unit) {

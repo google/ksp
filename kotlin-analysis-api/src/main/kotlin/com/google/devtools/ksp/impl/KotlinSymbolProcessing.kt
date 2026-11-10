@@ -19,6 +19,7 @@
 
 package com.google.devtools.ksp.impl
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.common.AnyChanges
 import com.google.devtools.ksp.common.KSObjectCacheManager
 import com.google.devtools.ksp.common.impl.AAResolutionStrategy
@@ -58,6 +59,7 @@ import com.intellij.openapi.roots.PackageIndex
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.impl.ZipHandler
 import com.intellij.openapi.vfs.impl.jar.CoreJarFileSystem
 import com.intellij.psi.PsiFileSystemItem
 import com.intellij.psi.PsiJavaFile
@@ -87,7 +89,6 @@ import org.jetbrains.kotlin.analysis.api.projectStructure.KaModule
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaSourceModule
 import org.jetbrains.kotlin.analysis.api.resolve.extensions.KaResolveExtensionProvider
 import org.jetbrains.kotlin.analysis.api.standalone.KotlinStaticPackagePartProviderFactory
-import org.jetbrains.kotlin.analysis.api.standalone.StandaloneAnalysisAPISession
 import org.jetbrains.kotlin.analysis.api.standalone.base.KotlinStandalonePlatformSettings
 import org.jetbrains.kotlin.analysis.api.standalone.base.declarations.KotlinStandaloneAnnotationsResolverFactory
 import org.jetbrains.kotlin.analysis.api.standalone.base.declarations.KotlinStandaloneDeclarationProviderMerger
@@ -162,7 +163,7 @@ class KotlinSymbolProcessing(
     @OptIn(KaExperimentalApi::class, KaImplementationDetail::class, KaIdeApi::class)
     private fun createAASession(
         projectDisposable: Disposable,
-    ): Triple<StandaloneAnalysisAPISession, KotlinCoreProjectEnvironment, List<KaModule>> {
+    ): Triple<MockProject, KotlinCoreProjectEnvironment, List<KaModule>> {
         val kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment =
             StandaloneProjectFactory.createProjectEnvironment(
                 projectDisposable,
@@ -303,12 +304,7 @@ class KotlinSymbolProcessing(
             project.extensionArea, PsiTreeChangeListener.EP.name, PsiTreeChangeAdapter::class.java
         )
         return Triple(
-            StandaloneAnalysisAPISession(kotlinCoreProjectEnvironment) {
-                // This is only used by kapt4, which should query a provider, instead of have it passed here IMHO.
-                // kapt4's implementation is static, which may or may not work for us depending on future use cases.
-                // Let's implement it later if necessary.
-                TODO("Not implemented yet.")
-            },
+            kotlinCoreProjectEnvironment.project,
             kotlinCoreProjectEnvironment,
             modules
         )
@@ -520,13 +516,14 @@ class KotlinSymbolProcessing(
         val projectDisposable: Disposable = Disposer.newDisposable("StandaloneAnalysisAPISession.project")
         var kotlinCoreProjectEnvironment: KotlinCoreProjectEnvironment? = null
 
+        synchronized(activeExecutionsLock) {
+            activeExecutions++
+        }
         try {
-            val (analysisAPISession, env, modules) =
-                createAASession(projectDisposable)
+            val (project, env, modules) = createAASession(projectDisposable)
             kotlinCoreProjectEnvironment = env
-            val project = analysisAPISession.project
             // Initializes it
-            KSPCoreEnvironment(project as MockProject)
+            KSPCoreEnvironment(project)
 
             val psiManager = PsiManager.getInstance(project)
             val providers: List<SymbolProcessorProvider> = symbolProcessorProviders
@@ -592,24 +589,15 @@ class KotlinSymbolProcessing(
             }
 
             // Emit warning for processors not opted in to new features
-            processors.filterNot(processorsRegisteredForUpcomingFeatures::contains)
-                .forEach { processor ->
-                    logger.info(
-                        "Processor '${processor::class.qualifiedName ?: processor::class.simpleName}' " +
-                            "has not opted in for upcoming features yet. " +
-                            "It might break in a future version of KSP. " +
-                            "To fix this, please update the processor to a version that is " +
-                            "compatible with upcoming features.",
-                        null
-                    )
-                }
+            computeFeatureOptInWarnings(processors, processorsRegisteredForUpcomingFeatures)
+                .forEach { warning -> logger.info(warning, null) }
 
             fun dropCaches() {
                 maybeRunInWriteAction {
                     project.publishGlobalSourceModuleStateModificationEvent()
                     psiManager.dropPsiCaches()
-                    KSObjectCacheManager.clear()
                 }
+                KSObjectCacheManager.clear()
             }
 
             // Run processors until either
@@ -700,23 +688,90 @@ class KotlinSymbolProcessing(
             codeGenerator.closeFiles()
         } finally {
             KSObjectCacheManager.clear()
+            ResolverAAImpl.tearDown()
+            KSPCoreEnvironment.tearDown()
             maybeRunInWriteAction {
-                (kotlinCoreProjectEnvironment?.environment?.jarFileSystem as? CoreJarFileSystem)?.clearHandlersCache()
                 Disposer.dispose(projectDisposable)
-                ResolverAAImpl.tearDown()
-                KSPCoreEnvironment.tearDown()
+            }
+            synchronized(activeExecutionsLock) {
+                if (--activeExecutions == 0) {
+                    (kotlinCoreProjectEnvironment?.environment?.jarFileSystem as? CoreJarFileSystem)
+                        ?.clearHandlersCache()
+                    // CoreJarFileSystem.myHandlers uses ConcurrentFactoryMap, which can construct
+                    // duplicate CoreJarHandler instances on concurrent lookups of an uncached JAR
+                    // and discard the loser via putIfAbsent. Because each CoreJarHandler opens a
+                    // ZipFile in ZipHandler's static cache (keyed by handler identity),
+                    // clearHandlersCache() only closes the winning handler. Also clear
+                    // ZipHandler's cache to close any orphaned ZipFile handles when the
+                    // application environment stays alive across runs.
+                    ZipHandler.clearFileAccessorCache()
+                }
             }
         }
 
         return if (logger.hasError) ExitCode.PROCESSING_ERROR else ExitCode.OK
     }
 
+    private fun computeDisabledApiFeatures(apiFeatures: ApiFeatures): List<String> = buildList {
+        if (!apiFeatures.enableBackingFields) {
+            add(ApiFeatures::enableBackingFields.name)
+        }
+        if (!apiFeatures.enableContextParameters) {
+            add(ApiFeatures::enableContextParameters.name)
+        }
+    }
+
+    private fun computeFeatureOptInWarnings(
+        processors: List<SymbolProcessor>,
+        processorsRegisteredForUpcomingFeatures: Set<SymbolProcessor>
+    ): List<String> = buildList {
+        for (processor in processors) {
+            val processorName = processor::class.qualifiedName ?: processor::class.simpleName
+            val disabledFeatures = computeDisabledApiFeatures(processor.apiFeatures)
+            if (processor in processorsRegisteredForUpcomingFeatures) {
+                add(
+                    "Processor '$processorName' " +
+                        "opted in for upcoming features via 'SymbolProcessorEnvironment.registerProcessorForNewFeatures'. " +
+                        "Note that 'SymbolProcessorEnvironment.registerProcessorForNewFeatures' is deprecated; " +
+                        "processors should instead migrate to configuring 'SymbolProcessor.apiFeatures'."
+                )
+            } else if (!processor.apiFeatures.enableBackingFields && !processor.apiFeatures.enableContextParameters) {
+                add(
+                    "Processor '$processorName' " +
+                        "has not opted in for upcoming features yet. " +
+                        "It might break in a future version of KSP. " +
+                        "To fix this, please update the processor to a version that is " +
+                        "compatible with upcoming features."
+                )
+                add(
+                    "Note that 'SymbolProcessorEnvironment.registerProcessorForNewFeatures' is deprecated; " +
+                        "processors should instead migrate to configuring 'SymbolProcessor.apiFeatures'."
+                )
+            }
+            if (disabledFeatures.isNotEmpty()) {
+                add(
+                    "Processor '$processorName' " +
+                        "has not enabled the following API features: ${disabledFeatures.joinToString(", ")}. " +
+                        "It might break in a future version of KSP. " +
+                        "To fix this, please configure the set of 'apiFeatures' in 'SymbolProcessorProvider' " +
+                        "when creating the 'SymbolProcessor' (e.g., using 'buildApiFeatures'). " +
+                        "Processors should eventually enable all features in 'ApiFeatures'."
+                )
+            }
+        }
+    }
+
     companion object {
-        fun List<KSFile>.toKtFiles(project: Project): List<KtFile> = getPsiFilesFromPaths<KtFile>(project, this.toPathSet())
+        private val activeExecutionsLock = Any()
+        private var activeExecutions = 0
 
-        fun List<KSFile>.toPsiJavaFiles(project: Project): List<PsiJavaFile> = getPsiFilesFromPaths<PsiJavaFile>(project, this.toPathSet())
+        fun List<KSFile>.toKtFiles(project: Project): List<KtFile> =
+            getPsiFilesFromPaths<KtFile>(project, this.toPathSet())
 
-        fun List<KSFile>.toPathSet(): Set<Path> = this.map {File(it.filePath).toPath() }.toSet()
+        fun List<KSFile>.toPsiJavaFiles(project: Project): List<PsiJavaFile> =
+            getPsiFilesFromPaths<PsiJavaFile>(project, this.toPathSet())
+
+        fun List<KSFile>.toPathSet(): Set<Path> = this.map { File(it.filePath).toPath() }.toSet()
 
         fun runTypeCheck(newKSFiles: List<KSFile>, project: Project, logger: KSPLogger) {
             val (kotlinKSFiles, javaKSFiles) = newKSFiles

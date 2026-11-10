@@ -17,62 +17,89 @@
 
 package com.google.devtools.ksp.test
 
+import com.google.devtools.ksp.ApiFeatures
+import com.google.devtools.ksp.buildApiFeatures
 import org.jetbrains.kotlin.test.TestMetadata
 import org.junit.jupiter.api.Test
 
 abstract class AAConfiguredUnitTestSuiteBase(
-    enableNewFeatures: Boolean
-) : KSPUnitTestSuite(experimentalPsiResolution = false, enableNewFeatures) {
+    apiFeatures: ApiFeatures
+) : KSPUnitTestSuite(experimentalPsiResolution = false, apiFeatures) {
 
     @TestMetadata("getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     @Test
     override fun testAllUseSiteTargetAppliedToAnnotationList() {
-        runFailingTest("$AA_PATH/getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
+        runFailingKSPTest("getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     }
 
     @TestMetadata("getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
     @Test
     override fun testGroupedAnnotationsWithUseSiteTargets() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
+        runKSPTest("getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
     }
 
     @TestMetadata("functionKindsJavaInheritsKotlin.kt")
     @Test
     override fun testFunctionKindsJavaInheritsKotlin() {
-        runThrowingTest("$AA_PATH/functionKindsJavaInheritsKotlin.kt")
+        runThrowingKSPTest("functionKindsJavaInheritsKotlin.kt")
     }
 
     @TestMetadata("javaSubtypeOfKotlinInterface.kt")
     @Test
     override fun testJavaSubtypeOfKotlinInterface() {
-        runTest("$AA_PATH/javaSubtypeOfKotlinInterface.kt")
+        runKSPTest("javaSubtypeOfKotlinInterface.kt")
     }
 }
 
-class AAConfiguredUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = false) {
+class AAConfiguredDefaultFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(
+    buildApiFeatures {
+        enableBackingFields = false
+        enableContextParameters = false
+    }
+) {
     @TestMetadata("backingFieldsSignatureMapper.kt")
     @Test
     override fun testBackingFieldsSignatureMapper() {
-        runTest("$AA_PATH/backingFieldsSignatureMapper.kt")
-    }
-
-    @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
-    @Test
-    override fun testContextParameters() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
+        runKSPTest("backingFieldsSignatureMapper.kt")
     }
 }
 
-class AAConfiguredNewFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(enableNewFeatures = true) {
+class AAConfiguredBackingFieldsUnitTestSuite : AAConfiguredUnitTestSuiteBase(
+    buildApiFeatures {
+        enableBackingFields = true
+        enableContextParameters = false
+    }
+) {
     @TestMetadata("backingFieldsSignatureMapper.kt")
     @Test
     override fun testBackingFieldsSignatureMapper() {
-        runThrowingTest("$AA_PATH/backingFieldsSignatureMapper.kt", NotImplementedError::class)
-    }
-
-    @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
-    @Test
-    override fun testContextParameters() {
-        runFailingTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
+        runThrowingKSPTest("backingFieldsSignatureMapper.kt", NotImplementedError::class)
     }
 }
+
+class AAConfiguredContextParametersUnitTestSuite : AAConfiguredUnitTestSuiteBase(
+    buildApiFeatures {
+        enableBackingFields = false
+        enableContextParameters = true
+    }
+) {
+    @TestMetadata("backingFieldsSignatureMapper.kt")
+    @Test
+    override fun testBackingFieldsSignatureMapper() {
+        runKSPTest("backingFieldsSignatureMapper.kt")
+    }
+}
+
+class AAConfiguredAllFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(
+    buildApiFeatures {
+        enableBackingFields = true
+        enableContextParameters = true
+    }
+) {
+    @TestMetadata("backingFieldsSignatureMapper.kt")
+    @Test
+    override fun testBackingFieldsSignatureMapper() {
+        runThrowingKSPTest("backingFieldsSignatureMapper.kt", NotImplementedError::class)
+    }
+}
+

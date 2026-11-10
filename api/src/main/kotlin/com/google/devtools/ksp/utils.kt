@@ -137,7 +137,9 @@ fun KSClassDeclaration.getConstructors(): Sequence<KSFunctionDeclaration> {
 
 /** Check whether this is a local declaration, or namely, declared in a function. */
 fun KSDeclaration.isLocal(): Boolean {
-    return this.parentDeclaration != null && this.parentDeclaration !is KSClassDeclaration
+    return this !is KSBackingField &&
+        this.parentDeclaration != null &&
+        this.parentDeclaration !is KSClassDeclaration
 }
 
 /**
@@ -148,16 +150,19 @@ fun KSDeclaration.isLocal(): Boolean {
  *   checks all.
  */
 @Deprecated(
-    message = "KSNode.validate is deprecated in favor of KSNode.validate(predicate, enableNewFeatures).\n" +
-        "Please specify enableNewFeatures to indicate whether new language features (such as backing fields and context parameters) should be validated.",
+    message = "KSNode.validate(predicate) is deprecated in favor of KSNode.validate(predicate, apiFeatures).\n" +
+        "Your SymbolProcessor should override its parent SymbolProcessor.apiFeatures property, " +
+        "share that property across all KSP interactions, and replace every use of buildApiFeatures " +
+        "with a reference to that shared apiFeatures property/object.",
     replaceWith = ReplaceWith(
-        expression = "validate(predicate, enableNewFeatures = false)",
+        expression = "validate(predicate, buildApiFeatures { enableBackingFields = false; enableContextParameters = false })",
+        imports = ["com.google.devtools.ksp.buildApiFeatures"],
     ),
 )
 fun KSNode.validate(
     predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true },
 ): Boolean {
-    return this.accept(KSValidateVisitor(predicate), null)
+    return this.accept(KSValidateVisitor(predicate, KSApiFeatures.DEFAULT), null)
 }
 
 /**
@@ -168,11 +173,45 @@ fun KSNode.validate(
  *   checks all.
  *   @param enableNewFeatures A boolean flag toggling new features in [KSValidateVisitor].
  */
+@Deprecated(
+    message = "KSNode.validate(predicate, enableNewFeatures) is deprecated in favor of KSNode.validate(predicate, apiFeatures).\n" +
+        "Your SymbolProcessor should override its parent SymbolProcessor.apiFeatures property, " +
+        "share that property across all KSP interactions, and replace every use of buildApiFeatures " +
+        "with a reference to that shared apiFeatures property/object.",
+    replaceWith = ReplaceWith(
+        expression = "validate(predicate, buildApiFeatures { enableBackingFields = enableNewFeatures; enableContextParameters = false })",
+        imports = ["com.google.devtools.ksp.buildApiFeatures"],
+    ),
+)
 fun KSNode.validate(
     predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true },
     enableNewFeatures: Boolean,
 ): Boolean {
-    return this.accept(KSValidateVisitor(predicate, enableNewFeatures), null)
+    return this.accept(
+        KSValidateVisitor(
+            predicate,
+            buildApiFeatures {
+                enableBackingFields = enableNewFeatures
+                enableContextParameters = false
+            }
+        ),
+        null
+    )
+}
+
+/**
+ * Perform a validation on a given symbol to check if all interested types in symbols enclosed scope
+ * are valid, i.e. resolvable.
+ *
+ * @param predicate A lambda for filtering interested symbols for performance purpose. Default
+ *   checks all.
+ *    @param apiFeatures An API feature configuration.
+ */
+fun KSNode.validate(
+    predicate: (KSNode?, KSNode) -> Boolean = { _, _ -> true },
+    apiFeatures: ApiFeatures,
+): Boolean {
+    return this.accept(KSValidateVisitor(predicate, apiFeatures), null)
 }
 
 /** Find the KSClassDeclaration that the alias points to, recursively. */
@@ -197,29 +236,24 @@ fun KSDeclaration.getVisibility(): Visibility {
             } ?: Visibility.PUBLIC
         }
 
-        this.isKotlinBackingField() -> Visibility.PRIVATE
         this.isLocal() -> Visibility.LOCAL
         this.modifiers.contains(Modifier.PRIVATE) -> Visibility.PRIVATE
         this.modifiers.contains(Modifier.PROTECTED) || this.modifiers.contains(Modifier.OVERRIDE) ->
             Visibility.PROTECTED
 
         this.modifiers.contains(Modifier.INTERNAL) -> Visibility.INTERNAL
-        // for synthetic origin from Java source, synthetic members follow visibility from parent to
-        // avoid
-        // package private synthetic members being mishandled as public.
-        this.origin == Origin.SYNTHETIC && this.parentDeclaration?.origin == Origin.JAVA ->
-            this.parentDeclaration!!.getVisibility()
-
-        else ->
-            if (this.origin != Origin.JAVA && this.origin != Origin.JAVA_LIB) Visibility.PUBLIC
+        else -> {
+            val origin =
+                if (this.origin == Origin.SYNTHETIC) {
+                    this.closestClassDeclaration()?.origin ?: this.origin
+                } else {
+                    this.origin
+                }
+            if (origin != Origin.JAVA && origin != Origin.JAVA_LIB) Visibility.PUBLIC
             else Visibility.JAVA_PACKAGE
+        }
     }
 }
-
-internal fun KSDeclaration.isKotlinBackingField(): Boolean =
-    this is KSBackingField && (
-        origin == Origin.KOTLIN || origin == Origin.KOTLIN_LIB
-        )
 
 /**
  * get all super types for a class declaration Calling [getAllSuperTypes] requires type resolution
@@ -281,7 +315,8 @@ fun KSPropertyDeclaration.isAbstract(): Boolean {
 }
 
 fun KSDeclaration.isOpen() =
-    !this.isLocal() &&
+    this !is KSBackingField &&
+        !this.isLocal() &&
         !this.modifiers.contains(Modifier.FINAL) &&
         ((this as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE ||
             this.modifiers.contains(Modifier.OVERRIDE) ||
@@ -328,13 +363,18 @@ fun KSDeclaration.isVisibleFrom(other: KSDeclaration): Boolean {
         return parents
     }
 
-    fun KSDeclaration.isVisibleInPrivate(other: KSDeclaration) =
-        (other.isLocal() && other.parentDeclarationsForLocal().contains(this.parentDeclaration)) ||
-            this.parentDeclaration == other.parentDeclaration ||
-            this.parentDeclaration == other ||
-            (this.parentDeclaration == null &&
-                other.parentDeclaration == null &&
-                this.containingFile == other.containingFile)
+    fun KSDeclaration.isVisibleInPrivate(other: KSDeclaration): Boolean {
+        val receiver = if (this is KSBackingField) this.property else this
+        val target = if (other is KSBackingField) other.property else other
+        return if (receiver.parentDeclaration == null && target.parentDeclaration == null)
+            receiver.containingFile == target.containingFile
+        else
+            (target.isLocal() &&
+                target.parentDeclarationsForLocal().contains(receiver.parentDeclaration)) ||
+                receiver.parentDeclaration == target.parentDeclaration ||
+                receiver.parentDeclaration == target ||
+                receiver == target
+    }
 
     return when {
         // locals are limited to lexical scope

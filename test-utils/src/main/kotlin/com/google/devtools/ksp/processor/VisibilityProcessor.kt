@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getVisibility
 import com.google.devtools.ksp.isVisibleFrom
@@ -26,7 +27,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 
-class VisibilityProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+class VisibilityProcessor(override val apiFeatures: ApiFeatures): AbstractTestProcessor() {
     val results = mutableListOf<String>()
 
     override fun toResult(): List<String> {
@@ -85,6 +86,15 @@ class VisibilityProcessor(override val enableNewFeatures: Boolean): AbstractTest
         }.forEach { results.add(it) }
         intersectionClass.getAllProperties().map {
             "${intersectionClass.simpleName.asString()}: ${it.simpleName.asString()}: ${it.getVisibility() }"
+        }.forEach { results.add(it) }
+        javaClass.getAllProperties().mapNotNull { it.backingField }.map {
+            "${it.qualifiedName?.asString()}: ${it.getVisibility()},visible in A, B, D: " +
+                "${it.isVisibleFrom(symbolA)}, ${it.isVisibleFrom(symbolB)}, ${it.isVisibleFrom(symbolD)}"
+        }.forEach { results.add(it) }
+        kotlinSubClass.declarations.filterIsInstance<KSPropertyDeclaration>().mapNotNull { it.backingField }.map {
+            "${it.qualifiedName?.asString()}: ${it.getVisibility()},visible in A, B, D, KotlinSubClass: " +
+                "${it.isVisibleFrom(symbolA)}, ${it.isVisibleFrom(symbolB)}, " +
+                "${it.isVisibleFrom(symbolD)}, ${it.isVisibleFrom(kotlinSubClass)}"
         }.forEach { results.add(it) }
         return emptyList()
     }

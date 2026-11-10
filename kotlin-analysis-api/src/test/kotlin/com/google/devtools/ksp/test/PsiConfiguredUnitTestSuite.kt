@@ -17,56 +17,89 @@
 
 package com.google.devtools.ksp.test
 
+import com.google.devtools.ksp.ApiFeatures
+import com.google.devtools.ksp.buildApiFeatures
 import org.jetbrains.kotlin.test.TestMetadata
 import org.junit.jupiter.api.Test
 
 abstract class PsiConfiguredUnitTestSuiteBase(
-    enableNewFeatures: Boolean,
-) : KSPUnitTestSuite(experimentalPsiResolution = true, enableNewFeatures) {
+    apiFeatures: ApiFeatures,
+) : KSPUnitTestSuite(experimentalPsiResolution = true, apiFeatures) {
 
     @TestMetadata("getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     @Test
     override fun testAllUseSiteTargetAppliedToAnnotationList() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
-    }
-
-    @TestMetadata("getSymbolsWithAnnotation/contextParameters.kt")
-    @Test
-    override fun testContextParameters() {
-        runThrowingTest("$AA_PATH/getSymbolsWithAnnotation/contextParameters.kt")
+        runKSPTest("getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     }
 
     @TestMetadata("functionKindsJavaInheritsKotlin.kt")
     @Test
     override fun testFunctionKindsJavaInheritsKotlin() {
-        runFailingTest("$AA_PATH/functionKindsJavaInheritsKotlin.kt")
+        runFailingKSPTest("functionKindsJavaInheritsKotlin.kt")
     }
 
     @TestMetadata("javaSubtypeOfKotlinInterface.kt")
     @Test
     override fun testJavaSubtypeOfKotlinInterface() {
-        runFailingTest("$AA_PATH/javaSubtypeOfKotlinInterface.kt")
+        runFailingKSPTest("javaSubtypeOfKotlinInterface.kt")
     }
 
     @TestMetadata("getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
     @Test
     override fun testGroupedAnnotationsWithUseSiteTargets() {
-        runTest("$AA_PATH/getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
+        runKSPTest("getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
     }
 }
 
-class PsiConfiguredUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = false) {
+
+class PsiConfiguredDefaultFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(
+    buildApiFeatures {
+        enableBackingFields = false
+        enableContextParameters = false
+    }
+) {
     @TestMetadata("backingFieldsSignatureMapper.kt")
     @Test
     override fun testBackingFieldsSignatureMapper() {
-        runTest("$AA_PATH/backingFieldsSignatureMapper.kt")
+        runKSPTest("backingFieldsSignatureMapper.kt")
     }
 }
 
-class PsiConfiguredNewFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(enableNewFeatures = true) {
+class PsiConfiguredBackingFieldsUnitTestSuite : PsiConfiguredUnitTestSuiteBase(
+    buildApiFeatures {
+        enableBackingFields = true
+        enableContextParameters = false
+    }
+) {
     @TestMetadata("backingFieldsSignatureMapper.kt")
     @Test
     override fun testBackingFieldsSignatureMapper() {
-        runThrowingTest("$AA_PATH/backingFieldsSignatureMapper.kt", NotImplementedError::class)
+        runThrowingKSPTest("backingFieldsSignatureMapper.kt", NotImplementedError::class)
+    }
+}
+
+class PsiConfiguredContextParametersUnitTestSuite : PsiConfiguredUnitTestSuiteBase(
+    buildApiFeatures {
+        enableBackingFields = false
+        enableContextParameters = true
+    }
+) {
+    @TestMetadata("backingFieldsSignatureMapper.kt")
+    @Test
+    override fun testBackingFieldsSignatureMapper() {
+        runKSPTest("backingFieldsSignatureMapper.kt")
+    }
+}
+
+class PsiConfiguredAllFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(
+    buildApiFeatures {
+        enableBackingFields = true
+        enableContextParameters = true
+    }
+) {
+    @TestMetadata("backingFieldsSignatureMapper.kt")
+    @Test
+    override fun testBackingFieldsSignatureMapper() {
+        runThrowingKSPTest("backingFieldsSignatureMapper.kt", NotImplementedError::class)
     }
 }

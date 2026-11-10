@@ -17,22 +17,34 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 
-class TestFrameworkExpectDifferentOutputProcessor(override val enableNewFeatures: Boolean) : AbstractTestProcessor() {
+class TestFrameworkExpectDifferentOutputProcessor(override val apiFeatures: ApiFeatures) : AbstractTestProcessor() {
     private val results = mutableListOf<String>()
     override fun toResult(): List<String> = results
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        results.add("This should be in both configurations")
-        if (enableNewFeatures) {
-            results.add("This different output should be expected when enableNewFeatures = $enableNewFeatures")
+        val enableBackingFields = apiFeatures.enableBackingFields
+        val enableContextParameters = apiFeatures.enableContextParameters
+
+        results.add("This should be in all configurations")
+        if (enableBackingFields) {
+            results.add("This different output should be expected when enableBackingFields = $enableBackingFields")
         } else {
-            results.add("This should be expected when enableNewFeatures = $enableNewFeatures")
+            results.add("This should be expected when enableBackingFields = $enableBackingFields")
         }
-        results.add("This also be in both configurations")
+        if (enableContextParameters) {
+            results.add("This different output should be expected when enableContextParameters = $enableContextParameters")
+        } else {
+            results.add("This should be expected when enableContextParameters = $enableContextParameters")
+        }
+        results.add(
+            "Combined configuration: enableBackingFields = $enableBackingFields, " +
+                "enableContextParameters = $enableContextParameters"
+        )
+        results.add("This should also be in all configurations")
         return emptyList()
     }
-
 }

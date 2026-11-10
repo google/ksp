@@ -1,5 +1,6 @@
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getJavaClassByName
@@ -8,7 +9,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.Variance
 
-class JavaSubtypeProcessor(override val enableNewFeatures: Boolean): AbstractTestProcessor() {
+class JavaSubtypeProcessor(override val apiFeatures: ApiFeatures): AbstractTestProcessor() {
     var isOk = true
     override fun toResult(): List<String> {
         return listOf(isOk.toString())
