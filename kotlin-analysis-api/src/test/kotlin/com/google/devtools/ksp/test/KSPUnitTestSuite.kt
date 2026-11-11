@@ -223,9 +223,12 @@ abstract class KSPUnitTestSuite(
         runKSPTest("backingFields.kt")
     }
 
-    @Bug("https://github.com/google/ksp/issues/3222", BugState.OPEN)
+    @Bug("https://github.com/google/ksp/issues/3222", BugState.FIXED)
     @TestMetadata("backingFieldsSignatureMapper.kt")
-    abstract fun testBackingFieldsSignatureMapper()
+    @Test
+    fun testBackingFieldsSignatureMapper() {
+        runKSPTest("backingFieldsSignatureMapper.kt")
+    }
 
     @TestMetadata("getSymbolsWithAnnotation/backingFieldsLateinit.kt")
     @Test
@@ -360,7 +363,7 @@ abstract class KSPUnitTestSuite(
     @Test
     @Negative("A dangling context(...) modifier list with no following declaration is a syntax error.")
     fun testContextParameterDangling() {
-        runKSPTest("/getSymbolsWithAnnotation/negative/contextParameterDangling.kt")
+        runKSPTest("getSymbolsWithAnnotation/negative/contextParameterDangling.kt")
     }
 
     @TestMetadata("declarationInconsistency.kt")
