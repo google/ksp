@@ -17,6 +17,7 @@
 
 package com.google.devtools.ksp.processor
 
+import com.google.devtools.ksp.ApiFeatures
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.AnnotationClass
 import com.google.devtools.ksp.symbol.ArrayValue
@@ -46,7 +47,7 @@ import com.google.devtools.ksp.typedValue
 
 class AnnotationArrayTypedValueProcessor(
     private val annotationNames: List<String>,
-    override val enableNewFeatures: Boolean,
+    override val apiFeatures: ApiFeatures,
 ) : AbstractTestProcessor() {
     private val results = mutableListOf<String>()
 
@@ -58,7 +59,8 @@ class AnnotationArrayTypedValueProcessor(
                     it.annotationType.resolve().declaration.qualifiedName?.asString() == annotationName
                 }.forEach { annotation ->
                     annotation.arguments.forEach { argument ->
-                        results.add("$name @$annotationName ${argument.name?.asString()} = ${render(argument.typedValue())}")
+                        val argumentName = argument.name?.asString()
+                        results.add("$name @$annotationName $argumentName = ${render(argument.typedValue())}")
                     }
                 }
             }

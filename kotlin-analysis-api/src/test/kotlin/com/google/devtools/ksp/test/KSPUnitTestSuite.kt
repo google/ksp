@@ -190,7 +190,7 @@ abstract class KSPUnitTestSuite(
     @TestMetadata("annotationArrayTypedValue.kt")
     @Test
     fun testAnnotationArrayTypedValue() {
-        runTest("$AA_PATH/annotationArrayTypedValue.kt")
+        runKSPTest("annotationArrayTypedValue.kt")
     }
 
     @TestMetadata("annotationWithDefault.kt")
