@@ -39,6 +39,9 @@ import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
+import org.junit.jupiter.api.parallel.Isolated
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -49,6 +52,8 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import kotlin.io.path.invariantSeparatorsPathString
 
+@Isolated
+@Execution(ExecutionMode.SAME_THREAD)
 class LibraryRootsSearchScopeTest {
     @TempDir
     lateinit var tempDir: Path
