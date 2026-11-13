@@ -65,6 +65,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolLocation
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolModality
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolVisibility
+import org.jetbrains.kotlin.analysis.api.symbols.KaSyntheticJavaPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.contextParameters
 import org.jetbrains.kotlin.analysis.api.symbols.name
 import org.jetbrains.kotlin.analysis.api.symbols.receiverType
@@ -467,7 +468,7 @@ fun KaSession.findKaFunctionSymbol(psiMethod: PsiMethod, parentClass: KSClassDec
 private fun KaSession.findKaPropertyAccessorSymbols(
     psiMethod: PsiMethod,
     parentClass: KSClassDeclarationImpl
-): Sequence<KaPropertyAccessorSymbol> {
+): Sequence<KaFunctionSymbol> {
     val methodName = psiMethod.name
     val namesToSearch = when {
         // A standard Java getter like `getFoo()` overrides a Kotlin property named `foo` or `Foo`.
@@ -496,7 +497,13 @@ private fun KaSession.findKaPropertyAccessorSymbols(
     return namesToSearch
         .flatMap { parentClass.ktClassOrObjectSymbol.memberScope.callables(Name.identifier(it)) }
         .filterIsInstance<KaPropertySymbol>()
-        .flatMap { sequenceOf(it.getter, it.setter) }
+        .flatMap {
+            if (it is KaSyntheticJavaPropertySymbol) {
+                sequenceOf(it.javaGetterSymbol, it.javaSetterSymbol)
+            } else {
+                sequenceOf(it.getter, it.setter)
+            }
+        }
         .filterNotNull()
 }
 

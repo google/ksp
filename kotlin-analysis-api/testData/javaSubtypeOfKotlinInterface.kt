@@ -22,8 +22,6 @@
 // Declaration qualifiedName: MyInterface.Foo (Origin: KOTLIN)
 // Declaration simpleName: getFoo
 // Declaration qualifiedName: MyClass.getFoo (Origin: JAVA)
-// Declaration simpleName: getFoo
-// Declaration qualifiedName: MyClass.getFoo (Origin: SYNTHETIC)
 // Declaration simpleName: <init>
 // END
 
