@@ -55,16 +55,40 @@ class AndroidIT(experimentalPsiResolution: Boolean) {
                 jarFile.assertContainsNonNullEntry("META-INF/proguard/builder-BClassBuilder.pro")
             }
 
-            val javaResDir = File(project.root, "workload/build/intermediates/java_res/debug/processDebugJavaRes/out")
-            Assert.assertTrue(File(javaResDir, "TestProcessor.log").exists())
-            Assert.assertTrue(File(javaResDir, "META-INF/proguard/builder-AClassBuilder.pro").exists())
-            Assert.assertTrue(File(javaResDir, "META-INF/proguard/builder-BClassBuilder.pro").exists())
+            val kspResDir = File(project.root, "workload/build/generated/ksp/debug/resources")
+            Assert.assertTrue(File(kspResDir, "TestProcessor.log").exists())
+            Assert.assertTrue(File(kspResDir, "META-INF/proguard/builder-AClassBuilder.pro").exists())
+            Assert.assertTrue(File(kspResDir, "META-INF/proguard/builder-BClassBuilder.pro").exists())
+
+            val compressedJavaResJar = File(
+                project.root,
+                "workload/build/intermediates/java_res_compressed_jar/debug/compressDebugJavaRes/java_res.jar"
+            )
+            if (compressedJavaResJar.exists()) {
+                JarFile(compressedJavaResJar).use { jarFile ->
+                    jarFile.assertContainsNonNullEntry("TestProcessor.log")
+                }
+            } else {
+                val javaResDir = File(
+                    project.root,
+                    "workload/build/intermediates/java_res/debug/processDebugJavaRes/out"
+                )
+                Assert.assertTrue(File(javaResDir, "TestProcessor.log").exists())
+                Assert.assertTrue(File(javaResDir, "META-INF/proguard/builder-AClassBuilder.pro").exists())
+                Assert.assertTrue(File(javaResDir, "META-INF/proguard/builder-BClassBuilder.pro").exists())
+            }
             assertMergedConfigurationOutput(project, "-keep class com.example.AClassBuilder { *; }")
             assertMergedConfigurationOutput(project, "-keep class com.example.BClassBuilder { *; }")
 
             val outputs = result.output.lines()
-            assert("w: [ksp] [workload_debug] Mangled name for internalFun: internalFun\$workload_debug" in outputs)
-            assert("w: [ksp] [workload_release] Mangled name for internalFun: internalFun\$workload_release" in outputs)
+            assert(
+                "w: [ksp] [playground:workload_debug] Mangled name for internalFun: " +
+                    "internalFun\$playground_workload_debug" in outputs
+            )
+            assert(
+                "w: [ksp] [playground:workload_release] Mangled name for internalFun: " +
+                    "internalFun\$playground_workload_release" in outputs
+            )
         }
     }
 }
