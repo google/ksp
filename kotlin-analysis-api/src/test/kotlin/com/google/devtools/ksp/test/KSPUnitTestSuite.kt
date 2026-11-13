@@ -1025,6 +1025,16 @@ abstract class KSPUnitTestSuite(
         runKSPTest("getSymbolsWithAnnotation/useSiteTargets.kt")
     }
 
+    @TestMetadata("getSymbolsWithAnnotation/declarationSiteAnnotationTargets.kt")
+    @Test
+    @Bug(
+        "https://github.com/google/ksp/issues/2987",
+        BugState.OPEN
+    )
+    fun testDeclarationSiteAnnotationTargets() {
+        runFailingTest("$AA_PATH/getSymbolsWithAnnotation/declarationSiteAnnotationTargets.kt")
+    }
+
     @TestMetadata("valueParameter.kt")
     @Test
     fun testValueParameter() {
