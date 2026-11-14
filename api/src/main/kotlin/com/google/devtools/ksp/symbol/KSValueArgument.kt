@@ -52,5 +52,6 @@ interface KSValueArgument : KSAnnotated {
      * * [KSAnnotation] for embedded annotation arguments;
      * * [Array] or [Collection] of a possible type listed above.
      */
+    @Deprecated("Use typedValue() for a typed representation of this argument.", level = DeprecationLevel.WARNING)
     val value: Any?
 }
