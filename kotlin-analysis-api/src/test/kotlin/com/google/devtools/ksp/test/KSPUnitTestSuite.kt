@@ -745,6 +745,13 @@ abstract class KSPUnitTestSuite(
         runKSPTest("multipleModules.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/2617", BugState.FIXED)
+    @TestMetadata("nestedAnnotationDeclarationOrder.kt")
+    @Test
+    fun testNestedAnnotationDeclarationOrder() {
+        runTest("$AA_PATH/nestedAnnotationDeclarationOrder.kt")
+    }
+
     @TestMetadata("nestedAnnotations.kt")
     @Test
     fun testNestedAnnotations() {
@@ -1116,6 +1123,13 @@ abstract class KSPUnitTestSuite(
     @Test
     fun testTypeParameterBoundTypeAlias() {
         runKSPTest("typeParameterBoundTypeAlias.kt")
+    }
+
+    @Bug("https://github.com/google/ksp/issues/2617", BugState.FIXED)
+    @TestMetadata("native/nestedAnnotationDeclarationOrder.kt")
+    @Test
+    fun testNativeNestedAnnotationDeclarationOrder() {
+        runTest("$AA_PATH/native/nestedAnnotationDeclarationOrder.kt")
     }
 
     @TestMetadata("native/nativeTest.kt")
