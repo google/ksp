@@ -204,30 +204,15 @@ class KotlinSymbolProcessing(
             }
 
             fun KtModuleBuilder.addModuleDependencies(moduleName: String) {
-                addRegularDependency(
-                    buildKspLibraryModule {
-                        this.platform = platform
-                        addBinaryRoots(kspConfig.libraries.map { it.toPath() })
-                        libraryName = "Libraries for $moduleName"
-                    }
-                )
+                val libraryRoots = kspConfig.libraries.map { it.toPath() }
+                addRegularDependency(buildKspLibraryModule("Libraries for $moduleName", platform, libraryRoots))
 
-                addFriendDependency(
-                    buildKspLibraryModule {
-                        this.platform = platform
-                        addBinaryRoots(kspConfig.friends.map { it.toPath() })
-                        libraryName = "Friends of $moduleName"
-                    }
-                )
+                val friendRoots = kspConfig.friends.map { it.toPath() }
+                addFriendDependency(buildKspLibraryModule("Friends of $moduleName", platform, friendRoots))
 
                 if (kspConfig is KSPJvmConfig && kspConfig.jdkHome != null) {
-                    addRegularDependency(
-                        buildKspSdkModule {
-                            this.platform = platform
-                            addBinaryRootsFromJdkHome(kspConfig.jdkHome!!.toPath(), isJre = false)
-                            libraryName = "JDK for $moduleName"
-                        }
-                    )
+                    val jdkHome = kspConfig.jdkHome!!.toPath()
+                    addRegularDependency(buildKspSdkModule("JDK for $moduleName", platform, jdkHome))
                 }
             }
 

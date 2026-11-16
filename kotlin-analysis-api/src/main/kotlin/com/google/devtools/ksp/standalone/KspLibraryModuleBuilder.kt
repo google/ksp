@@ -15,73 +15,66 @@
  * limitations under the License.
  */
 
-@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
-
 package com.google.devtools.ksp.standalone
 
 import com.intellij.core.CoreApplicationEnvironment
 import com.intellij.openapi.module.Module
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.impl.jar.CoreJarFileSystem
 import com.intellij.psi.search.GlobalSearchScope
-import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.impl.base.util.LibraryUtils
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaLibraryModule
-import org.jetbrains.kotlin.analysis.api.projectStructure.KaLibrarySourceModule
 import org.jetbrains.kotlin.analysis.api.standalone.base.projectStructure.StandaloneProjectFactory
-import org.jetbrains.kotlin.analysis.project.structure.builder.KtBinaryModuleBuilder
-import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilderDsl
+import org.jetbrains.kotlin.analysis.project.structure.builder.KtLibraryModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
-import org.jetbrains.kotlin.analysis.project.structure.impl.KaLibraryModuleImpl
+import org.jetbrains.kotlin.analysis.project.structure.builder.buildKtLibraryModule
+import org.jetbrains.kotlin.analysis.project.structure.builder.buildKtSdkModule
+import org.jetbrains.kotlin.platform.TargetPlatform
 import java.nio.file.Path
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.InvocationKind
-import kotlin.contracts.contract
 
-@KtModuleBuilderDsl
-open class KspLibraryModuleBuilder(
-    private val coreApplicationEnvironment: CoreApplicationEnvironment,
-    private val project: Project,
-) : KtBinaryModuleBuilder() {
-    public lateinit var libraryName: String
-    public var librarySources: KaLibrarySourceModule? = null
-
-    override fun build(): KaLibraryModule = build(isSdk = false)
-
-    @OptIn(KaExperimentalApi::class)
-    fun build(isSdk: Boolean): KaLibraryModule {
-        val binaryRoots = getBinaryRoots()
-        val binaryVirtualFiles = getBinaryVirtualFiles()
-        val contentScope = LibraryRootsSearchScope(
-            StandaloneProjectFactory.getVirtualFilesForLibraryRoots(
-                binaryRoots,
-                coreApplicationEnvironment,
-            ) + binaryVirtualFiles
-        )
-        return KaLibraryModuleImpl(
-            directRegularDependencies,
-            directDependsOnDependencies,
-            directFriendDependencies,
-            contentScope,
-            platform,
-            project,
-            binaryRoots,
-            binaryVirtualFiles,
-            libraryName,
-            librarySources,
-            isSdk
-        )
+/**
+ * Builds a library module with the given [binaryRoots] and a [LibraryRootsSearchScope] as its content scope.
+ */
+fun KtModuleProviderBuilder.buildKspLibraryModule(
+    libraryName: String,
+    platform: TargetPlatform,
+    binaryRoots: Collection<Path>,
+): KaLibraryModule {
+    val environment = coreApplicationEnvironment
+    return buildKtLibraryModule {
+        configure(libraryName, platform, binaryRoots, environment)
     }
 }
 
-@OptIn(ExperimentalContracts::class)
-inline fun KtModuleProviderBuilder.buildKspLibraryModule(init: KspLibraryModuleBuilder.() -> Unit): KaLibraryModule {
-    contract {
-        callsInPlace(init, InvocationKind.EXACTLY_ONCE)
+/**
+ * Builds an SDK module for the JDK at [jdkHome] with a [LibraryRootsSearchScope] as its content scope.
+ */
+@OptIn(KaImplementationDetail::class)
+fun KtModuleProviderBuilder.buildKspSdkModule(
+    libraryName: String,
+    platform: TargetPlatform,
+    jdkHome: Path,
+): KaLibraryModule {
+    val environment = coreApplicationEnvironment
+    val jdkRoots = LibraryUtils.findClassesFromJdkHome(jdkHome, isJre = false)
+    return buildKtSdkModule {
+        configure(libraryName, platform, jdkRoots, environment)
     }
-    return KspLibraryModuleBuilder(coreApplicationEnvironment, project).apply(init).build()
+}
+
+private fun KtLibraryModuleBuilder.configure(
+    libraryName: String,
+    platform: TargetPlatform,
+    binaryRoots: Collection<Path>,
+    environment: CoreApplicationEnvironment,
+) {
+    this.libraryName = libraryName
+    this.platform = platform
+    addBinaryRoots(binaryRoots)
+    contentScope = LibraryRootsSearchScope(
+        StandaloneProjectFactory.getVirtualFilesForLibraryRoots(binaryRoots, environment)
+    )
 }
 
 internal class LibraryRootsSearchScope(roots: List<VirtualFile>) : GlobalSearchScope() {
@@ -123,26 +116,4 @@ internal class LibraryRootsSearchScope(roots: List<VirtualFile>) : GlobalSearchS
     override fun isSearchInModuleContent(aModule: Module): Boolean = false
 
     override fun isSearchInLibraries(): Boolean = true
-}
-
-@KtModuleBuilderDsl
-public class KspSdkModuleBuilder(
-    coreApplicationEnvironment: CoreApplicationEnvironment,
-    project: Project,
-) : KspLibraryModuleBuilder(coreApplicationEnvironment, project) {
-    @OptIn(KaImplementationDetail::class)
-    public fun addBinaryRootsFromJdkHome(jdkHome: Path, isJre: Boolean) {
-        val jdkRoots = LibraryUtils.findClassesFromJdkHome(jdkHome, isJre)
-        addBinaryRoots(jdkRoots)
-    }
-
-    override fun build(): KaLibraryModule = build(isSdk = true)
-}
-
-@OptIn(ExperimentalContracts::class)
-public inline fun KtModuleProviderBuilder.buildKspSdkModule(init: KspSdkModuleBuilder.() -> Unit): KaLibraryModule {
-    contract {
-        callsInPlace(init, InvocationKind.EXACTLY_ONCE)
-    }
-    return KspSdkModuleBuilder(coreApplicationEnvironment, project).apply(init).build()
 }
