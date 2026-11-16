@@ -366,10 +366,12 @@ abstract class KSPUnitTestSuite(
         runKSPTest("getSymbolsWithAnnotation/negative/contextParameterDangling.kt")
     }
 
-    @Bug("https://github.com/google/ksp/issues/3221", BugState.OPEN)
+    @Bug("https://github.com/google/ksp/issues/3221", BugState.FIXED)
     @TestMetadata("contextParameterValidate.kt")
     @Test
-    abstract fun testContextParameterValidate()
+    fun testContextParameterValidate() {
+        runKSPTest("contextParameterValidate.kt")
+    }
 
     @Bug("https://github.com/google/ksp/issues/3221", BugState.FIXED)
     @TestMetadata("contextParameterAnnotations.kt")
