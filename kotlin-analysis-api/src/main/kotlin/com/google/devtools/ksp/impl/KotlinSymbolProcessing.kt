@@ -216,7 +216,8 @@ class KotlinSymbolProcessing(
                 }
             }
 
-            buildKspSourceModule {
+            // Single file java source roots are added in reinitJavaFileManager() later.
+            buildKspSourceModule(allSourceRoots().map { it.toPath() }) {
                 val languageVersion = LanguageVersion.fromFullVersionString(kspConfig.languageVersion)!!
                 val apiVersion = LanguageVersion.fromFullVersionString(kspConfig.apiVersion)!!
                 languageVersionSettings = LanguageVersionSettingsImpl(
@@ -232,9 +233,6 @@ class KotlinSymbolProcessing(
                 this.moduleName = kspConfig.moduleName
 
                 addModuleDependencies(moduleName)
-
-                // Single file java source roots are added in reinitJavaFileManager() later.
-                addSourceRoots(allSourceRoots().map { it.toPath() })
             }.apply(::addModule)
 
             this.platform = platform
@@ -542,7 +540,7 @@ class KotlinSymbolProcessing(
                 KSPCoreEnvironment(project)
 
                 val psiManager = PsiManager.getInstance(project)
-                // KspModuleBuilder ensures this is always a KtSourceModule
+                // buildKspSourceModule ensures this is always a KaSourceModule
                 ResolverAAImpl.ktModule = modules.single() as KaSourceModule
                 ResolverAAImpl.kspConfig = kspConfig
 
