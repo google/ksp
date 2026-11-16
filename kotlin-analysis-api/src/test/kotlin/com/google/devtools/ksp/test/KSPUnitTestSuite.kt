@@ -216,10 +216,12 @@ abstract class KSPUnitTestSuite(
         runKSPTest("backingFields.kt")
     }
 
-    @Bug("https://github.com/google/ksp/issues/2873", BugState.OPEN)
+    @Bug("https://github.com/google/ksp/issues/2873", BugState.FIXED)
     @TestMetadata("backingFieldValidate.kt")
     @Test
-    abstract fun testBackingFieldValidate()
+    fun testBackingFieldValidate() {
+        runKSPTest("backingFieldValidate.kt")
+    }
 
     @Bug("https://github.com/google/ksp/issues/3222", BugState.FIXED)
     @TestMetadata("backingFieldsSignatureMapper.kt")
