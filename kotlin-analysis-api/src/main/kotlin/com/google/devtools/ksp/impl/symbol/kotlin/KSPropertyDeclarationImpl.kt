@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
-
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.InternalKSPException
@@ -30,7 +28,6 @@ import com.google.devtools.ksp.impl.recordLookupWithSupertypes
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSAnnotationResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.synthetic.KSSyntheticJavaBackingFieldImpl
-import com.google.devtools.ksp.impl.symbol.util.BinaryClassInfoCache
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSBackingField
 import com.google.devtools.ksp.symbol.KSContextParameter
@@ -48,7 +45,6 @@ import com.intellij.psi.PsiClass
 import org.jetbrains.kotlin.analysis.api.KaConstantInitializerValue
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotation
-import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirKotlinPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaKotlinPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolModality
@@ -58,8 +54,6 @@ import org.jetbrains.kotlin.analysis.api.symbols.contextParameters
 import org.jetbrains.kotlin.analysis.api.symbols.receiverType
 import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
-import org.jetbrains.kotlin.load.kotlin.JvmPackagePartSource
-import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinarySourceElement
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget.PROPERTY_DELEGATE_FIELD as KaDelegateTarget
@@ -186,21 +180,7 @@ class KSPropertyDeclarationImpl private constructor(internal val ktPropertySymbo
                 ktPropertySymbol.initializer is KaConstantInitializerValue -> true
                 (ktPropertySymbol as? KaKotlinPropertySymbol)?.isLateInit == true -> true
                 ktPropertySymbol.modality == KaSymbolModality.ABSTRACT -> false
-                else -> {
-                    if (!ResolverAAImpl.instance.isJvm)
-                        return@lazy ktPropertySymbol.hasBackingField
-                    val classId = when (
-                        val containerSource =
-                            (ktPropertySymbol as? KaFirKotlinPropertySymbol<*>)?.firSymbol?.containerSource
-                    ) {
-                        is JvmPackagePartSource -> containerSource.classId
-                        is KotlinJvmBinarySourceElement -> containerSource.binaryClass.classId
-                        else -> null
-                    } ?: return@lazy ktPropertySymbol.hasBackingField
-                    val fileManager = ResolverAAImpl.instance.javaFileManager
-                    BinaryClassInfoCache.getCached(classId, fileManager)
-                        ?.fieldAccFlags?.containsKey(simpleName.asString()) ?: ktPropertySymbol.hasBackingField
-                }
+                else -> ktPropertySymbol.hasBackingField
             }
         } else {
             ktPropertySymbol.hasBackingField
