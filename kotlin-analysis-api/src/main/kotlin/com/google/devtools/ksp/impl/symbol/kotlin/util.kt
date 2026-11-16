@@ -125,13 +125,11 @@ import org.jetbrains.kotlin.codegen.state.InfoForMangling
 import org.jetbrains.kotlin.codegen.state.collectFunctionSignatureForManglingSuffix
 import org.jetbrains.kotlin.codegen.state.md5base64
 import org.jetbrains.kotlin.fir.declarations.FirRegularClass
-import org.jetbrains.kotlin.fir.declarations.FirResolvePhase
 import org.jetbrains.kotlin.fir.declarations.utils.moduleName
 import org.jetbrains.kotlin.fir.java.JavaTypeParameterStack
 import org.jetbrains.kotlin.fir.java.toFirExpression
 import org.jetbrains.kotlin.fir.resolve.getContainingClassSymbol
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
-import org.jetbrains.kotlin.fir.symbols.lazyResolveToPhase
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotationArgument
 import org.jetbrains.kotlin.load.kotlin.TypeMappingMode
 import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmProtoBufUtil
@@ -930,7 +928,7 @@ internal fun KaType.convertToKotlinType(): KaType {
             ?: declaration
     } else declaration
     return analyze {
-        buildClassType(base.tryResolveToTypePhase()) {
+        buildClassType(base) {
             this@convertToKotlinType.typeArguments().forEach { typeProjection ->
                 if (typeProjection is KaTypeArgumentWithVariance) {
                     argument(typeProjection.type.convertToKotlinType(), typeProjection.variance)
@@ -958,7 +956,7 @@ internal fun KaType.isAssignableFrom(that: KaType): Boolean {
 internal fun KaType.replace(newArgs: List<KaTypeProjection>): KaType {
     require(newArgs.isEmpty() || newArgs.size == this.typeArguments().size)
     return analyze {
-        when (val symbol = classifierSymbol().tryResolveToTypePhase()) {
+        when (val symbol = classifierSymbol()) {
             is KaClassLikeSymbol -> useSiteSession.buildClassType(symbol) {
                 newArgs.forEach { arg -> argument(arg) }
                 isMarkedNullable = this@replace.isMarkedNullable
@@ -1045,7 +1043,7 @@ internal fun KaType.toWildcard(mode: TypeMappingMode): KaType {
         when (this@toWildcard) {
             is KaClassType -> {
                 // TODO: missing annotations from original type.
-                buildClassType(symbol.tryResolveToTypePhase()) {
+                buildClassType(symbol) {
                     val parameters = symbol.typeParameters
                     parameters.zip(args).map { (param, arg) ->
                         val argMode = mode.updateFromAnnotations(arg.type)
@@ -1065,7 +1063,7 @@ internal fun KaType.toWildcard(mode: TypeMappingMode): KaType {
             }
 
             is KaTypeParameterType -> {
-                buildTypeParameterType(this@toWildcard.symbol.tryResolveToTypePhase())
+                buildTypeParameterType(this@toWildcard.symbol)
             }
 
             else -> throw IllegalStateException("Unexpected type ${this@toWildcard}")
@@ -1141,11 +1139,6 @@ internal fun TypeMappingMode.updateFromAnnotations(
 }
 
 internal fun KaFunctionType.abbreviatedSymbol(): KaTypeAliasSymbol? = abbreviation?.symbol as? KaTypeAliasSymbol
-
-fun <T : KaSymbol?> T.tryResolveToTypePhase(): T {
-    (this as? KaFirSymbol<*>)?.firSymbol?.lazyResolveToPhase(FirResolvePhase.TYPES)
-    return this
-}
 
 private val KaType.upperBoundIfFlexible: KaType
     get() = (this as? KaFlexibleType)?.upperBound ?: this
