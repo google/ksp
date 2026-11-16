@@ -23,7 +23,10 @@ import com.google.devtools.ksp.buildApiFeatures
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSContextParameter
 import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.Modifier
 
 class ChangingBehaviorProcessor(val annotationNames: List<String>, override var apiFeatures: ApiFeatures) :
@@ -81,14 +84,33 @@ class ChangingBehaviorProcessor(val annotationNames: List<String>, override var 
                 }"
             )
         }
-        seenSymbols.forEach { sym ->
+        seenSymbols.sortedBy(::renderSymbol).forEach { sym ->
+            val name = renderSymbol(sym)
             when (sym) {
                 is KSDeclaration -> {
-                    val name = sym.qualifiedName?.asString() ?: sym.simpleName.asString()
                     val annotations = renderAnnotations(sym.annotations)
                     val modifiers = renderModifiers(resolver.effectiveJavaModifiers(sym))
                     localResults.add("$name.annotations = $annotations")
                     localResults.add("$name.modifiers = $modifiers")
+                    when (sym) {
+                        is KSPropertyDeclaration -> {
+                            localResults.add("$name.backingField = ${sym.backingField?.let(::renderSymbol)}")
+                            localResults.add(
+                                "$name.contextParameters = ${sym.contextParameters.map(::renderSymbol)}"
+                            )
+                        }
+
+                        is KSFunctionDeclaration -> {
+                            localResults.add(
+                                "$name.contextParameters = ${sym.contextParameters.map(::renderSymbol)}"
+                            )
+                        }
+                    }
+                }
+
+                is KSContextParameter -> {
+                    val annotations = renderAnnotations(sym.annotations)
+                    localResults.add("$name.annotations = $annotations")
                 }
 
                 else -> error("Unexpected annotated symbol $sym")
@@ -100,12 +122,17 @@ class ChangingBehaviorProcessor(val annotationNames: List<String>, override var 
     private fun renderSymbols(
         symbols: Sequence<KSAnnotated>,
         annotationName: String
-    ): String = symbols.joinToString(", ") { sym ->
-        when (sym) {
-            is KSDeclaration -> sym.qualifiedName?.asString() ?: sym.simpleName.asString()
+    ): String = symbols.map { sym ->
+        renderSymbol(sym, "annotated with $annotationName")
+    }.sorted().toList().toString()
 
-            else -> error("Unexpected annotated symbol $sym annotated with $annotationName")
-        }
+    private fun renderSymbol(sym: KSAnnotated, context: String? = null): String = when (sym) {
+        is KSDeclaration -> sym.qualifiedName?.asString() ?: sym.simpleName.asString()
+        is KSContextParameter -> "${renderSymbol(sym.parent as KSAnnotated)}.$sym"
+        else -> error(
+            if (context != null) "Unexpected annotated symbol $sym $context"
+            else "Unexpected annotated symbol $sym"
+        )
     }
 
     private fun renderModifiers(modifiers: Set<Modifier>): String =

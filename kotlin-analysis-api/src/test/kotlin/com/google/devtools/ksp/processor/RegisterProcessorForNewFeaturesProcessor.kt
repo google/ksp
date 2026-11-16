@@ -24,7 +24,9 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSContextParameter
 import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.Modifier
 
@@ -58,17 +60,33 @@ class RegisterProcessorForNewFeaturesProcessor(
                 }"
             )
         }
-        seenSymbols.forEach { sym ->
+        seenSymbols.sortedBy(::renderSymbol).forEach { sym ->
+            val name = renderSymbol(sym)
             when (sym) {
                 is KSDeclaration -> {
-                    val name = sym.qualifiedName?.asString() ?: sym.simpleName.asString()
                     val annotations = renderAnnotations(sym.annotations)
                     val modifiers = renderModifiers(resolver.effectiveJavaModifiers(sym))
                     results.add("$name.annotations = $annotations")
                     results.add("$name.modifiers = $modifiers")
-                    if (sym is KSPropertyDeclaration) {
-                        results.add("$name.backingField = ${sym.backingField?.qualifiedName?.asString()}")
+                    when (sym) {
+                        is KSPropertyDeclaration -> {
+                            results.add("$name.backingField = ${sym.backingField?.let(::renderSymbol)}")
+                            results.add(
+                                "$name.contextParameters = ${sym.contextParameters.map(::renderSymbol)}"
+                            )
+                        }
+
+                        is KSFunctionDeclaration -> {
+                            results.add(
+                                "$name.contextParameters = ${sym.contextParameters.map(::renderSymbol)}"
+                            )
+                        }
                     }
+                }
+
+                is KSContextParameter -> {
+                    val annotations = renderAnnotations(sym.annotations)
+                    results.add("$name.annotations = $annotations")
                 }
 
                 else -> error("Unexpected annotated symbol $sym")
@@ -80,12 +98,17 @@ class RegisterProcessorForNewFeaturesProcessor(
     private fun renderSymbols(
         symbols: Sequence<KSAnnotated>,
         annotationName: String
-    ): String = symbols.joinToString(", ") { sym ->
-        when (sym) {
-            is KSDeclaration -> sym.qualifiedName?.asString() ?: sym.simpleName.asString()
+    ): String = symbols.map { sym ->
+        renderSymbol(sym, "annotated with $annotationName")
+    }.sorted().toList().toString()
 
-            else -> error("Unexpected annotated symbol $sym annotated with $annotationName")
-        }
+    private fun renderSymbol(sym: KSAnnotated, context: String? = null): String = when (sym) {
+        is KSDeclaration -> sym.qualifiedName?.asString() ?: sym.simpleName.asString()
+        is KSContextParameter -> "${renderSymbol(sym.parent as KSAnnotated)}.$sym"
+        else -> error(
+            if (context != null) "Unexpected annotated symbol $sym $context"
+            else "Unexpected annotated symbol $sym"
+        )
     }
 
     private fun renderModifiers(modifiers: Set<Modifier>): String =

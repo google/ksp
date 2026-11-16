@@ -258,6 +258,7 @@ abstract class KSPUnitTestSuite(
         "This test asserts that resolver behavior change (when calling the enableNewFeatures lambda) is observable and not just a property of KSP's test framework."
     )
     @Bug("https://github.com/google/ksp/issues/3185", BugState.FIXED)
+    @Bug("https://github.com/google/ksp/issues/3221", BugState.FIXED)
     @TestMetadata("changingBehavior.kt")
     @Test
     fun testChangingBehavior() {
@@ -322,41 +323,73 @@ abstract class KSPUnitTestSuite(
         runKSPTest("getSymbolsWithAnnotation/contextParameters.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/3221", BugState.FIXED)
     @TestMetadata("contextParameterIdentity.kt")
     @Test
     fun testContextParameterIdentity() {
         runKSPTest("contextParameterIdentity.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/3221", BugState.FIXED)
     @TestMetadata("contextParameterTypes.kt")
     @Test
     fun testContextParameterTypes() {
         runKSPTest("contextParameterTypes.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/3221", BugState.FIXED)
     @TestMetadata("contextParameterTypeAlias.kt")
     @Test
     fun testContextParameterTypeAlias() {
         runKSPTest("contextParameterTypeAlias.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/3221", BugState.FIXED)
     @TestMetadata("contextParameterNames.kt")
     @Test
     fun testContextParameterNames() {
         runKSPTest("contextParameterNames.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/3221", BugState.FIXED)
     @TestMetadata("native/contextParameterNames.kt")
     @Test
     fun testNativeContextParameterNames() {
         runKSPTest("native/contextParameterNames.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/3221", BugState.FIXED)
     @TestMetadata("getSymbolsWithAnnotation/negative/contextParameterDangling.kt")
     @Test
     @Negative("A dangling context(...) modifier list with no following declaration is a syntax error.")
     fun testContextParameterDangling() {
         runKSPTest("getSymbolsWithAnnotation/negative/contextParameterDangling.kt")
+    }
+
+    @Bug("https://github.com/google/ksp/issues/3221", BugState.OPEN)
+    @TestMetadata("contextParameterValidate.kt")
+    @Test
+    abstract fun testContextParameterValidate()
+
+    @Bug("https://github.com/google/ksp/issues/3221", BugState.FIXED)
+    @TestMetadata("contextParameterAnnotations.kt")
+    @Test
+    fun testContextParameterAnnotations() {
+        runKSPTest("contextParameterAnnotations.kt")
+    }
+
+    @Bug("https://github.com/google/ksp/issues/3221", BugState.FIXED)
+    @TestMetadata("native/contextParameterAnnotations.kt")
+    @Test
+    fun testNativeContextParameterAnnotations() {
+        runKSPTest("native/contextParameterAnnotations.kt")
+    }
+
+    @Bug("https://github.com/google/ksp/issues/3221", BugState.FIXED)
+    @TestMetadata("contextParameterOriginAndVisitor.kt")
+    @Test
+    fun testContextParameterOriginAndVisitor() {
+        runKSPTest("contextParameterOriginAndVisitor.kt")
     }
 
     @TestMetadata("declarationInconsistency.kt")
