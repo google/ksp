@@ -68,7 +68,6 @@ import org.jetbrains.kotlin.analysis.api.components.KaSubstitutorBuilder
 import org.jetbrains.kotlin.analysis.api.fir.evaluate.FirAnnotationValueConverter
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirSymbol
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirValueParameterSymbol
-import org.jetbrains.kotlin.analysis.api.fir.types.KaFirFunctionType
 import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseTypeArgumentWithVariance
 import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeToken
@@ -133,8 +132,6 @@ import org.jetbrains.kotlin.fir.java.toFirExpression
 import org.jetbrains.kotlin.fir.resolve.getContainingClassSymbol
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 import org.jetbrains.kotlin.fir.symbols.lazyResolveToPhase
-import org.jetbrains.kotlin.fir.types.abbreviatedType
-import org.jetbrains.kotlin.fir.types.classId
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotationArgument
 import org.jetbrains.kotlin.load.kotlin.TypeMappingMode
 import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmProtoBufUtil
@@ -670,12 +667,6 @@ internal fun ClassId.toKtClassSymbol(): KaClassSymbol? {
     }
 }
 
-internal fun ClassId.toTypeAlias(): KaTypeAliasSymbol? {
-    return analyze {
-        findTypeAlias(this@toTypeAlias)
-    }
-}
-
 internal fun KaType.classifierSymbol(): KaClassifierSymbol? {
     return try {
         when (this) {
@@ -683,7 +674,7 @@ internal fun KaType.classifierSymbol(): KaClassifierSymbol? {
             // TODO: upstream is not exposing enough information for captured types.
             is KaCapturedType -> TODO("fix in upstream")
             is KaClassErrorType, is KaErrorType -> null
-            is KaFunctionType -> (this as? KaFirFunctionType)?.abbreviatedSymbol() ?: symbol
+            is KaFunctionType -> abbreviatedSymbol() ?: symbol
             is KaUsualClassType -> symbol
             is KaDefinitelyNotNullType -> original.classifierSymbol()
             is KaDynamicType -> null
@@ -1149,10 +1140,7 @@ internal fun TypeMappingMode.updateFromAnnotations(
     }
 }
 
-internal fun KaFunctionType.abbreviatedSymbol(): KaTypeAliasSymbol? {
-    val classId = (this as? KaFirFunctionType)?.coneType?.abbreviatedType?.classId ?: return null
-    return classId.toTypeAlias()
-}
+internal fun KaFunctionType.abbreviatedSymbol(): KaTypeAliasSymbol? = abbreviation?.symbol as? KaTypeAliasSymbol
 
 fun <T : KaSymbol?> T.tryResolveToTypePhase(): T {
     (this as? KaFirSymbol<*>)?.firSymbol?.lazyResolveToPhase(FirResolvePhase.TYPES)
