@@ -24,6 +24,7 @@
 // lib : functionInLib -> lib.LibKt
 // lib : functionInLibCompanion -> lib.RealLibClass$Companion
 // lib : functionInLibJvmName -> lib.LibCustomClassName
+// lib : functionInLibMultifile -> lib.LibMultifileClassName
 // lib : functionInLibRealClass -> lib.RealLibClass
 // lib : javaFieldInLib -> lib.LibJavaClass
 // lib : javaMethodInLib -> lib.LibJavaClass
@@ -44,6 +45,7 @@
 // main : functionInMain -> main.MainKt
 // main : functionInMainCompanion -> main.RealMainClass$Companion
 // main : functionInMainJvmName -> main.MainCustomClassName
+// main : functionInMainMultifile -> main.MainMultifileClassName
 // main : functionInMainRealClass -> main.RealMainClass
 // main : javaFieldInMain -> main.MainJavaClass
 // main : javaMethodInMain -> main.MainJavaClass
@@ -89,6 +91,11 @@ package lib
 fun functionInLibJvmName() {}
 val valueInLibJvmName: String = ""
 var variableInLibJvmName: String = ""
+// FILE: multifile.kt
+@file:JvmMultifileClass
+@file:JvmName("LibMultifileClassName")
+package lib
+fun functionInLibMultifile() {}
 
 // FILE: lib/LibJavaClass.java
 package lib;
@@ -128,6 +135,11 @@ package main
 fun functionInMainJvmName() {}
 val valueInMainJvmName: String = ""
 var variableInMainJvmName: String = ""
+// FILE: multifile.kt
+@file:JvmMultifileClass
+@file:JvmName("MainMultifileClassName")
+package main
+fun functionInMainMultifile() {}
 // FILE: main/MainJavaClass.java
 package main;
 public class MainJavaClass {

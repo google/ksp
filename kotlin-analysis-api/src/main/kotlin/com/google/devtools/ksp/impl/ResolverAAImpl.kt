@@ -119,9 +119,9 @@ import com.intellij.psi.impl.file.impl.JavaFileManager
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.components.buildSubstitutor
-import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirSymbol
 import org.jetbrains.kotlin.analysis.api.fir.types.KaFirType
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaSourceModule
+import org.jetbrains.kotlin.analysis.api.symbols.KaCallableSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaEnumEntrySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaFunctionSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaJavaFieldSymbol
@@ -138,11 +138,9 @@ import org.jetbrains.kotlin.asJava.classes.KtLightClassForFacade
 import org.jetbrains.kotlin.asJava.findFacadeClass
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl
-import org.jetbrains.kotlin.fir.symbols.impl.FirCallableSymbol
 import org.jetbrains.kotlin.fir.types.isRaw
 import org.jetbrains.kotlin.fir.types.typeContext
 import org.jetbrains.kotlin.load.java.JvmAbi
-import org.jetbrains.kotlin.load.kotlin.JvmPackagePartSource
 import org.jetbrains.kotlin.load.kotlin.TypeMappingMode
 import org.jetbrains.kotlin.load.kotlin.getOptimalModeForReturnType
 import org.jetbrains.kotlin.load.kotlin.getOptimalModeForValueParameter
@@ -668,8 +666,8 @@ class ResolverAAImpl(
         return resolutionStrategy.newKSFiles.asSequence()
     }
 
+    @OptIn(KaExperimentalApi::class)
     private fun getOwnerJvmClassNameHelper(declaration: KSDeclaration): String? {
-        @Suppress("UNCHECKED_CAST")
         return declaration.closestClassDeclaration()?.let {
             // Find classId for JvmClassName for member callables.
             (it as? KSClassDeclarationImpl)?.ktClassOrObjectSymbol?.classId
@@ -680,11 +678,9 @@ class ResolverAAImpl(
                 ((it.ktFileSymbol.psi as? KtFile)?.findFacadeClass() as? KtLightClassForFacade)
                     ?.facadeClassFqName?.asString()
             }
-            // Down cast to fir symbol for library symbols as light facade class for libraries not available in AA.
-        } ?: (
-            ((declaration as? AbstractKSDeclarationImpl)?.ktDeclarationSymbol as? KaFirSymbol<FirCallableSymbol<*>>)
-                ?.firSymbol?.containerSource as? JvmPackagePartSource
-            )?.classId?.asFqNameString()
+            // Light facade classes are not available for libraries, so ask the Analysis API instead.
+        } ?: ((declaration as? AbstractKSDeclarationImpl)?.ktDeclarationSymbol as? KaCallableSymbol)
+            ?.let { analyze { it.containingJvmClassName } }
     }
 
     override fun getOwnerJvmClassName(declaration: KSFunctionDeclaration): String? {
