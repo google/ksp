@@ -93,7 +93,6 @@ import org.jetbrains.kotlin.analysis.api.standalone.base.projectStructure.FirSta
 import org.jetbrains.kotlin.analysis.api.standalone.base.projectStructure.StandaloneProjectFactory
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getResolutionFacade
 import org.jetbrains.kotlin.analysis.low.level.api.fir.lazy.resolve.LLFirResolutionActivityTracker
-import org.jetbrains.kotlin.analysis.low.level.api.fir.providers.LLSealedInheritorsProvider
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
 import org.jetbrains.kotlin.cli.jvm.compiler.CliMetadataFinderFactory
@@ -109,7 +108,6 @@ import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.config.LanguageVersion
 import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 import org.jetbrains.kotlin.diagnostics.KtRegisteredDiagnosticFactoriesStorage
-import org.jetbrains.kotlin.fir.declarations.SealedClassInheritorsProvider
 import org.jetbrains.kotlin.fir.session.registerResolveComponents
 import org.jetbrains.kotlin.load.kotlin.MetadataFinderFactory
 import org.jetbrains.kotlin.load.kotlin.PackagePartProvider
@@ -354,11 +352,6 @@ class KotlinSymbolProcessing(
             registerService(
                 KotlinPackageProviderFactory::class.java,
                 IncrementalKotlinPackageProviderFactory(project, libraryRoots)
-            )
-
-            registerService(
-                SealedClassInheritorsProvider::class.java,
-                LLSealedInheritorsProvider::class.java,
             )
 
             registerService(
