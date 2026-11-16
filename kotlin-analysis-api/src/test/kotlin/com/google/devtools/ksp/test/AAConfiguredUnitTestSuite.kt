@@ -57,6 +57,12 @@ class AAConfiguredDefaultFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(
         enableContextParameters = false
     }
 ) {
+    @TestMetadata("backingFieldValidate.kt")
+    @Test
+    override fun testBackingFieldValidate() {
+        runKSPTest("backingFieldValidate.kt")
+    }
+
     @TestMetadata("deferredBackingFields.kt")
     @Test
     override fun testDeferredBackingFields() {
@@ -70,6 +76,12 @@ class AAConfiguredBackingFieldsUnitTestSuite : AAConfiguredUnitTestSuiteBase(
         enableContextParameters = false
     }
 ) {
+    @TestMetadata("backingFieldValidate.kt")
+    @Test
+    override fun testBackingFieldValidate() {
+        runFailingKSPTest("backingFieldValidate.kt")
+    }
+
     @TestMetadata("deferredBackingFields.kt")
     @Test
     override fun testDeferredBackingFields() {
@@ -83,6 +95,12 @@ class AAConfiguredContextParametersUnitTestSuite : AAConfiguredUnitTestSuiteBase
         enableContextParameters = true
     }
 ) {
+    @TestMetadata("backingFieldValidate.kt")
+    @Test
+    override fun testBackingFieldValidate() {
+        runKSPTest("backingFieldValidate.kt")
+    }
+
     @TestMetadata("deferredBackingFields.kt")
     @Test
     override fun testDeferredBackingFields() {
@@ -96,6 +114,12 @@ class AAConfiguredAllFeaturesUnitTestSuite : AAConfiguredUnitTestSuiteBase(
         enableContextParameters = true
     }
 ) {
+    @TestMetadata("backingFieldValidate.kt")
+    @Test
+    override fun testBackingFieldValidate() {
+        runFailingKSPTest("backingFieldValidate.kt")
+    }
+
     @TestMetadata("deferredBackingFields.kt")
     @Test
     override fun testDeferredBackingFields() {

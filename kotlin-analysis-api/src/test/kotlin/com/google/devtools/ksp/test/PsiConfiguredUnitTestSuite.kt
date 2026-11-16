@@ -57,6 +57,12 @@ class PsiConfiguredDefaultFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase
         enableContextParameters = false
     }
 ) {
+    @TestMetadata("backingFieldValidate.kt")
+    @Test
+    override fun testBackingFieldValidate() {
+        runKSPTest("backingFieldValidate.kt")
+    }
+
     @TestMetadata("deferredBackingFields.kt")
     @Test
     override fun testDeferredBackingFields() {
@@ -70,6 +76,12 @@ class PsiConfiguredBackingFieldsUnitTestSuite : PsiConfiguredUnitTestSuiteBase(
         enableContextParameters = false
     }
 ) {
+    @TestMetadata("backingFieldValidate.kt")
+    @Test
+    override fun testBackingFieldValidate() {
+        runFailingKSPTest("backingFieldValidate.kt")
+    }
+
     @TestMetadata("deferredBackingFields.kt")
     @Test
     override fun testDeferredBackingFields() {
@@ -83,6 +95,12 @@ class PsiConfiguredContextParametersUnitTestSuite : PsiConfiguredUnitTestSuiteBa
         enableContextParameters = true
     }
 ) {
+    @TestMetadata("backingFieldValidate.kt")
+    @Test
+    override fun testBackingFieldValidate() {
+        runKSPTest("backingFieldValidate.kt")
+    }
+
     @TestMetadata("deferredBackingFields.kt")
     @Test
     override fun testDeferredBackingFields() {
@@ -96,6 +114,12 @@ class PsiConfiguredAllFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(
         enableContextParameters = true
     }
 ) {
+    @TestMetadata("backingFieldValidate.kt")
+    @Test
+    override fun testBackingFieldValidate() {
+        runFailingKSPTest("backingFieldValidate.kt")
+    }
+
     @TestMetadata("deferredBackingFields.kt")
     @Test
     override fun testDeferredBackingFields() {
