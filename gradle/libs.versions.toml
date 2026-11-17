@@ -1,5 +1,6 @@
 [versions]
 kotlin-base = "2.3.20"
+kotlin-build-tools-api = "2.4.0"
 kotlinx-serialization = "1.6.3"
 agp-base = "9.3.0-alpha01"
 junit = "4.13.1"
@@ -30,6 +31,7 @@ aa-javax-inject = "1"
 [libraries]
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin-base" }
 kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin-base" }
+kotlin-buildToolsApi = { module = "org.jetbrains.kotlin:kotlin-build-tools-api", version.ref = "kotlin-build-tools-api" }
 kotlin-gradlePluginApi = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin-api", version.ref = "kotlin-base" }
 kotlin-compiler-embeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin-base" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }

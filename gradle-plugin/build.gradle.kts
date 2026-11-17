@@ -16,6 +16,7 @@ plugins {
 }
 
 dependencies {
+    compileOnly(libs.kotlin.buildToolsApi)
     compileOnly(libs.kotlin.gradlePluginApi)
     compileOnly(libs.kotlin.gradlePlugin)
     compileOnly(libs.kotlin.compiler.embeddable)
@@ -27,6 +28,8 @@ dependencies {
     compileOnly(libs.kotlin.stdlib)
     implementation(project(":api"))
     implementation(project(":common-deps"))
+    testImplementation(libs.kotlin.buildToolsApi)
+    testImplementation(libs.kotlin.gradlePluginApi)
     testImplementation(gradleApi())
     testImplementation(project(":api"))
     testImplementation(libs.junit4)

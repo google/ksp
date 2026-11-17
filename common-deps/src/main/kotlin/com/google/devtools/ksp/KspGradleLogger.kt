@@ -18,15 +18,24 @@ package com.google.devtools.ksp.processing
 
 import com.google.devtools.ksp.symbol.FileLocation
 import com.google.devtools.ksp.symbol.KSNode
-import com.google.devtools.ksp.symbol.NonExistLocation
+import javax.tools.Diagnostic
+import javax.tools.DiagnosticListener
+import javax.tools.JavaFileObject
 
-class KspGradleLogger(val loglevel: Int) : KSPLogger {
+class KspGradleLogger @JvmOverloads constructor(
+    val loglevel: Int,
+    private val diagnosticListener: DiagnosticListener<JavaFileObject>? = null
+) : KSPLogger {
     private val messager = System.out
 
     private fun decorateMessage(message: String, symbol: KSNode?): String =
-        when (val location = symbol?.location) {
-            is FileLocation -> "${location.filePath}:${location.lineNumber}: $message"
-            is NonExistLocation, null -> message
+        when {
+            symbol is KspDiagnosticNode -> message
+            symbol?.location is FileLocation -> {
+                val location = symbol.location as FileLocation
+                "${location.filePath}:${location.lineNumber}: $message"
+            }
+            else -> message
         }
 
     override fun logging(message: String, symbol: KSNode?) {
@@ -40,18 +49,26 @@ class KspGradleLogger(val loglevel: Int) : KSPLogger {
     }
 
     override fun warn(message: String, symbol: KSNode?) {
-        if (loglevel <= LOGGING_LEVEL_WARN)
-            messager.println("w: [ksp] ${decorateMessage(message, symbol)}")
+        if (diagnosticListener != null || loglevel <= LOGGING_LEVEL_WARN)
+            report(Diagnostic.Kind.WARNING, "w", "[ksp] ${decorateMessage(message, symbol)}", symbol)
     }
 
     override fun error(message: String, symbol: KSNode?) {
-        if (loglevel <= LOGGING_LEVEL_ERROR)
-            messager.println("e: [ksp] ${decorateMessage(message, symbol)}")
+        if (diagnosticListener != null || loglevel <= LOGGING_LEVEL_ERROR)
+            report(Diagnostic.Kind.ERROR, "e", "[ksp] ${decorateMessage(message, symbol)}", symbol)
     }
 
     override fun exception(e: Throwable) {
-        if (loglevel <= LOGGING_LEVEL_ERROR)
-            messager.println("e: [ksp] $e")
+        if (diagnosticListener != null || loglevel <= LOGGING_LEVEL_ERROR)
+            report(Diagnostic.Kind.ERROR, "e", "[ksp] $e", null)
+    }
+
+    private fun report(kind: Diagnostic.Kind, prefix: String, message: String, symbol: KSNode?) {
+        if (diagnosticListener != null) {
+            diagnosticListener.report(KspDiagnostic(kind, message, symbol?.location))
+        } else {
+            messager.println("$prefix: $message")
+        }
     }
 
     companion object {

@@ -310,13 +310,13 @@ internal fun KSTypeArgument.toKtTypeProjection(): KaTypeProjection {
     }
 }
 
-internal fun PsiElement?.toLocation(): Location {
+internal fun PsiElement?.toLocation(offset: Int? = null): Location {
     if (this == null) {
         return NonExistLocation
     }
     val file = this.containingFile
     val document = KSPCoreEnvironment.instance.psiDocumentManager.getDocument(file) ?: return NonExistLocation
-    return FileLocation(file.virtualFile.path, document.getLineNumber(this.textOffset) + 1)
+    return FileLocation(file.virtualFile.path, document.getLineNumber(offset ?: this.textOffset) + 1)
 }
 
 internal fun KaSymbol.toContainingFile(): KSFile? {
