@@ -30,8 +30,8 @@ import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.Nullability
+import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
-import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.types.*
 
@@ -132,9 +132,14 @@ class KSTypeImpl private constructor(internal val type: KaType) : KSType {
         return getCached(type.replace(arguments.map { it.toKtTypeProjection() }))
     }
 
-    @OptIn(KaImplementationDetail::class)
+    @OptIn(KaExperimentalApi::class)
     override fun starProjection(): KSType {
-        return getCached(type.replace(List(type.typeArguments().size) { KaBaseStarTypeProjection(type.token) }))
+        val starProjections = analyze {
+            List(type.typeArguments().size) {
+                typeCreator.starTypeProjection()
+            }
+        }
+        return getCached(type.replace(starProjections))
     }
 
     override fun makeNullable(): KSType {

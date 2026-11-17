@@ -56,9 +56,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.impl.compiled.ClsMemberImpl
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
-import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.KaNonPublicApi
-import org.jetbrains.kotlin.analysis.api.KaPlatformInterface
 import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotated
@@ -68,9 +66,6 @@ import org.jetbrains.kotlin.analysis.api.components.KaSubstitutorBuilder
 import org.jetbrains.kotlin.analysis.api.fir.evaluate.FirAnnotationValueConverter
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirSymbol
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirValueParameterSymbol
-import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseStarTypeProjection
-import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseTypeArgumentWithVariance
-import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeToken
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaLibraryModule
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaSourceModule
 import org.jetbrains.kotlin.analysis.api.symbols.KaBackingFieldSymbol
@@ -287,7 +282,7 @@ internal fun KaType.toClassifierReference(parent: KSTypeReference?): KSReference
     }
 }
 
-@OptIn(KaImplementationDetail::class, KaPlatformInterface::class)
+@OptIn(KaExperimentalApi::class)
 internal fun KSTypeArgument.toKtTypeProjection(): KaTypeProjection {
     val variance = when (this.variance) {
         com.google.devtools.ksp.symbol.Variance.INVARIANT -> Variance.INVARIANT
@@ -296,12 +291,12 @@ internal fun KSTypeArgument.toKtTypeProjection(): KaTypeProjection {
         else -> null
     }
     val argType = (this.type?.resolve() as? KSTypeImpl)?.type
-    // TODO: maybe make a singleton of alwaysAccessibleLifetimeToken?
-    val alwaysAccessibleLifetimeToken = KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
-    return if (argType == null || variance == null) {
-        KaBaseStarTypeProjection(alwaysAccessibleLifetimeToken)
-    } else {
-        KaBaseTypeArgumentWithVariance(argType, variance, alwaysAccessibleLifetimeToken)
+    return analyze {
+        if (argType == null || variance == null) {
+            typeCreator.starTypeProjection()
+        } else {
+            typeCreator.typeProjection(variance, argType)
+        }
     }
 }
 

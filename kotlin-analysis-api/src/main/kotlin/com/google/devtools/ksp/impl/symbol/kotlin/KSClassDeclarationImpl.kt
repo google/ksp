@@ -32,8 +32,6 @@ import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolv
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiClass
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
-import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
-import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
 import org.jetbrains.kotlin.name.Name
@@ -157,7 +155,7 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
         }
     }
 
-    @OptIn(KaExperimentalApi::class, KaImplementationDetail::class)
+    @OptIn(KaExperimentalApi::class)
     override fun asStarProjectedType(): KSType {
         return analyze {
             KSTypeImpl.getCached(
@@ -165,11 +163,7 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
                     var current: KSNode? = this@KSClassDeclarationImpl
                     while (current is KSClassDeclarationImpl) {
                         current.ktClassOrObjectSymbol.typeParameters.forEach { _ ->
-                            argument(
-                                KaBaseStarTypeProjection(
-                                    current.ktClassOrObjectSymbol.token
-                                )
-                            )
+                            argument(typeCreator.starTypeProjection())
                         }
                         current = if (Modifier.INNER in current.modifiers) {
                             current.parent
