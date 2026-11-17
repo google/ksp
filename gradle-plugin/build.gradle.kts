@@ -102,6 +102,7 @@ val writeTestPropsTask =
             "Generates a properties file with the current environment for gradle integration tests"
         destinationFile = testPropsOutDir.map { it.file("testprops.properties") }
         property("kspVersion", version)
+        property("kotlinStdlibFloor", libs.versions.kotlin.stdlib.floor.get())
         property(
             "mavenRepoDir",
             rootProject.layout.buildDirectory.dir("repos/test").get().asFile.absolutePath,
@@ -142,6 +143,7 @@ tasks.named<Test>("test").configure {
     dependsOn(":api:publishAllPublicationsToTestRepository")
     dependsOn(":common-deps:publishAllPublicationsToTestRepository")
     dependsOn(":gradle-plugin:publishAllPublicationsToTestRepository")
+    dependsOn(":kotlin-analysis-api:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing-aa-embeddable:publishAllPublicationsToTestRepository")
 }
