@@ -21,6 +21,7 @@ import com.google.devtools.ksp.processing.KspGradleLogger
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import java.io.ByteArrayInputStream
 import java.io.ObjectInputStream
+import java.util.function.Supplier
 
 class KSPLoader {
     companion object {
@@ -29,11 +30,22 @@ class KSPLoader {
             kspConfigStream: ByteArray,
             processorProvider: List<SymbolProcessorProvider>,
             logLevel: Int
+        ): Int = loadAndRunKSP(kspConfigStream, Supplier { processorProvider }, logLevel)
+
+        /**
+         * Like the overload above, but [processorProviders] is only called if there is something to process (see
+         * [KotlinSymbolProcessing]).
+         */
+        @JvmStatic
+        fun loadAndRunKSP(
+            kspConfigStream: ByteArray,
+            processorProviders: Supplier<List<SymbolProcessorProvider>>,
+            logLevel: Int
         ): Int {
             val kspConfig = ObjectInputStream(ByteArrayInputStream(kspConfigStream)).use { objectInputStream ->
                 objectInputStream.readObject() as KSPConfig
             }
-            val ksp = KotlinSymbolProcessing(kspConfig, processorProvider, KspGradleLogger(logLevel))
+            val ksp = KotlinSymbolProcessing(kspConfig, processorProviders, KspGradleLogger(logLevel))
             return ksp.execute().ordinal
         }
     }

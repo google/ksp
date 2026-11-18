@@ -48,6 +48,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import java.nio.file.FileSystemException
+import java.util.function.Supplier
 
 /**
  * Tests for [IncrementalContextAA.tryEarlyExitIfClean]: KSP skips the session and the processors when an incremental
@@ -227,6 +228,21 @@ class IncrementalEarlyExitTest {
         assertEquals("gen", File(out, "kotlin/p1/Gen.kt").readText())
     }
 
+    @Test
+    fun `KSP loads the processors only when it processes`() {
+        var loads = 0
+        val processor = processor { resolver, codeGenerator ->
+            val files = resolver.getAllFiles().toList().toTypedArray()
+            codeGenerator.createNewFile(Dependencies(false, *files), "p1", "AGen").use { it.write("gen".toByteArray()) }
+        }
+        val loading = Supplier { loads++; listOf(processor) }
+
+        runKsp(loading)
+        runKsp(loading, changed = listOf("other.Unrelated"))
+
+        assertEquals(1, loads, "the clean second run must not load the processors")
+    }
+
     private fun src(path: String) = File(base, "src/main/kotlin/$path").apply {
         parentFile.mkdirs()
         writeText(if (extension == "java") "package p1; class $nameWithoutExtension {}" else "package p1")
@@ -300,7 +316,14 @@ class IncrementalEarlyExitTest {
             }
         }
 
-    private fun runKsp(provider: SymbolProcessorProvider, changed: List<String> = emptyList(), log: Boolean = false) {
+    private fun runKsp(provider: SymbolProcessorProvider, changed: List<String> = emptyList(), log: Boolean = false) =
+        runKsp(Supplier { listOf(provider) }, changed, log)
+
+    private fun runKsp(
+        providers: Supplier<List<SymbolProcessorProvider>>,
+        changed: List<String> = emptyList(),
+        log: Boolean = false,
+    ) {
         val srcRoot = a.parentFile.parentFile
         val config = KSPJvmConfig.Builder().apply {
             moduleName = "test"
@@ -326,7 +349,7 @@ class IncrementalEarlyExitTest {
             removedSources = emptyList()
             changedClasses = changed
         }.build()
-        val exitCode = KotlinSymbolProcessing(config, listOf(provider), CommandLineKSPLogger()).execute()
+        val exitCode = KotlinSymbolProcessing(config, providers, CommandLineKSPLogger()).execute()
         assertEquals(KotlinSymbolProcessing.ExitCode.OK, exitCode)
     }
 

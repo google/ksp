@@ -90,6 +90,7 @@ import java.net.URLClassLoader
 import java.nio.file.Paths
 import java.util.*
 import java.util.concurrent.Callable
+import java.util.function.Supplier
 import javax.inject.Inject
 
 @CacheableTask
@@ -772,37 +773,43 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             )
         }
 
-        // Clean stale files for now.
-        // TODO: support incremental processing.
-        gradleCfg.outputBaseDir.get().asFile.deleteRecursively()
-
-        val cacheProcessorLoader = gradleCfg.cacheProcessorClassloader.get()
-        val processorClassloader =
-            getProcessorClassLoader(gradleCfg, isolatedClassLoader, kspClasspath, cacheProcessorLoader)
-        if (gradleCfg.profilingMode.get()) {
-            doNotGC.add(processorClassloader)
-        } else if (!cacheProcessorLoader) {
-            doNotGC.clear()
-        }
-
-        val excludedProcessors = gradleCfg.excludedProcessors.get()
-        val processorProviders = ServiceLoader.load(
-            processorClassloader.loadClass("com.google.devtools.ksp.processing.SymbolProcessorProvider"),
-            processorClassloader
-        ).filter {
-            it.javaClass.name !in excludedProcessors
-        }.toList()
-
         val kspGradleLogger = KspGradleLogger(gradleCfg.logLevel.get().ordinal)
+        val cacheProcessorLoader = gradleCfg.cacheProcessorClassloader.get()
+        var processorClassloader: URLClassLoader? = null
 
-        if (processorProviders.isEmpty()) {
-            kspGradleLogger.error("No providers found in processor classpath.")
-            throw Exception("KSP failed with exit code: ${KotlinSymbolProcessing.ExitCode.PROCESSING_ERROR}")
-        } else {
+        // KSP calls this only when it is going to process, so an incremental run with nothing to process keeps its
+        // outputs in place and never loads the processors.
+        val prepareProcessing = Supplier<List<Any>> {
+            // Clean stale files for now.
+            // TODO: support incremental processing.
+            gradleCfg.outputBaseDir.get().asFile.deleteRecursively()
+
+            val classloader =
+                getProcessorClassLoader(gradleCfg, isolatedClassLoader, kspClasspath, cacheProcessorLoader)
+            processorClassloader = classloader
+            if (gradleCfg.profilingMode.get()) {
+                doNotGC.add(classloader)
+            } else if (!cacheProcessorLoader) {
+                doNotGC.clear()
+            }
+
+            val excludedProcessors = gradleCfg.excludedProcessors.get()
+            val processorProviders = ServiceLoader.load(
+                classloader.loadClass("com.google.devtools.ksp.processing.SymbolProcessorProvider"),
+                classloader
+            ).filter {
+                it.javaClass.name !in excludedProcessors
+            }.toList()
+
+            if (processorProviders.isEmpty()) {
+                kspGradleLogger.error("No providers found in processor classpath.")
+                throw NoProcessorProvidersException()
+            }
             kspGradleLogger.info(
                 "loaded provider(s): " +
                     processorProviders.joinToString(separator = ", ", prefix = "[", postfix = "]") { it.javaClass.name }
             )
+            processorProviders
         }
 
         fun KSPConfig.Builder.setupSuper() {
@@ -878,24 +885,27 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
             val runMethod = kspLoaderClass.getMethod(
                 "loadAndRunKSP",
                 ByteArray::class.java,
-                List::class.java,
+                Supplier::class.java,
                 Int::class.java
             )
             val returnCode = runMethod.invoke(
                 null,
                 byteArrayOutputStream.toByteArray(),
-                processorProviders,
+                prepareProcessing,
                 gradleCfg.logLevel.get().ordinal
             ) as Int
             ExitCode.entries[returnCode]
         } catch (e: InvocationTargetException) {
-            kspGradleLogger.exception(e.targetException)
+            // A missing provider has already been reported.
+            if (e.targetException !is NoProcessorProvidersException) {
+                kspGradleLogger.exception(e.targetException)
+            }
             throw e.targetException
         } finally {
             // Cached loaders are shared across modules for the lifetime of the build service,
             // so closing here would break every subsequent module that reuses them.
             if (!cacheProcessorLoader) {
-                processorClassloader.close()
+                processorClassloader?.close()
             }
         }
 
@@ -940,6 +950,9 @@ abstract class KspAAWorkerAction : WorkAction<KspAAWorkParameter> {
         }
     }
 }
+
+private class NoProcessorProvidersException :
+    Exception("KSP failed with exit code: ${KotlinSymbolProcessing.ExitCode.PROCESSING_ERROR}")
 
 internal fun File.isParentOf(childCandidate: File): Boolean {
     val parentPath = Paths.get(this.absolutePath).normalize()

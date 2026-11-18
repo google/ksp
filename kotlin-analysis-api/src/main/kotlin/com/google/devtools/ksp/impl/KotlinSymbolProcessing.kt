@@ -126,14 +126,29 @@ import org.jetbrains.kotlin.platform.wasm.WasmPlatforms
 import org.jetbrains.kotlin.psi.KtFile
 import java.io.File
 import java.nio.file.Path
+import java.util.function.Supplier
 
+/**
+ * Runs symbol processors over the sources described by [kspConfig].
+ *
+ * [processorProviders] is called at most once, when processing starts. It isn't called at all when an incremental run
+ * has nothing to process, so callers can defer loading processors and any work that only processing needs.
+ */
 @OptIn(KaPlatformInterface::class)
 @Suppress("UnstableApiUsage")
 class KotlinSymbolProcessing(
     val kspConfig: KSPConfig,
-    val symbolProcessorProviders: List<SymbolProcessorProvider>,
+    processorProviders: Supplier<List<SymbolProcessorProvider>>,
     val logger: KSPLogger
 ) {
+    constructor(
+        kspConfig: KSPConfig,
+        symbolProcessorProviders: List<SymbolProcessorProvider>,
+        logger: KSPLogger,
+    ) : this(kspConfig, Supplier { symbolProcessorProviders }, logger)
+
+    val symbolProcessorProviders: List<SymbolProcessorProvider> by lazy { processorProviders.get() }
+
     enum class ExitCode(
         val code: Int
     ) {
@@ -530,6 +545,8 @@ class KotlinSymbolProcessing(
         if (incrementalContext.tryEarlyExitIfClean(::listAllSourceFiles)) {
             return ExitCode.OK
         }
+        // Loaded only after the early exit, so a run with nothing to process never creates them.
+        val providers = incrementalContext.closeFilesOnException { symbolProcessorProviders }
 
         KotlinCoreProjectEnvironmentManager.withKotlinCoreProjectEnvironment { kotlinCoreProjectEnvironment ->
             try {
@@ -539,7 +556,6 @@ class KotlinSymbolProcessing(
                 KSPCoreEnvironment(project)
 
                 val psiManager = PsiManager.getInstance(project)
-                val providers: List<SymbolProcessorProvider> = symbolProcessorProviders
                 // KspModuleBuilder ensures this is always a KtSourceModule
                 ResolverAAImpl.ktModule = modules.single() as KaSourceModule
                 ResolverAAImpl.kspConfig = kspConfig
