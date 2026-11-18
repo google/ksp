@@ -27,6 +27,27 @@ check [DEVELOPMENT.md](DEVELOPMENT.md)
 
 ---
 
+## Compatibility and Minimum Requirements
+
+| Requirement                                                   | Minimum Version                                            | Notes                                                                                                                                                                                                |
+|:--------------------------------------------------------------|:-----------------------------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Kotlin Gradle Plugin (KGP)**                                | `2.2.10` or higher                                         | Enforced at build configuration time.                                                                                                                                                                |
+| **Gradle**                                                    | `8.13` or higher                                           | Enforced at build configuration time. Android Gradle Plugin `9.0+` requires Gradle `9.x`.                                                                                                            |
+| **Android Gradle Plugin (AGP)** *(Android projects only)*     | `8.12.0` or higher (`9.0.0-alpha14+` with built-in Kotlin) | Enforced at build configuration time (`9.0.0-alpha14` or higher when using AGP's built-in Kotlin support). KSP generally supports AGP versions released within roughly the past year.                |
+| **JDK (Gradle daemon / running the build)**                   | Java `11` or higher (`17+` for Gradle `9.0+` or AGP)       | Pure Kotlin/JVM and Multiplatform builds on Gradle `8.x` run on Java `11+`; Gradle `9.0+` and AGP `8.x+` require Java `17+`.                                                                         |
+| **Compiled bytecode (`jvmTarget`) & KSP runtime/API jars**    | Java `8` or higher                                         | `symbol-processing-api`, `symbol-processing-aa`, and `symbol-processing-aa-embeddable` target Java `8` bytecode, so projects and processors can still target Java `8`.                               |
+| **Kotlin `languageVersion` / `apiVersion` (project sources)** | Kotlin `2.0` or higher *(recommended)*                     | KSP2 is built on the K2 compiler frontend; Kotlin `1.9` is deprecated in Kotlin `2.3` and removed in Kotlin `2.4`.                                                                                   |
+| **Symbol processor authors (`symbol-processing-api`)**        | Kotlin `2.2` or higher, Java `8` or higher                 | Applies when compiling processors against `com.google.devtools.ksp:symbol-processing-api`, which publishes Kotlin `2.3` metadata and `kotlin-stdlib` `2.3.20` (readable by Kotlin `2.2+` compilers). |
+
+### KSP2 Versioning
+
+KSP2 releases use standalone `2.x.y` version numbers that are decoupled from your project's exact
+Kotlin compiler version (unlike legacy KSP1 `1.9.x-1.0.y` tags). You can upgrade KSP and Kotlin
+independently as long as your Kotlin Gradle Plugin version and build tools meet the minimum
+requirements above.
+
+---
+
 ## KSP Gradle Configurations Reference
 
 This section contains a reference of Gradle configurations for KSP.
