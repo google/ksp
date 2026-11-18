@@ -249,9 +249,11 @@ tasks.withType<org.gradle.jvm.tasks.Jar> {
 tasks.withType<ShadowJar>().configureEach {
     dependencies {
         exclude(project(":api"))
+        exclude(dependency("org.jetbrains:annotations"))
     }
     exclude("kotlin/**")
     exclude("kotlinx/coroutines/**")
+    exclude("org/jetbrains/annotations/**")
     archiveClassifier.set("")
     mergeServiceFiles()
 }
