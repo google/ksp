@@ -93,6 +93,17 @@ class IncrementalEarlyExitTest {
     }
 
     @Test
+    fun `does not copy outputs that still match their backups`() {
+        build(mapOf(a to setOf(aGen)))
+        // Same size and timestamp as the backup, so the early exit takes it to be unchanged.
+        aGen.writeText("GEN p1/AGen.kt")
+        aGen.setLastModified(File(caches, "backups/kotlin/p1/AGen.kt").lastModified())
+
+        assertTrue(canExitEarly())
+        assertEquals("GEN p1/AGen.kt", aGen.readText())
+    }
+
+    @Test
     fun `no early exit when not incremental, on the first build, or when sources changed`() {
         assertFalse(canExitEarly(), "first build: there are no caches yet")
         build(mapOf(a to setOf(aGen)))

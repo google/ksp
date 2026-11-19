@@ -273,10 +273,17 @@ abstract class IncrementalContextBase(
         return true
     }
 
-    // Like the restore step in updateOutputs, outputs are overwritten from their backups.
+    // Like the restore step in updateOutputs, outputs are restored from their backups. Outputs with the same size and
+    // timestamp as their backup are skipped: the Gradle plugin only deletes outputs when KSP processes, so on an early
+    // exit they are usually still in place. If they were changed outside of KSP, Gradle reruns the task
+    // non-incrementally, which invalidates the caches, so there is no early exit.
     private fun restoreCleanOutputs() {
         try {
-            cleanOutputs().filter { it.bak().exists() }.forEach { copyWithTimestamp(it.bak(), it.abs(), true) }
+            cleanOutputs().forEach { output ->
+                val bak = output.bak()
+                val abs = output.abs()
+                if (bak.exists() && !abs.matches(bak)) copyWithTimestamp(bak, abs, true)
+            }
         } catch (e: Exception) {
             // Like updateCachesAndOutputs: make the next run a full rebuild rather than failing the same way again.
             cachesUpToDateFile.delete()
@@ -415,6 +422,10 @@ abstract class IncrementalContextBase(
 
     private fun File.abs() = File(baseDir, path)
     private fun File.bak() = File(File(cachesDir, "backups"), abs().toRelativeString(kspOutputDir))
+
+    // Backups are copied with their timestamp, so an output that was restored or backed up and left alone matches.
+    private fun File.matches(backup: File) =
+        exists() && length() == backup.length() && lastModified() == backup.lastModified()
 
     private fun updateOutputs(outputs: Set<File>, cleanOutputs: Collection<File>) {
         // Backing up outputs is necessary for two reasons:
