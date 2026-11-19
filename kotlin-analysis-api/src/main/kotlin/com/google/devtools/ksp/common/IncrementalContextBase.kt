@@ -33,6 +33,9 @@ import com.intellij.psi.PsiPackage
 import com.intellij.util.containers.MultiMap
 import java.io.Closeable
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.NoSuchFileException
+import java.nio.file.attribute.BasicFileAttributes
 import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
 
@@ -424,13 +427,24 @@ abstract class IncrementalContextBase(
     private fun File.bak() = File(File(cachesDir, "backups"), abs().toRelativeString(kspOutputDir))
 
     // Backups are copied with their timestamp, so an output that was restored or backed up and left alone matches.
-    private fun File.matches(backup: File) =
-        exists() && length() == backup.length() && lastModified() == backup.lastModified()
+    private fun File.matches(backup: File): Boolean {
+        val attributes = attributesOrNull() ?: return false
+        val backupAttributes = backup.attributesOrNull() ?: return false
+        return attributes.isRegularFile &&
+            attributes.size() == backupAttributes.size() &&
+            attributes.lastModifiedTime().toMillis() == backupAttributes.lastModifiedTime().toMillis()
+    }
+
+    private fun File.attributesOrNull(): BasicFileAttributes? = try {
+        Files.readAttributes(toPath(), BasicFileAttributes::class.java)
+    } catch (e: NoSuchFileException) {
+        null
+    }
 
     private fun updateOutputs(outputs: Set<File>, cleanOutputs: Collection<File>) {
         // Backing up outputs is necessary for two reasons:
         //
-        // 1. Currently, outputs are always cleaned up in gradle plugin before compiler is called.
+        // 1. Currently, outputs are cleaned up in the Gradle plugin when KSP processes.
         //    Untouched outputs need to be restore.
         //
         //    TODO: need a change in upstream to not clean files in gradle plugin.
