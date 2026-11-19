@@ -17,7 +17,7 @@ description = "Kotlin Symbol Processing implementation using Kotlin Analysis API
 val signingKey: String? by project
 val signingPassword: String? by project
 
-val kotlinBaseVersion = libs.versions.kotlin.base.get()
+val kotlinStdlibFloor = libs.versions.kotlin.stdlib.floor.get()
 val libsForTesting: Configuration by configurations.creating
 val libsForTestingCommon: Configuration by configurations.creating
 
@@ -214,7 +214,7 @@ dependencies {
     libsForTesting(kotlin("script-runtime", aaKotlinBaseVersion))
     libsForTestingCommon(kotlin("stdlib-common", aaKotlinBaseVersion))
 
-    depJarsForCheck("org.jetbrains.kotlin:kotlin-stdlib:$kotlinBaseVersion")
+    depJarsForCheck("org.jetbrains.kotlin:kotlin-stdlib:$kotlinStdlibFloor")
     depJarsForCheck("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$aaCoroutinesVersion")
     depJarsForCheck("org.jetbrains.kotlinx:kotlinx-coroutines-core:$aaCoroutinesVersion")
     depJarsForCheck(project(":api"))
@@ -374,7 +374,7 @@ publishing {
                     }
 
                     asNode().appendNode("dependencies").apply {
-                        addDependency("org.jetbrains.kotlin", "kotlin-stdlib", kotlinBaseVersion)
+                        addDependency("org.jetbrains.kotlin", "kotlin-stdlib", kotlinStdlibFloor)
                         addDependency(
                             "org.jetbrains.kotlinx",
                             "kotlinx-coroutines-core-jvm",
