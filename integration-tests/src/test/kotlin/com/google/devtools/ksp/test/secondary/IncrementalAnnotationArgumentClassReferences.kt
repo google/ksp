@@ -161,4 +161,97 @@ class IncrementalAnnotationArgumentClassReferences(experimentalPsiResolution: Bo
         // Caching the classloader must not change processing behaviour.
         Assert.assertEquals(offProcessed, onProcessed)
     }
+
+    @Test
+    fun testRootPackageJavaOnDemandImportShadowing() {
+        project.appendProperty("ksp.incremental.log=true")
+        project.appendProperty("ksp.incremental.log.graph.origin=RootJavaConsumer")
+        File(project.root, "downstream/src/main/java/RootJavaConsumer.java").apply {
+            parentFile.mkdirs()
+        }.writeText(
+            """
+            import com.example.upstream.*;
+
+            @ExampleJavaReference(UpstreamExplicitTarget.class)
+            public class RootJavaConsumer {
+                public UpstreamChangesJava helper() {
+                    return null;
+                }
+            }
+            """.trimIndent() + "\n"
+        )
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(CLEAN, ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            Assert.assertTrue(result.output.lines().contains("$PROCESSOR_LABEL Processing RootJavaConsumer"))
+        }
+
+        val dotFiles = File(project.root, TARGET).walk().filter { it.name == "kspLookupGraphOrigin.dot" }.toList()
+        Assert.assertTrue("Expected kspLookupGraphOrigin.dot to be generated in :$TARGET", dotFiles.isNotEmpty())
+        val dotContent = dotFiles.single().readText()
+        Assert.assertTrue(
+            "Expected root-package edge in kspLookupGraphOrigin.dot, got:\n$dotContent",
+            dotContent.contains("\"RootJavaConsumer\" -> \"UpstreamExplicitTarget\";")
+        )
+        Assert.assertFalse(
+            "Expected no <anonymous> scope prefix in kspLookupGraphOrigin.dot, got:\n$dotContent",
+            dotContent.contains("<anonymous>")
+        )
+
+        File(project.root, "downstream/src/main/kotlin/UpstreamChangesJava.kt").writeText(
+            "class UpstreamChangesJava\n"
+        )
+
+        gradleRunner.withArguments(ASSEMBLE).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            Assert.assertTrue(
+                "Expected RootJavaConsumer to be reprocessed when root-package UpstreamChangesJava shadows * import",
+                result.output.lines().contains("$PROCESSOR_LABEL Processing RootJavaConsumer")
+            )
+        }
+    }
+
+    @Test
+    fun testBacktickedDottedKotlinFunctionIncrementalInvalidation() {
+        File(project.root, "downstream/src/main/kotlin/DottedTarget.kt").writeText(
+            """
+            package com.example.downstream
+
+            @JvmName("dottedTarget")
+            fun `dotted.target`(): Int = 1
+            """.trimIndent() + "\n"
+        )
+        File(project.root, "downstream/src/main/kotlin/DownstreamClass.kt").writeText(
+            """
+            @ExampleReference(UpstreamExplicitTarget::class)
+            class DownstreamClass {
+                fun callDotted() = com.example.downstream.`dotted.target`()
+            }
+            """.trimIndent() + "\n"
+        )
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+
+        gradleRunner.withArguments(CLEAN, KSP_KOTLIN).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            Assert.assertTrue(result.output.lines().contains("$PROCESSOR_LABEL Processing DownstreamClass"))
+        }
+
+        File(project.root, "downstream/src/main/kotlin/DottedTarget.kt").writeText(
+            """
+            package com.example.downstream
+
+            @JvmName("dottedTarget")
+            fun `dotted.target`(): Int = 2
+            """.trimIndent() + "\n"
+        )
+
+        gradleRunner.withArguments(KSP_KOTLIN).build().let { result ->
+            Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
+            Assert.assertTrue(
+                "Expected DownstreamClass to be reprocessed after modifying backticked `dotted.target` function",
+                result.output.lines().contains("$PROCESSOR_LABEL Processing DownstreamClass")
+            )
+        }
+    }
 }

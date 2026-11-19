@@ -23,14 +23,17 @@ import com.google.devtools.ksp.common.LookupStorageWrapper
 import com.google.devtools.ksp.common.LookupSymbolWrapper
 import com.google.devtools.ksp.common.LookupTrackerWrapper
 import com.google.devtools.ksp.common.NoSourceFile
+import com.google.devtools.ksp.common.ROOT_PACKAGE_SCOPE
+import com.google.devtools.ksp.common.normalizeLookupScope
 import com.google.devtools.ksp.common.stripSyntheticFileNameModifiers
+import com.google.devtools.ksp.common.toGraphVertexName
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFunctionDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
-import com.google.devtools.ksp.impl.symbol.kotlin.getFqn
+import com.google.devtools.ksp.impl.symbol.kotlin.fullyExpand
 import com.google.devtools.ksp.impl.symbol.kotlin.separateQualifierAndName
 import com.google.devtools.ksp.impl.symbol.kotlin.typeArguments
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -65,6 +68,7 @@ import org.jetbrains.kotlin.incremental.components.Position
 import org.jetbrains.kotlin.incremental.components.ScopeKind
 import org.jetbrains.kotlin.incremental.storage.FileToPathConverter
 import org.jetbrains.kotlin.incremental.update
+import org.jetbrains.kotlin.name.ClassId
 import java.io.File
 import java.io.Writer
 
@@ -126,12 +130,10 @@ class IncrementalContextAA(
         )
     override val classLookupCache = LookupStorageWrapperImpl(LookupStorage(classLookupCacheDir, icContext))
 
-    // Debugging and testing only.
-    fun dumpLookupRecords(): Map<String, List<String>> {
-        val map = mutableMapOf<String, List<String>>()
+    private fun collectLookupRecordsBySymbol(): Map<LookupSymbolWrapper, List<String>> {
+        val map = mutableMapOf<LookupSymbolWrapper, List<String>>()
         symbolLookupTracker.lookups.entrySet().forEach { e ->
-            val key = "${e.key.scope}.${e.key.name}"
-            map[key] = e.value.map {
+            map[e.key] = e.value.map {
                 // Safely try to relativize, since it may fail on Windows
                 // where it and baseDir have different roots.
                 File(it).relativeToOrNull(baseDir)?.path ?: it
@@ -140,14 +142,33 @@ class IncrementalContextAA(
         return map
     }
 
+    // Debugging and testing only.
+    fun dumpLookupRecords(): Map<String, List<String>> {
+        val merged = mutableMapOf<String, MutableList<String>>()
+        collectLookupRecordsBySymbol().forEach { (sym, paths) ->
+            val key = "${sym.scope}.${sym.name}"
+            val existing = merged[key]
+            if (existing == null) {
+                merged[key] = paths.toMutableList()
+            } else {
+                paths.forEach { path ->
+                    if (path !in existing) {
+                        existing.add(path)
+                    }
+                }
+            }
+        }
+        return merged
+    }
+
     private fun recordWithArgs(type: KaType, file: PsiJavaFile) {
         type.typeArguments().forEach {
             it.type?.let { recordWithArgs(it, file) }
         }
         when (type) {
             is KaClassType -> {
-                val fqn = type.classId.asFqNameString()
-                recordLookup(file, fqn)
+                val (scope, name) = type.classId.toLookupScopeAndName()
+                recordLookup(file, scope, name)
             }
 
             is KaFlexibleType -> {
@@ -196,11 +217,12 @@ class IncrementalContextAA(
             return
         }
 
-        val fqn = type.symbol?.classId?.asFqNameString()
-            ?: type.getFqn()
+        val classId = type.symbol?.classId
+            ?: type.fullyExpand().symbol?.classId
             ?: return
+        val (scope, name) = classId.toLookupScopeAndName()
 
-        recordClassReferenceLookup(fqn, declaration)
+        symbolLookupTracker.record(filePathFor(declaration), scope, name)
     }
 
     /**
@@ -234,11 +256,9 @@ class IncrementalContextAA(
 
         // Construct synthetic filepath
         val parentDeclarationName = declaration.qualifiedName?.asString()
-            ?: buildString {
-                append(declaration.packageName.asString())
-                append('.')
-                append(declaration.simpleName.asString())
-            }
+            ?: listOf(declaration.packageName.asString(), declaration.simpleName.asString())
+                .filter { it.isNotEmpty() }
+                .joinToString(".")
 
         return NoSourceFile(baseDir, parentDeclarationName).filePath
     }
@@ -339,16 +359,21 @@ class IncrementalContextAA(
 
     override fun logBeforeCacheFlush(outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>) {
         super.logBeforeCacheFlush(outputs, sourceToOutputs)
-        val lookupRecords = if (loggingOptions.incrementalLoggingEnabled) dumpLookupRecords() else emptyMap()
-        logLookupGraph(lookupRecords)
-        logDependencyGraphFrom(loggingOptions.dependencyGraphOriginName, lookupRecords)
+        if (loggingOptions.incrementalLoggingEnabled) {
+            val lookupRecordsBySymbol = collectLookupRecordsBySymbol()
+            logLookupGraph(lookupRecordsBySymbol)
+            logDependencyGraphFrom(loggingOptions.dependencyGraphOriginName, lookupRecordsBySymbol)
+        }
         logFiles.forEach { it.close() }
     }
 
     /**
      * Computes the dependency graph from [origin] using a normal BFS and logs it as a Graphviz `.dot` file.
      */
-    private fun logDependencyGraphFrom(origin: String?, lookupRecords: Map<String, List<String>>) {
+    private fun logDependencyGraphFrom(
+        origin: String?,
+        lookupRecordsBySymbol: Map<LookupSymbolWrapper, List<String>>,
+    ) {
         if (!loggingOptions.incrementalLoggingEnabled) {
             return
         }
@@ -369,24 +394,27 @@ class IncrementalContextAA(
             allDefinedSyms.getOrPut(file, ::mutableSetOf).addAll(updatedSymbols[file])
         }
 
+        val normalizedOrigin = normalizeGraphVertexName(origin)
+
         // Prepare edges
         val edges = mutableMapOf<String, MutableSet<String>>()
-        lookupRecords.forEach { (fqn, paths) ->
+        lookupRecordsBySymbol.forEach { (targetSym, paths) ->
+            val targetFqn = targetSym.toGraphVertexName()
             paths.forEach { path ->
                 if (NoSourceFile.isSyntheticFile(path)) {
-                    val fqnSource = stripSyntheticFileNameModifiers(path)
-                    edges.getOrPut(fqnSource, ::mutableSetOf).add(fqn)
+                    val fqnSource = normalizeGraphVertexName(stripSyntheticFileNameModifiers(path))
+                    edges.getOrPut(fqnSource, ::mutableSetOf).add(targetFqn)
                 } else {
                     val file = File(path)
                     val syms = allDefinedSyms[file]
                     if (!syms.isNullOrEmpty()) {
                         syms.forEach { sym ->
-                            val fqnSource = "${sym.scope}.${sym.name}"
-                            edges.getOrPut(fqnSource, ::mutableSetOf).add(fqn)
+                            val fqnSource = sym.toGraphVertexName()
+                            edges.getOrPut(fqnSource, ::mutableSetOf).add(targetFqn)
                         }
                     } else {
                         // Default back to the path so we can visualize errors
-                        edges.getOrPut(path, ::mutableSetOf).add(fqn)
+                        edges.getOrPut(path, ::mutableSetOf).add(targetFqn)
                     }
                 }
             }
@@ -396,9 +424,9 @@ class IncrementalContextAA(
         val visited = mutableSetOf<String>()
         val queue = ArrayDeque<String>()
         val bfsEdges = mutableSetOf<Pair<String, String>>()
-        if (edges.contains(origin)) {
-            visited.add(origin)
-            queue.add(origin)
+        if (edges.contains(normalizedOrigin)) {
+            visited.add(normalizedOrigin)
+            queue.add(normalizedOrigin)
         }
         while (queue.isNotEmpty()) {
             val curr = queue.removeFirst()
@@ -414,7 +442,7 @@ class IncrementalContextAA(
         mkFileInLogDir("kspLookupGraphOrigin.dot").bufferedWriter().use { logFile ->
             logFile.write("digraph {\n")
             // Always add origin vertex
-            logFile.write("  \"$origin\";\n")
+            logFile.write("  \"$normalizedOrigin\";\n")
             bfsEdges.sortedWith(compareBy({ it.first }, { it.second })).forEach { (u, v) ->
                 logFile.write("  \"$u\" -> \"$v\";\n")
             }
@@ -422,13 +450,17 @@ class IncrementalContextAA(
         }
     }
 
-    private fun logLookupGraph(lookupRecords: Map<String, List<String>>) {
+    private fun normalizeGraphVertexName(fqn: String): String =
+        fqn.removePrefix("$ROOT_PACKAGE_SCOPE.")
+
+    private fun logLookupGraph(lookupRecordsBySymbol: Map<LookupSymbolWrapper, List<String>>) {
         if (!loggingOptions.incrementalLoggingEnabled) {
             return
         }
 
         mkLogFile("kspLookupGraph.log").bufferedWriter().use { logFile ->
-            lookupRecords.forEach { (fqn, paths) ->
+            lookupRecordsBySymbol.forEach { (sym, paths) ->
+                val fqn = "${sym.scope}.${sym.name}"
                 paths.forEach {
                     logFile.write("$it -> $fqn\n")
                 }
@@ -477,6 +509,13 @@ internal fun recordLookupForGetAllFunctions(supers: List<KaType>) =
         it is KaFunctionSymbol
     }
 
+/**
+ * Extracts the normalized lookup scope and simple name from this [ClassId], preserving backticked dots in
+ * [ClassId.shortClassName] and normalizing root-package scopes to [ROOT_PACKAGE_SCOPE].
+ */
+internal fun ClassId.toLookupScopeAndName(): Pair<String, String> =
+    (outerClassId?.asFqNameString() ?: packageFqName.asString()).normalizeLookupScope() to shortClassName.asString()
+
 internal fun recordGetSealedSubclasses(classDeclaration: KSClassDeclaration) {
     if (classDeclaration.origin == Origin.KOTLIN) {
         ResolverAAImpl.instance.incrementalContext.recordGetSealedSubclasses(classDeclaration)
@@ -492,8 +531,9 @@ class LookupTrackerWrapperImpl(val lookupTracker: LookupTracker, val trackerLogF
         }
 
     override fun record(filePath: String, scopeFqName: String, name: String) {
-        trackerLogFile?.write("$scopeFqName.$name $filePath\n")
-        lookupTracker.record(filePath, Position.NO_POSITION, scopeFqName, ScopeKind.PACKAGE, name)
+        val normalizedScope = scopeFqName.normalizeLookupScope()
+        trackerLogFile?.write("$normalizedScope.$name $filePath\n")
+        lookupTracker.record(filePath, Position.NO_POSITION, normalizedScope, ScopeKind.PACKAGE, name)
     }
 }
 
