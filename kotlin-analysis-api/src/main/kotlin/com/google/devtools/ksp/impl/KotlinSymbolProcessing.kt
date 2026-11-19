@@ -166,7 +166,6 @@ class KotlinSymbolProcessing(
         if (System.getProperty("java.awt.headless") == null) {
             System.setProperty("java.awt.headless", "true")
         }
-        setupIdeaStandaloneExecution()
     }
 
     @OptIn(KaExperimentalApi::class, KaImplementationDetail::class, KaIdeApi::class)
@@ -545,7 +544,8 @@ class KotlinSymbolProcessing(
         if (incrementalContext.tryEarlyExitIfClean(::listAllSourceFiles)) {
             return ExitCode.OK
         }
-        // Loaded only after the early exit, so a run with nothing to process never creates them.
+        // Only after the early exit: a run with nothing to process needs neither the IDEA setup nor the processors.
+        setupIdeaStandaloneExecution()
         val providers = incrementalContext.closeFilesOnException { symbolProcessorProviders }
 
         KotlinCoreProjectEnvironmentManager.withKotlinCoreProjectEnvironment { kotlinCoreProjectEnvironment ->
