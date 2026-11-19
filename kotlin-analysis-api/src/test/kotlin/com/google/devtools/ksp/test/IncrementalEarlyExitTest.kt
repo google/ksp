@@ -26,10 +26,12 @@ import com.google.devtools.ksp.common.impl.KSNameImpl
 import com.google.devtools.ksp.impl.CommandLineKSPLogger
 import com.google.devtools.ksp.impl.DualLookupTracker
 import com.google.devtools.ksp.impl.IncrementalContextAA
+import com.google.devtools.ksp.impl.KSPLoader
 import com.google.devtools.ksp.impl.KotlinSymbolProcessing
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSPJvmConfig
+import com.google.devtools.ksp.processing.KspGradleLogger.Companion.LOGGING_LEVEL_WARN
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
@@ -42,11 +44,15 @@ import org.jetbrains.kotlin.incremental.components.Position
 import org.jetbrains.kotlin.incremental.components.ScopeKind
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.ObjectOutputStream
 import java.nio.file.FileSystemException
 import java.util.function.Supplier
 
@@ -67,12 +73,13 @@ class IncrementalEarlyExitTest {
 
     private val a by lazy { src("p1/A.kt") }
     private val aGen by lazy { gen("p1/AGen.kt") }
+    private val aGenBackup by lazy { File(caches, "backups/kotlin/p1/AGen.kt") }
 
     @Test
     fun `exits early and restores all outputs when the classpath change is unrelated`() {
         val aGen2 = gen("p1/AGen2.kt") // Generated in round 2, from AGen.kt.
         build(mapOf(a to setOf(aGen), aGen to setOf(aGen2)))
-        out.deleteRecursively() // As the Gradle plugin does before each run.
+        out.deleteRecursively() // As callers that clean the outputs before each run do.
         val cacheFiles = listOf("symbols", "sealed", "sourceToOutputs").map { File(caches, it) }
         cacheFiles.forEach { it.setLastModified(10_000) }
 
@@ -97,10 +104,20 @@ class IncrementalEarlyExitTest {
         build(mapOf(a to setOf(aGen)))
         // Same size and timestamp as the backup, so the early exit takes it to be unchanged.
         aGen.writeText("GEN p1/AGen.kt")
-        aGen.setLastModified(File(caches, "backups/kotlin/p1/AGen.kt").lastModified())
+        aGen.setLastModified(aGenBackup.lastModified())
 
         assertTrue(canExitEarly())
         assertEquals("GEN p1/AGen.kt", aGen.readText())
+    }
+
+    @Test
+    fun `restores outputs with the same size as their backups but a different timestamp`() {
+        build(mapOf(a to setOf(aGen)))
+        aGen.writeText("GEN p1/AGen.kt")
+        aGen.setLastModified(aGenBackup.lastModified() + 2_000)
+
+        assertTrue(canExitEarly())
+        assertEquals("gen p1/AGen.kt", aGen.readText())
     }
 
     @Test
@@ -205,11 +222,7 @@ class IncrementalEarlyExitTest {
 
     @Test
     fun `KSP skips the processors on a clean run`() {
-        val processor = processor { resolver, codeGenerator ->
-            val files = resolver.getAllFiles().toList().toTypedArray()
-            codeGenerator.createNewFile(Dependencies(false, *files), "p1", "AGen").use { it.write("gen".toByteArray()) }
-        }
-        runKsp(processor)
+        runKsp(generatesAGen)
         val generated = File(out, "kotlin/p1/AGen.kt")
         out.deleteRecursively()
 
@@ -242,16 +255,41 @@ class IncrementalEarlyExitTest {
     @Test
     fun `KSP loads the processors only when it processes`() {
         var loads = 0
-        val processor = processor { resolver, codeGenerator ->
-            val files = resolver.getAllFiles().toList().toTypedArray()
-            codeGenerator.createNewFile(Dependencies(false, *files), "p1", "AGen").use { it.write("gen".toByteArray()) }
-        }
-        val loading = Supplier { loads++; listOf(processor) }
+        val loading = Supplier { loads++; listOf(generatesAGen) }
 
         runKsp(loading)
         runKsp(loading, changed = listOf("other.Unrelated"))
 
         assertEquals(1, loads, "the clean second run must not load the processors")
+    }
+
+    @Test
+    fun `an exception from loading the processors propagates and closes the caches`() {
+        val failure = IllegalStateException("cannot load processors")
+
+        // With the incremental log, the caches directory holds open log files until the incremental context is closed.
+        val thrown = assertThrows(IllegalStateException::class.java) { runKsp(Supplier { throw failure }, log = true) }
+
+        assertSame(failure, thrown)
+        assertEquals(emptyList<String>(), openFilesIn(caches))
+    }
+
+    @Test
+    fun `KSPLoader loads the processors only when KSP processes`() {
+        var loads = 0
+        val loading = Supplier { loads++; listOf(generatesAGen) }
+
+        assertEquals(0, KSPLoader.loadAndRunKSP(serialized(config()), loading, LOGGING_LEVEL_WARN))
+        val unrelatedChange = serialized(config(changed = listOf("other.Unrelated")))
+        assertEquals(0, KSPLoader.loadAndRunKSP(unrelatedChange, loading, LOGGING_LEVEL_WARN))
+
+        assertEquals(1, loads, "the clean second run must not load the processors")
+    }
+
+    @Test
+    fun `KSPLoader runs a list of processors`() {
+        assertEquals(0, KSPLoader.loadAndRunKSP(serialized(config()), listOf(generatesAGen), LOGGING_LEVEL_WARN))
+        assertEquals("gen", File(out, "kotlin/p1/AGen.kt").readText())
     }
 
     private fun src(path: String) = File(base, "src/main/kotlin/$path").apply {
@@ -327,6 +365,12 @@ class IncrementalEarlyExitTest {
             }
         }
 
+    /** Generates AGen.kt from all files. */
+    private val generatesAGen = processor { resolver, codeGenerator ->
+        val files = resolver.getAllFiles().toList().toTypedArray()
+        codeGenerator.createNewFile(Dependencies(false, *files), "p1", "AGen").use { it.write("gen".toByteArray()) }
+    }
+
     private fun runKsp(provider: SymbolProcessorProvider, changed: List<String> = emptyList(), log: Boolean = false) =
         runKsp(Supplier { listOf(provider) }, changed, log)
 
@@ -335,8 +379,13 @@ class IncrementalEarlyExitTest {
         changed: List<String> = emptyList(),
         log: Boolean = false,
     ) {
+        val exitCode = KotlinSymbolProcessing(config(changed, log), providers, CommandLineKSPLogger()).execute()
+        assertEquals(KotlinSymbolProcessing.ExitCode.OK, exitCode)
+    }
+
+    private fun config(changed: List<String> = emptyList(), log: Boolean = false): KSPJvmConfig {
         val srcRoot = a.parentFile.parentFile
-        val config = KSPJvmConfig.Builder().apply {
+        return KSPJvmConfig.Builder().apply {
             moduleName = "test"
             sourceRoots = listOf(srcRoot)
             javaSourceRoots = listOf(srcRoot) // Overlaps with sourceRoots, as in a typical Gradle setup.
@@ -360,8 +409,20 @@ class IncrementalEarlyExitTest {
             removedSources = emptyList()
             changedClasses = changed
         }.build()
-        val exitCode = KotlinSymbolProcessing(config, providers, CommandLineKSPLogger()).execute()
-        assertEquals(KotlinSymbolProcessing.ExitCode.OK, exitCode)
+    }
+
+    /** Serializes [config] like the Gradle plugin does for [KSPLoader]. */
+    private fun serialized(config: KSPJvmConfig): ByteArray =
+        ByteArrayOutputStream().also { bytes -> ObjectOutputStream(bytes).use { it.writeObject(config) } }.toByteArray()
+
+    /** Files in [dir] that this process has open. Skips the test where the OS doesn't tell (it needs /proc). */
+    private fun openFilesIn(dir: File): List<String> {
+        val fileDescriptors = File("/proc/self/fd")
+        assumeTrue(fileDescriptors.isDirectory, "needs /proc/self/fd to list open files")
+        val dirPath = dir.canonicalPath + File.separator
+        return fileDescriptors.listFiles().orEmpty()
+            .mapNotNull { runCatching { it.canonicalPath }.getOrNull() }
+            .filter { it.startsWith(dirPath) }
     }
 
     private class FakeKSFile(file: File) : KSFile {

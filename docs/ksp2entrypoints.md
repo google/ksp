@@ -36,3 +36,10 @@ val kspConfig = KSPJvmConfig.Builder().apply {
 // Run!
 val exitCode = KotlinSymbolProcessing(kspConfig, processorProviders, kspLoggerImpl).execute()
 ```
+
+For incremental runs, you can pass a `java.util.function.Supplier<List<SymbolProcessorProvider>>` instead of the list.
+KSP calls it only when it is going to process, so a run with nothing to process doesn't load the processors at all:
+
+```kotlin
+val exitCode = KotlinSymbolProcessing(kspConfig, Supplier { loadProcessors() }, kspLoggerImpl).execute()
+```
