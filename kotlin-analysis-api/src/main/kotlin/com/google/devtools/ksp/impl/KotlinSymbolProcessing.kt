@@ -131,7 +131,8 @@ import java.util.function.Supplier
 /**
  * Runs symbol processors over the sources described by [kspConfig].
  *
- * [processorProviders] is called at most once, when processing starts. It isn't called at all when an incremental run
+ * [processorProviders] is called when processing starts, or when [symbolProcessorProviders] is first read, and not
+ * again once it has returned. Unless [symbolProcessorProviders] is read, it isn't called at all when an incremental run
  * has nothing to process, so callers can defer loading processors and any work that only processing needs.
  */
 @OptIn(KaPlatformInterface::class)
