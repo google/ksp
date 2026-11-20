@@ -1,3 +1,18 @@
+buildscript {
+    val testRepo: String by project
+    val kotlinVersion: String by project
+
+    repositories {
+        maven(testRepo)
+        mavenCentral()
+        maven("https://redirector.kotlinlang.org/maven/bootstrap/")
+        google()
+    }
+    dependencies {
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+    }
+}
+
 val testRepo: String by project
 
 plugins {

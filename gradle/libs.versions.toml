@@ -1,7 +1,7 @@
 [versions]
-kotlin-base = "2.3.20"
+kotlin-base = "2.4.21"
 kotlinx-serialization = "1.6.3"
-agp-base = "9.3.0-alpha01"
+agp-base = "9.6.0-alpha02"
 junit = "4.13.1"
 junit5 = "5.8.2"
 junit-platform = "1.8.2"
@@ -65,4 +65,4 @@ androidx-lintGradle = { module = "androidx.lint:lint-gradle", version.ref = "and
 nexus-publish = { id = "io.github.gradle-nexus.publish-plugin", version = "2.0.0" }
 shadow = { id = "com.gradleup.shadow", version = "8.3.9" }
 dokka = { id = "org.jetbrains.dokka", version = "1.9.20" }
-android-lint = { id = "com.android.lint", version = "8.13.0" }
+android-lint = { id = "com.android.lint", version.ref = "agp-base" }
