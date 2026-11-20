@@ -124,8 +124,8 @@ open class KSValidateVisitor(
         }
         if (
             !function.parameters.all { it.accept(this, function) } ||
-            // N.B.: Short-circuit AND with enableNewFeatures to only evaluate contextParameters
-            // if the feature toggle is enabled.
+            // N.B.: Short-circuit AND with apiFeatures.enableContextParameters to only evaluate
+            // contextParameters if the feature toggle is enabled.
             (apiFeatures.enableContextParameters &&
                 !function.contextParameters.all { it.accept(this, function) })
         ) {
@@ -139,6 +139,22 @@ open class KSValidateVisitor(
 
     override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: KSNode?): Boolean {
         if (predicate(property, property.type) && !property.type.accept(this, data)) {
+            return false
+        }
+        // N.B.: Short-circuit AND with apiFeatures.enableBackingFields to only evaluate
+        // backingField if the feature toggle is enabled.
+        if (
+            apiFeatures.enableBackingFields &&
+            property.backingField?.let { predicate(property, it) && !it.accept(this, property) } == true
+        ) {
+            return false
+        }
+        // N.B.: Short-circuit AND with apiFeatures.enableContextParameters to only evaluate
+        // contextParameters if the feature toggle is enabled.
+        if (
+            apiFeatures.enableContextParameters &&
+            !property.contextParameters.all { it.accept(this, property) }
+        ) {
             return false
         }
         if (!this.visitDeclaration(property, data)) {
@@ -170,7 +186,7 @@ open class KSValidateVisitor(
             )
         }
         // N.B.: Mirrors visitValueParameter
-        return contextParameter.type.accept(this, data)
+        return contextParameter.type.accept(this, contextParameter)
     }
 
     override fun visitValueArgument(valueArgument: KSValueArgument, data: KSNode?): Boolean {

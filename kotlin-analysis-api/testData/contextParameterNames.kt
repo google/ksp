@@ -24,6 +24,8 @@
 // TEST PROCESSOR: ContextParameterNameProcessor
 // PROCESSOR INPUT: lib
 // EXPECTED:
+// EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: libMixedProp[0] name=null toString=_
+// EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: libMixedProp[1] name=b toString=b
 // EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: libNamed[0] name=libNamed toString=libNamed
 // EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: libUnnamed[0] name=null toString=_
 // EXPECT ENABLE_CONTEXT_PARAMETERS = TRUE: mixedProp[0] name=null toString=_
@@ -38,6 +40,7 @@
 package lib
 
 interface LibCtx
+interface LibCtx2
 
 context(libNamed: LibCtx)
 fun libNamed() {
@@ -45,6 +48,12 @@ fun libNamed() {
 
 context(_: LibCtx)
 fun libUnnamed() {
+}
+
+class MyLibClass {
+    context(_: LibCtx, b: LibCtx2)
+    val libMixedProp: String
+        get() = ""
 }
 
 // MODULE: main(lib)
