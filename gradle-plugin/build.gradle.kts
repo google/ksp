@@ -142,8 +142,21 @@ tasks.named<Test>("test").configure {
     dependsOn(":api:publishAllPublicationsToTestRepository")
     dependsOn(":common-deps:publishAllPublicationsToTestRepository")
     dependsOn(":gradle-plugin:publishAllPublicationsToTestRepository")
+    dependsOn(":kotlin-analysis-api:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing:publishAllPublicationsToTestRepository")
     dependsOn(":symbol-processing-aa-embeddable:publishAllPublicationsToTestRepository")
+    inputs
+        .files(
+            rootProject.layout.buildDirectory.dir("repos/test").map { dir ->
+                fileTree(dir) { include("**/*.pom", "**/*.module", "**/maven-metadata.xml") }
+            }
+        )
+        .withPropertyName("publishedTestRepoMetadata")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+    System.getProperty("updateTestSnapshots")?.let {
+        systemProperty("updateTestSnapshots", it)
+        outputs.upToDateWhen { false }
+    }
 }
 
 abstract class WriteVersionSrcTask : DefaultTask() {

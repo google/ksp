@@ -32,9 +32,11 @@ information on using pull requests.
 This project follows
 [Google's Open Source Community Guidelines](https://opensource.google/conduct/).
 
-## API verification
+## API & Published Metadata verification
 
-For changes that involves API changes(new API, API signature change), please also update [api.base](api/api.base) file. You can monitor api change with `./gradlew :api:checkApi`, and`./gradlew :api:updateApi` to generate new api signature.
+For changes that involve API changes (new API, API signature change), please also update [api.base](api/api.base) file. You can monitor API changes with `./gradlew :api:checkApi`, and `./gradlew :api:updateApi` to generate a new API signature.
+
+For changes that affect published Maven POMs or Gradle Module Metadata (such as dependency versions, scopes, or Gradle variant attributes), verify against [published-metadata.txt](gradle-plugin/src/test/resources/com/google/devtools/ksp/gradle/published-metadata.txt) with `./gradlew :gradle-plugin:test --tests "*PublishedMetadataTest"`, and pass `-DupdateTestSnapshots=true` to update the golden snapshot when intentional.
 
 ## Bug Contribution Workflow
 If you want to submit a bug fix or report a bug via a test, follow this workflow:
