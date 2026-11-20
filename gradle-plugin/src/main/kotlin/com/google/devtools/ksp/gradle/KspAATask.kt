@@ -161,6 +161,7 @@ abstract class KspAATask @Inject constructor(
                         kspConfig.classpathStructure,
                         kspConfig.libraries,
                         kspConfig.processorClasspath,
+                        logger,
                     )
                 }
 

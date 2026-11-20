@@ -9,6 +9,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.File
+import java.io.RandomAccessFile
 
 @RunWith(Parameterized::class)
 class IncrementalCPIT(experimentalPsiResolution: Boolean) {
@@ -49,6 +50,37 @@ class IncrementalCPIT(experimentalPsiResolution: Boolean) {
     )
 
     private val emptyMessage = setOf("w: [ksp] processing done")
+
+    @Test
+    fun testCorruptedClasspathSnapshotRecovery() {
+        val task = ":workload:kspKotlin"
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+            .withArguments(task, "--no-build-cache", "--info")
+
+        val initial = gradleRunner.build()
+        Assert.assertEquals(TaskOutcome.SUCCESS, initial.task(task)?.outcome)
+
+        val snapshot = File(project.root, "workload/build/kspCaches/main/classpath-structure.bin")
+        Assert.assertTrue("Expected a populated classpath snapshot", snapshot.length() > 4)
+        RandomAccessFile(snapshot, "rw").use { it.setLength(it.length() / 2) }
+
+        File(project.root, "workload/src/main/kotlin/p1/K1.kt").appendText("\n// Trigger KSP again.\n")
+        val rebuilt = gradleRunner.build()
+        Assert.assertEquals(TaskOutcome.SUCCESS, rebuilt.task(task)?.outcome)
+        Assert.assertTrue(rebuilt.output.contains("[ksp] Could not read the previous classpath snapshot"))
+        Assert.assertTrue(rebuilt.output.contains("at java.base/java.io.ObjectInputStream."))
+        val processed = rebuilt.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
+        Assert.assertEquals(
+            emptyMessage + setOf("w: [ksp] p1/K1.kt", "w: [ksp] p1/K2.kt", "w: [ksp] p1/K3.kt"),
+            processed,
+        )
+
+        File(project.root, "l2/src/main/kotlin/p1/L2.kt").appendText("\n{ val v100 = 100 }\n")
+        val incremental = gradleRunner.build()
+        Assert.assertEquals(TaskOutcome.SUCCESS, incremental.task(task)?.outcome)
+        val dirties = incremental.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
+        Assert.assertEquals(emptyMessage + setOf("w: [ksp] p1/K1.kt", "w: [ksp] p1/K2.kt"), dirties)
+    }
 
     @Test
     fun testCPChanges() {
