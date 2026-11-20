@@ -578,7 +578,8 @@ class KotlinSymbolProcessing(
                     kspConfig.projectBaseDir,
                     anyChangesWildcard,
                     allKSFiles,
-                    kspConfig.incremental
+                    kspConfig.incremental,
+                    logger
                 )
 
                 var allDirtyKSFiles = incrementalContext.calcDirtyFiles(allKSFiles).toList()
