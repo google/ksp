@@ -143,6 +143,20 @@ abstract class IncrementalContextBase(
     private val unassociatedOutputsKey = File("<This is a virtual key for unassociated outputs; DO NOT USE>")
     private val syntheticKeys = setOf(anyChangesWildcard, removedOutputsKey, unassociatedOutputsKey)
 
+    // Synthetic files in the symbol lookup cache, under which classpath lookups by processors are recorded:
+    // - classpathQueriesKey: classes and packages that processors asked the Resolver for, e.g. by
+    //   getClassDeclarationByName or getDeclarationsFromPackage. If one changes, processors must run.
+    // - librarySymbolsKey: library classes that processors saw while processing. Only aggregating outputs depend on
+    //   these: isolating outputs are covered by the lookups of their sources.
+    // A package scan is recorded as the name PACKAGE_SCAN in the scope of the package.
+    private val classpathQueriesKey = File("<This is a virtual key for classpath queries; DO NOT USE>")
+    private val librarySymbolsKey = File("<This is a virtual key for library symbols; DO NOT USE>")
+    private val classpathLookupKeys = setOf(classpathQueriesKey, librarySymbolsKey)
+
+    // Marks caches that record classpath lookups; see canSkipProcessing. Bump the version whenever what is recorded
+    // under classpathLookupKeys changes.
+    private val classpathLookupsMarkerKey = File("<This is a virtual key for classpath lookups v1; DO NOT USE>")
+
     private fun updateFromRemovedOutputs() {
         val removedOutputs = sourceToOutputsMap[removedOutputsKey] ?: return
 
@@ -157,7 +171,10 @@ abstract class IncrementalContextBase(
     }
 
     private fun updateLookupCache(dirtyFiles: Collection<File>) {
-        symbolLookupCache.update(symbolLookupTracker, dirtyFiles, knownRemoved)
+        // Every run that processes reruns all processors and regenerates all aggregating outputs (see
+        // initialDirtyFiles), so its classpath lookups replace the old ones.
+        val classpathLookupFiles = classpathLookupKeys.map { it.lookupPath() }
+        symbolLookupCache.update(symbolLookupTracker, dirtyFiles + classpathLookupFiles, knownRemoved)
         symbolLookupCache.flush()
         symbolLookupCache.close()
 
@@ -238,9 +255,13 @@ abstract class IncrementalContextBase(
     }
 
     /**
-     * Fast path for incremental runs in which nothing is dirty: no source was modified or removed, and no classpath
-     * change reaches a source file or an output of this module. Processors are then not run at all, so processors
-     * that only query the classpath (e.g. `getDeclarationsFromPackage`) are not given a chance to generate anything.
+     * Fast path for incremental runs in which nothing is dirty: no source was modified or removed, no classpath
+     * change reaches a source file or an output of this module, and no changed class is one that processors asked
+     * the Resolver for (by name, e.g. `getClassDeclarationByName`, or by scanning its package, e.g.
+     * `getDeclarationsFromPackage`). Processors are then not run at all.
+     *
+     * Aggregating outputs are regenerated whenever KSP processes, but they don't prevent the early exit unless a
+     * processor saw a changed class while generating them.
      *
      * Returns `true` if processing can be skipped. The clean outputs have then been restored from their backups, the
      * logs written and the lookup caches closed, so this context must not be used again.
@@ -267,9 +288,20 @@ abstract class IncrementalContextBase(
         // A missing key means the caches were written by an older KSP that didn't record outputs without sources
         // (Dependencies(false)). We can't prove there are none, and they'd be lost if we exited early.
         if (unassociatedOutputsKey !in sourceToOutputsMap) return false
+        // A missing key means the caches were written by an older KSP that didn't record classpath lookups. Any
+        // processor may have asked for a changed class, so processors must run once to record them.
+        if (classpathLookupsMarkerKey !in sourceToOutputsMap) return false
         // Nothing to propagate from means calcDirtyFiles would return no files. Newly defined symbols can be ignored:
         // they only come from modified files.
-        if (initialDirtyFiles().isNotEmpty()) return false
+        if (changedInputs().isNotEmpty()) return false
+        // A processor asked for a class that changed, so it may generate something else now, even if it generated
+        // nothing last time.
+        if (classpathQueriesKey in lookupsOfChangedClasses) return false
+        // Aggregating outputs are regenerated whenever KSP processes, so they only prevent the early exit if a
+        // processor saw a changed class while generating them.
+        if (!sourceToOutputsMap[anyChangesWildcard].isNullOrEmpty() && librarySymbolsKey in lookupsOfChangedClasses) {
+            return false
+        }
         // If an output can't be restored (neither it nor its backup exists), let the normal path handle it. It
         // invalidates caches.uptodate before restoring, so the next run is a full rebuild instead of the same failure.
         if (cleanOutputs().any { !it.abs().exists() && !it.bak().exists() }) return false
@@ -296,29 +328,41 @@ abstract class IncrementalContextBase(
 
     private fun cleanOutputs(): Set<File> = sourceToOutputsMap.values.flatten().toSet()
 
+    // The files and classpath lookup keys that looked up a changed class: by its name, or by scanning a package that
+    // contains it.
+    private val lookupsOfChangedClasses: Set<File> by lazy {
+        changedClasses.flatMap { fqn ->
+            val (scope, name) = separateQualifierAndName(fqn)
+            val symbol = LookupSymbolWrapper(name, scope)
+            val packageScans = enclosingScopes(fqn).flatMap { symbolLookupCache[LookupSymbolWrapper(PACKAGE_SCAN, it)] }
+            classLookupCache[symbol] + symbolLookupCache[symbol] + packageScans
+        }.map { it.toRelativeFile() }.toSet()
+    }
+
     // Files in this module that looked up a class that changed on the classpath.
-    private fun dirtyFilesByClasspath(): Set<File> = changedClasses.flatMap { fqn ->
-        val (scope, name) = separateQualifierAndName(fqn)
-        classLookupCache[LookupSymbolWrapper(name, scope)].map { it.toRelativeFile() } +
-            symbolLookupCache[LookupSymbolWrapper(name, scope)].map { it.toRelativeFile() }
-    }.toSet()
+    private fun dirtyFilesByClasspath(): Set<File> = lookupsOfChangedClasses - classpathLookupKeys
 
     private fun noSourceFilesOfChangedClasses(): Set<File> = changedClasses.map { fqn ->
         NoSourceFile(baseDir, fqn).filePath.toRelativeFile()
     }.toSet()
 
-    // The files from which calcDirtyFiles propagates dirtiness, apart from those that look up newly defined symbols.
-    // Shared with canSkipProcessing so that both agree on what is dirty.
-    private fun initialDirtyFiles(dirtyFilesByCP: Set<File> = dirtyFilesByClasspath()): Set<File> = buildSet {
+    // The files from which calcDirtyFiles propagates dirtiness, apart from aggregating outputs and the files that look
+    // up newly defined symbols. Shared with canSkipProcessing so that both agree on what is dirty.
+    private fun changedInputs(dirtyFilesByCP: Set<File> = dirtyFilesByClasspath()): Set<File> = buildSet {
         addAll(modified)
         addAll(removed)
         addAll(dirtyFilesByCP)
         // Files that called getSealedSubclasses are always dirty.
         addAll(sealedMap.keys)
         addAll(noSourceFilesOfChangedClasses().flatMap { sourceToOutputsMap[it].orEmpty() })
-        // Outputs under synthetic keys (aggregating, unassociated, or disappeared in the last run).
-        syntheticKeys.forEach { addAll(sourceToOutputsMap[it].orEmpty()) }
+        addAll(sourceToOutputsMap[unassociatedOutputsKey].orEmpty())
+        addAll(sourceToOutputsMap[removedOutputsKey].orEmpty())
     }
+
+    // Aggregating outputs are dirty whenever KSP processes: they can depend on any change. That they don't depend on
+    // a changed class is only used to skip processing; see canSkipProcessing.
+    private fun initialDirtyFiles(dirtyFilesByCP: Set<File>): Set<File> =
+        changedInputs(dirtyFilesByCP) + sourceToOutputsMap[anyChangesWildcard].orEmpty()
 
     // Beware: no side-effects here; Caches should only be touched in updateCaches.
     fun calcDirtyFiles(ksFiles: List<KSFile>): Collection<KSFile> = closeFilesOnException {
@@ -345,7 +389,7 @@ abstract class IncrementalContextBase(
 
         val dirtyFilesByNewSyms = newSyms.flatMap { newSym ->
             symbolLookupCache[newSym].map { it.toRelativeFile() }
-        }
+        } - classpathLookupKeys
         val dirtyFilesBySealed = sealedMap.keys
 
         // Calculate dirty files by dirty classes in CP.
@@ -407,6 +451,8 @@ abstract class IncrementalContextBase(
             // written by an older KSP that didn't track unassociated outputs. See tryEarlyExitIfClean.
             sourceToOutputsMap[unassociatedOutputsKey] = emptyList()
         }
+        // The classpath lookups of this run were recorded; see updateLookupCache.
+        sourceToOutputsMap[classpathLookupsMarkerKey] = emptyList()
 
         removedOutputs.forEach {
             sourceToOutputsMap.removeRecursively(it)
@@ -617,10 +663,18 @@ abstract class IncrementalContextBase(
      * - If `sym` is a named import, then `sym` may invalidate the file.
      * - If `sym` is an on-demand import, then `sym` may invalidate the file.
      * - If `sym` is an implicit import, i.e., from the same package, then `sym` may invalidate the file.
+     *
+     * If [psiFile] is a class file of a library, `fqn` is recorded with [recordLibraryClass] instead.
      */
     fun recordLookup(psiFile: PsiJavaFile, fqn: String) {
         if (!isIncremental)
             return
+
+        // Resolved in a Java library class, so only aggregating outputs can depend on it.
+        if (psiFile.fileType.isBinary) {
+            recordLibraryClass(fqn)
+            return
+        }
 
         val path = psiFile.virtualFile.path
         val (scope, name) = separateQualifierAndName(fqn)
@@ -664,6 +718,39 @@ abstract class IncrementalContextBase(
         updatedSealed.putValue(classDeclaration.containingFile!!.relativeFile, LookupSymbolWrapper(name, scope))
     }
 
+    /** Records that a processor asked the Resolver for the class [fqn] by name. */
+    fun recordClasspathQuery(fqn: String) = recordClass(classpathQueriesKey, fqn)
+
+    /** Records that a processor asked the Resolver for the declarations in [packageName]. */
+    fun recordPackageQuery(packageName: String) = recordPackageScan(classpathQueriesKey, packageName)
+
+    /** Records that a processor saw the library class [fqn]. */
+    fun recordLibraryClass(fqn: String) = recordClass(librarySymbolsKey, fqn)
+
+    /**
+     * Records that a processor saw something in the library package [packageName] that only changes as some class
+     * in the package does, e.g. a typealias or the subclasses of a sealed class.
+     */
+    fun recordLibraryPackage(packageName: String) = recordPackageScan(librarySymbolsKey, packageName)
+
+    // Nested classes are spelled with dots, like changedClasses.
+    private fun recordClass(key: File, fqn: String) {
+        val (scope, name) = separateQualifierAndName(fqn.replace('$', '.'))
+        record(key, scope, name)
+    }
+
+    private fun recordPackageScan(key: File, packageName: String) = record(key, packageName, PACKAGE_SCAN)
+
+    private fun record(key: File, scope: String, name: String) {
+        if (!isIncremental)
+            return
+
+        symbolLookupTracker.record(key.lookupPath().path, scope, name)
+    }
+
+    // Paths in the lookup storage must be absolute: they are read back relative to baseDir.
+    private fun File.lookupPath() = File(baseDir, path)
+
     protected open fun logBeforeCacheFlush(outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>) {
         logSourceToOutputs(outputs, sourceToOutputs)
     }
@@ -679,6 +766,17 @@ abstract class IncrementalContextBase(
     protected fun mkLogFile(fileName: String): File = mkFileInLogDir(fileName)
         .also { it.appendText("=== Build $buildTime ===\n") }
 }
+
+// The name under which a scan of all declarations in a package is recorded.
+private const val PACKAGE_SCAN = "*"
+
+// The packages in which a scan finds the changed class [fqn] or one of its outer classes: "a.b.C.D" is found by scans
+// of "a.b.C", "a.b", "a" and "". Nested classes are spelled with dots in changedClasses, so outer classes can't be told
+// apart from packages.
+private fun enclosingScopes(fqn: String): Sequence<String> =
+    generateSequence(fqn.substringBeforeLast('.', "")) { scope ->
+        if (scope.isEmpty()) null else scope.substringBeforeLast('.', "")
+    }
 
 internal class DirtinessPropagator(
     private val lookupCache: LookupStorageWrapper,

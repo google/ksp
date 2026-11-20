@@ -2,6 +2,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.impl.recordIfFromLibrary
 import com.google.devtools.ksp.impl.recordLookup
 import com.google.devtools.ksp.impl.recordLookupForGetAllFunctions
 import com.google.devtools.ksp.impl.recordLookupForGetAllProperties
@@ -28,6 +29,11 @@ class KSClassDeclarationEnumEntryImpl private constructor(private val ktEnumEntr
     AbstractKSDeclarationImpl(),
     KSExpectActual by KSExpectActualImpl(ktEnumEntrySymbol) {
     override val ktDeclarationSymbol get() = ktEnumEntrySymbol
+
+    init {
+        recordIfFromLibrary(ktEnumEntrySymbol)
+    }
+
     companion object : KSObjectCache<KaEnumEntrySymbol, KSClassDeclarationEnumEntryImpl>() {
         fun getCached(ktEnumEntrySymbol: KaEnumEntrySymbol) =
             cache.getOrPut(ktEnumEntrySymbol) { KSClassDeclarationEnumEntryImpl(ktEnumEntrySymbol) }

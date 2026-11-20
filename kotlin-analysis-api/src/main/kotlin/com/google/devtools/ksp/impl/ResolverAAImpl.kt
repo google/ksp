@@ -405,6 +405,8 @@ class ResolverAAImpl(
             if (name.asString() == "") {
                 return null
             }
+            // Also records the outer classes of nested names: an enum entry, for example, only changes as its class.
+            incrementalContext.recordClasspathQuery(name.asString())
             val parent = name.getQualifier()
             val simpleName = name.getShortName()
             val classId = ClassId(FqName(parent), Name.identifier(simpleName))
@@ -438,6 +440,7 @@ class ResolverAAImpl(
     @OptIn(KaExperimentalApi::class)
     @KspExperimental
     override fun getDeclarationsFromPackage(packageName: String): Sequence<KSDeclaration> {
+        incrementalContext.recordPackageQuery(packageName)
         return analyze {
             findPackage(FqName(packageName))?.packageScope?.declarations?.distinct()?.mapNotNull { symbol ->
                 when (symbol) {
@@ -496,6 +499,8 @@ class ResolverAAImpl(
         includeTopLevel: Boolean
     ): Sequence<KSFunctionDeclaration> {
         val qualifier = name.getQualifier()
+        // Top-level functions are in facade classes, whose names are unknown.
+        if (includeTopLevel) incrementalContext.recordPackageQuery(qualifier)
         val functionName = name.getShortName()
         val nonTopLevelResult = this.getClassDeclarationByName(qualifier)?.getDeclaredFunctions()
             ?.filter { it.simpleName.asString() == functionName } ?: emptySequence()
@@ -697,6 +702,8 @@ class ResolverAAImpl(
 
     override fun getPropertyDeclarationByName(name: KSName, includeTopLevel: Boolean): KSPropertyDeclaration? {
         val qualifier = name.getQualifier()
+        // Top-level properties are in facade classes, whose names are unknown.
+        if (includeTopLevel) incrementalContext.recordPackageQuery(qualifier)
         val propertyName = name.getShortName()
         val nonTopLevelResult = this.getClassDeclarationByName(qualifier)?.getDeclaredProperties()
             ?.singleOrNull { it.simpleName.asString() == propertyName }
@@ -730,7 +737,11 @@ class ResolverAAImpl(
     override fun getSymbolsWithAnnotation(annotationName: String, inDepth: Boolean): Sequence<KSAnnotated> {
         val expandedIfAlias = analyze {
             val classId = ClassId.fromString(annotationName)
-            findTypeAlias(classId)?.expandedType?.symbol?.classId?.asFqNameString()
+            val alias = findTypeAlias(classId)
+            // A library typealias only changes as the facade class that declares it does.
+            val aliasPackage = alias?.takeIf { it.isFromLibrary }?.classId?.packageFqName
+            aliasPackage?.let { incrementalContext.recordPackageQuery(it.asString()) }
+            alias?.expandedType?.symbol?.classId?.asFqNameString()
         }
         val realAnnotationName = expandedIfAlias ?: annotationName
 

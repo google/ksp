@@ -18,11 +18,17 @@
 package com.google.devtools.ksp.test
 
 import com.google.devtools.ksp.IncrementalContextLoggingOptions
+import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.common.FileToFilesMap
 import com.google.devtools.ksp.common.FileToSymbolsMap
 import com.google.devtools.ksp.common.LookupSymbolWrapper
 import com.google.devtools.ksp.common.NoSourceFile
 import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.getClassDeclarationByName
+import com.google.devtools.ksp.getDeclaredFunctions
+import com.google.devtools.ksp.getDeclaredProperties
+import com.google.devtools.ksp.getFunctionDeclarationsByName
+import com.google.devtools.ksp.getPropertyDeclarationByName
 import com.google.devtools.ksp.impl.CommandLineKSPLogger
 import com.google.devtools.ksp.impl.DualLookupTracker
 import com.google.devtools.ksp.impl.IncrementalContextAA
@@ -152,9 +158,52 @@ class IncrementalEarlyExitTest {
     }
 
     @Test
-    fun `no early exit when the module has an aggregating output`() {
+    fun `aggregating outputs don't prevent the early exit by themselves`() {
         build(mapOf(File(base, ANY_CHANGES) to setOf(aGen)))
+        assertTrue(canExitEarly())
+    }
+
+    @Test
+    fun `no early exit when the caches predate classpath lookups`() {
+        build(mapOf(a to setOf(aGen)))
+        FileToFilesMap(File(caches, "sourceToOutputs")).apply {
+            remove(keys.single { it.path.startsWith("<This is a virtual key for classpath lookups") })
+            flush()
+        }
+
         assertFalse(canExitEarly())
+    }
+
+    @Test
+    fun `no early exit when a processor asked for a changed class, even without outputs`() {
+        build(sourceToOutputs = emptyMap()) {
+            recordClasspathQuery("p1.Asked")
+            recordPackageQuery("p2")
+        }
+
+        assertFalse(canExitEarly(changed = listOf("p1.Asked")))
+        assertFalse(canExitEarly(changed = listOf("p2.Added")), "a class added to or removed from a scanned package")
+        assertFalse(canExitEarly(changed = listOf("p2.Outer.Nested")), "a nested class in a scanned package")
+        assertTrue(canExitEarly(changed = listOf("p1.Other", "p3.C")))
+    }
+
+    @Test
+    fun `library classes that processors saw only prevent the early exit of aggregating outputs`() {
+        build(mapOf(a to setOf(aGen))) { recordLibraryClass("p1.Seen") }
+        assertTrue(canExitEarly(changed = listOf("p1.Seen")), "isolating outputs depend on their sources' lookups")
+
+        build(mapOf(File(base, ANY_CHANGES) to setOf(aGen)), modified = listOf(a)) { recordLibraryClass("p1.Seen") }
+        assertFalse(canExitEarly(changed = listOf("p1.Seen")))
+        assertTrue(canExitEarly(changed = listOf("p1.Unrelated")))
+    }
+
+    @Test
+    fun `classpath lookups are replaced by those of the next run`() {
+        build(sourceToOutputs = emptyMap()) { recordClasspathQuery("p1.Old") }
+        build(sourceToOutputs = emptyMap(), modified = listOf(a)) { recordClasspathQuery("p1.New") }
+
+        assertTrue(canExitEarly(changed = listOf("p1.Old")))
+        assertFalse(canExitEarly(changed = listOf("p1.New")))
     }
 
     @Test
@@ -252,6 +301,60 @@ class IncrementalEarlyExitTest {
         assertEquals("gen", File(out, "kotlin/p1/Gen.kt").readText())
     }
 
+    @OptIn(KspExperimental::class)
+    @Test
+    fun `KSP records the classes and packages that processors ask the Resolver for`() {
+        val asks = processor { resolver, _ ->
+            resolver.getClassDeclarationByName("java.util.concurrent.Callable")
+            resolver.getClassDeclarationByName("java.util.concurrent.TimeUnit.SECONDS")
+            resolver.getDeclarationsFromPackage("java.util.function")
+            resolver.getFunctionDeclarationsByName("java.util.zip.topLevelFunction", includeTopLevel = true)
+            resolver.getPropertyDeclarationByName("java.time.topLevelProperty", includeTopLevel = true)
+        }
+        runKsp(asks)
+
+        assertTrue(processes(asks, changed = listOf("java.util.concurrent.Callable")))
+        assertTrue(processes(asks, changed = listOf("java.util.concurrent.TimeUnit")), "an enum entry is in its class")
+        assertTrue(processes(asks, changed = listOf("java.util.function.Added")))
+        assertTrue(processes(asks, changed = listOf("java.util.zip.FileKt")), "top-level functions are in facades")
+        assertTrue(processes(asks, changed = listOf("java.time.FileKt")), "top-level properties are in facades")
+        assertFalse(processes(asks, changed = listOf("java.util.concurrent.Executors")))
+    }
+
+    @Test
+    fun `KSP records the library classes that processors see for aggregating outputs`() {
+        val aggregates = processor { resolver, codeGenerator ->
+            resolver.getClassDeclarationByName("java.util.Map")!!.declarations.toList() // Creates Map.Entry.
+            resolveFutureInJavaLibrary(resolver)
+            val kotlinMap = resolver.getClassDeclarationByName("kotlin.collections.Map")!!
+            val entries = kotlinMap.getDeclaredProperties().single { it.simpleName.asString() == "entries" }
+            entries.type.resolve() // Set<Map.Entry<K, V>>, without creating the declaration of Set.
+            resolver.getClassDeclarationByName("java.lang.constant.ConstantDesc")!!.getSealedSubclasses().toList()
+            codeGenerator.createNewFile(Dependencies(true), "p1", "Gen").use { it.write("gen".toByteArray()) }
+        }
+        runKsp(aggregates)
+
+        assertTrue(processes(aggregates, changed = listOf("java.util.Map.Entry")), "a library class")
+        assertTrue(processes(aggregates, changed = listOf("kotlin.collections.Set")), "a type resolved in a library")
+        assertTrue(processes(aggregates, changed = listOf("java.util.concurrent.Future")), "and in a Java library")
+        assertTrue(processes(aggregates, changed = listOf("java.lang.constant.NewDesc")), "a new sealed subclass")
+        assertFalse(processes(aggregates, changed = listOf("java.util.concurrent.Executors")))
+    }
+
+    @Test
+    fun `types resolved in Java libraries don't prevent the early exit of isolating outputs`() {
+        val resolves = processor { resolver, _ -> resolveFutureInJavaLibrary(resolver) }
+        runKsp(resolves)
+
+        assertFalse(processes(resolves, changed = listOf("java.util.concurrent.Future")))
+    }
+
+    // Resolves List<Future<T>> in the Java library class ExecutorService, without creating the declaration of Future.
+    private fun resolveFutureInJavaLibrary(resolver: Resolver) {
+        val executorService = resolver.getClassDeclarationByName("java.util.concurrent.ExecutorService")!!
+        executorService.getDeclaredFunctions().first { it.simpleName.asString() == "invokeAll" }.returnType!!.resolve()
+    }
+
     @Test
     fun `KSP loads the processors only when it processes`() {
         var loads = 0
@@ -321,13 +424,16 @@ class IncrementalEarlyExitTest {
         changedClasses = changed,
     )
 
-    /** Runs a full incremental build in which [outputs] were generated from the sources in [sourceToOutputs]. */
+    /**
+     * Runs a full incremental build in which [outputs] were generated from the sources in [sourceToOutputs], and
+     * processors made the lookups in [recordLookups].
+     */
     private fun build(
         sourceToOutputs: Map<File, Set<File>>,
         outputs: Set<File> = sourceToOutputs.values.flatten().toSet(),
         modified: List<File> = emptyList(),
         sources: List<File> = listOf(a),
-        recordLookups: (DualLookupTracker) -> Unit = {},
+        recordLookups: IncrementalContextAA.(DualLookupTracker) -> Unit = {},
     ) {
         val tracker = DualLookupTracker()
         context(modified = modified, tracker = tracker).run {
@@ -369,6 +475,13 @@ class IncrementalEarlyExitTest {
     private val generatesAGen = processor { resolver, codeGenerator ->
         val files = resolver.getAllFiles().toList().toTypedArray()
         codeGenerator.createNewFile(Dependencies(false, *files), "p1", "AGen").use { it.write("gen".toByteArray()) }
+    }
+
+    /** Runs KSP with [provider] and returns whether it processed, i.e. created the processors. */
+    private fun processes(provider: SymbolProcessorProvider, changed: List<String>): Boolean {
+        var created = false
+        runKsp(SymbolProcessorProvider { created = true; provider.create(it) }, changed)
+        return created
     }
 
     private fun runKsp(provider: SymbolProcessorProvider, changed: List<String> = emptyList(), log: Boolean = false) =
