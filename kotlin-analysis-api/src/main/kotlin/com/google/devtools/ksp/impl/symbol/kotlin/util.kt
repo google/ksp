@@ -20,7 +20,9 @@
 package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.InternalKSPException
+import com.google.devtools.ksp.common.ROOT_PACKAGE_SCOPE
 import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.common.normalizeLookupScope
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.KSPCoreEnvironment
 import com.google.devtools.ksp.impl.ResolverAAImpl
@@ -1396,12 +1398,18 @@ internal val KSNode.definitionOrigin: Origin
     get() = containingFile?.origin ?: origin
 
 /**
- * Returns the qualifier and name of [fqn].
+ * Returns the lookup scope qualifier and simple name of [fqn].
  *
- * E.g., if `fqn = a.b.c.f`, then it returns `a.b.c, f`.
+ * E.g., if `fqn = a.b.c.f`, then it returns `"a.b.c" to "f"`. Unqualified root-package names (including backticked
+ * names starting with dots, such as `RootClass` or `.foo`) return `ROOT_PACKAGE_SCOPE to fqn`.
  */
 internal fun separateQualifierAndName(fqn: String): Pair<String, String> {
-    val scope = fqn.substringBeforeLast('.', "<anonymous>")
-    val name = fqn.substringAfterLast('.')
+    val firstNonDot = fqn.indexOfFirst { it != '.' }
+    val lastDot = fqn.lastIndexOf('.')
+    if (firstNonDot == -1 || lastDot < firstNonDot) {
+        return ROOT_PACKAGE_SCOPE to fqn
+    }
+    val scope = fqn.substring(0, lastDot).normalizeLookupScope()
+    val name = fqn.substring(lastDot + 1)
     return scope to name
 }
