@@ -686,6 +686,18 @@ abstract class KSPUnitTestSuite(
         runKSPTest("jvmModifiersCompanionObject.kt")
     }
 
+    @TestMetadata("diamondInheritance.kt")
+    @Test
+    fun testDiamondInheritance() {
+        runTest("$AA_PATH/diamondInheritance.kt")
+    }
+
+    @TestMetadata("diamondInheritanceRepeatable.kt")
+    @Test
+    fun testDiamondInheritanceRepeatable() {
+        runTest("$AA_PATH/diamondInheritanceRepeatable.kt")
+    }
+
     @TestMetadata("lateinitProperties.kt")
     @Test
     fun testLateinitProperties() {
