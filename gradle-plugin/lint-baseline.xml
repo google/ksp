@@ -169,17 +169,6 @@
     <issue
         id="InternalKgpApiUsage"
         message="Avoid using internal Kotlin Gradle Plugin APIs"
-        errorLine1="import org.jetbrains.kotlin.gradle.internal.kapt.incremental.StructureTransformLegacyAction"
-        errorLine2="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/com/google/devtools/ksp/gradle/KspSubplugin.kt"
-            line="51"
-            column="1"/>
-    </issue>
-
-    <issue
-        id="InternalKgpApiUsage"
-        message="Avoid using internal Kotlin Gradle Plugin APIs"
         errorLine1="    val loadedPrevious = ClasspathSnapshot.ClasspathSnapshotFactory.loadFrom(cacheDir)"
         errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location

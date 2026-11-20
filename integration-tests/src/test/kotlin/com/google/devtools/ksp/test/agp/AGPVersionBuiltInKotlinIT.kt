@@ -13,25 +13,27 @@ import java.io.File
 @RunWith(Parameterized::class)
 class AGPVersionBuiltInKotlinIT(
     private val agpVersion: String,
-    private val kotlinVersion: String,
+    private val kotlinVersion: String?,
     private val gradleVersion: String,
-    experimentalPsiResolution: String
+    experimentalPsiResolution: String?
 ) {
     @Rule
     @JvmField
     val project: TemporaryTestProject = TemporaryTestProject(
         "playground-android-builtinkotlin",
         "playground",
-        experimentalPsiResolution.toBoolean()
+        experimentalPsiResolution!!.toBoolean()
     )
 
     companion object {
         @JvmStatic
         @Parameterized.Parameters(name = "AGP: {0}, KGP: {1}, Gradle: {2}, experimentalPsiResolution: {3}")
-        fun data(): Collection<Array<String>> {
-            return listOf(
+        fun data(): Collection<Array<String?>> {
+            return listOf<Array<String?>>(
+                arrayOf("9.0.0-alpha14", null, "9.1.0"),
                 arrayOf("9.0.0-alpha14", "2.3.0-RC", "9.1.0"),
                 arrayOf("9.0.0-alpha14", "2.4.0", "9.1.0"),
+                arrayOf("9.0.0-beta01", null, "9.1.0"),
                 arrayOf("9.0.0-beta01", "2.3.0-RC", "9.1.0"),
                 arrayOf("9.0.0-beta01", "2.4.0", "9.1.0"),
             ).flatMap {
@@ -48,7 +50,7 @@ class AGPVersionBuiltInKotlinIT(
         gradleVersion.let { gradleRunner.withGradleVersion(it) }
 
         agpVersion.let { project.setAgpVersion(it) }
-        kotlinVersion.let {
+        kotlinVersion?.let {
             project.setKotlinVersion(it)
             setKotlinInBuildClasspath(it)
         }

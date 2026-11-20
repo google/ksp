@@ -2,7 +2,6 @@ package com.google.devtools.ksp.gradle.utils
 
 import org.gradle.api.Project
 import org.gradle.api.configuration.BuildFeatures
-import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.gradle.plugin.KotlinBaseApiPlugin
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
@@ -24,6 +23,23 @@ fun Project.isKotlinAndroidPluginApplied() = pluginManager.hasPlugin("org.jetbra
 
 fun Project.isLegacyKaptPluginApplied() = pluginManager.hasPlugin("com.android.legacy-kapt")
 
+fun checkMinimumKgpVersion(kgpVersion: KotlinToolingVersion) {
+    if (kgpVersion < MINIMUM_SUPPORTED_KGP_VERSION) {
+        throw RuntimeException(
+            "The minimum supported Kotlin Gradle Plugin version is $MINIMUM_SUPPORTED_KGP_VERSION. " +
+                "Please upgrade the Kotlin Gradle Plugin version in your project."
+        )
+    }
+}
+
+/**
+ * Defines the minimum supported Kotlin Gradle Plugin (KGP) version.
+ *
+ * KSP's API artifact is compiled with Kotlin languageVersion 2.3, which requires at least
+ * Kotlin 2.2 to read its metadata, and AGP 9.0+ built-in Kotlin bundles KGP 2.2.10.
+ */
+val MINIMUM_SUPPORTED_KGP_VERSION = KotlinToolingVersion("2.2.10")
+
 fun Project.canUseGeneratedKotlinApi(): Boolean {
     val kotlinVersion = KotlinToolingVersion(getKotlinPluginVersion())
     return kotlinVersion >= KotlinToolingVersion("2.3.0-Beta2")
@@ -40,24 +56,12 @@ fun Project.enableProjectIsolationCompatibleCodepath(): Boolean {
     if (providers.gradleProperty("ksp.project.isolation.enabled").orNull == "true") {
         return true
     }
-    if (supportsBuildFeatures) {
-        return objects.newInstance(KspBuildFeatures::class.java).buildFeatures.isolatedProjects.active.get()
-    }
-    // BuildFeatures isn't available, approximate Gradle's own property handling.
-    return providers.gradleProperty("org.gradle.unsafe.isolated-projects").orNull == "true" ||
-        providers.systemProperty("org.gradle.unsafe.isolated-projects").orNull == "true" ||
-        providers.gradleProperty("org.gradle.isolated-projects").orNull == "true" ||
-        providers.systemProperty("org.gradle.isolated-projects").orNull == "true"
+    return objects.newInstance(KspBuildFeatures::class.java).buildFeatures.isolatedProjects.active.get()
 }
 
-// org.gradle.api.configuration.BuildFeatures was introduced in Gradle 8.5.
-private val supportsBuildFeatures = GradleVersion.current() >= GradleVersion.version("8.5")
-
 /**
- * Holder for the injected [BuildFeatures] service.
- *
- * Keeping the reference in a separate class means [BuildFeatures] is only loaded when we actually instantiate this,
- * i.e. never on Gradle versions that don't have it.
+ * Holder for the injected [BuildFeatures] service, allowing [enableProjectIsolationCompatibleCodepath]
+ * to obtain [BuildFeatures] via [org.gradle.api.model.ObjectFactory.newInstance].
  */
 internal abstract class KspBuildFeatures {
     @get:Inject
