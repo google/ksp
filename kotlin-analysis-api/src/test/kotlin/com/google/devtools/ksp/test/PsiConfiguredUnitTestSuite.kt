@@ -32,18 +32,6 @@ abstract class PsiConfiguredUnitTestSuiteBase(
         runKSPTest("getSymbolsWithAnnotation/negative/allUseSiteTargetAppliedToAnnotationList.kt")
     }
 
-    @TestMetadata("functionKindsJavaInheritsKotlin.kt")
-    @Test
-    override fun testFunctionKindsJavaInheritsKotlin() {
-        runFailingKSPTest("functionKindsJavaInheritsKotlin.kt")
-    }
-
-    @TestMetadata("javaSubtypeOfKotlinInterface.kt")
-    @Test
-    override fun testJavaSubtypeOfKotlinInterface() {
-        runFailingKSPTest("javaSubtypeOfKotlinInterface.kt")
-    }
-
     @TestMetadata("getSymbolsWithAnnotation/groupedAnnotationsWithUseSiteTargets.kt")
     @Test
     override fun testGroupedAnnotationsWithUseSiteTargets() {
