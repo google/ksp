@@ -43,6 +43,7 @@ nexusPublishing {
 }
 
 version = rootProject.extra.get("kspVersion") as String
+val kotlinStdlibFloor = libs.versions.kotlin.stdlib.floor.get()
 
 subprojects {
     group = "com.google.devtools.ksp"
@@ -106,6 +107,7 @@ subprojects {
             targetCompatibility = JavaVersion.VERSION_1_8
         }
         configure<KotlinJvmProjectExtension> {
+            coreLibrariesVersion = kotlinStdlibFloor
             compilerOptions {
                 jvmTarget = JvmTarget.JVM_1_8
                 languageVersion.set(KotlinVersion.KOTLIN_2_3)

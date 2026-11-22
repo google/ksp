@@ -160,29 +160,17 @@ object AndroidPluginIntegration {
         if (androidComponent != null &&
             project.isAgpBuiltInKotlinUsed()
         ) {
-            if (project.canUseInternalKspApis()) {
-                (androidComponent.sources.java as? FlatSourceDirectoriesImpl)?.addGeneratedSourceDirectory(
-                    taskProvider = kspTaskProvider,
-                    wiredWith = { task -> task.kspConfig.javaOutputDir },
-                    DirectoryEntry.Kind.KSP
-                )
+            (androidComponent.sources.java as? FlatSourceDirectoriesImpl)?.addGeneratedSourceDirectory(
+                taskProvider = kspTaskProvider,
+                wiredWith = { task -> task.kspConfig.javaOutputDir },
+                DirectoryEntry.Kind.KSP
+            )
 
-                (androidComponent.sources.java as? FlatSourceDirectoriesImpl)?.addGeneratedSourceDirectory(
-                    taskProvider = kspTaskProvider,
-                    wiredWith = { task -> task.kspConfig.kotlinOutputDir },
-                    DirectoryEntry.Kind.KSP
-                )
-            } else {
-                androidComponent.sources.java?.addGeneratedSourceDirectory(
-                    taskProvider = kspTaskProvider,
-                    wiredWith = { task -> task.kspConfig.javaOutputDir }
-                )
-
-                androidComponent.sources.java?.addGeneratedSourceDirectory(
-                    taskProvider = kspTaskProvider,
-                    wiredWith = { task -> task.kspConfig.kotlinOutputDir }
-                )
-            }
+            (androidComponent.sources.java as? FlatSourceDirectoriesImpl)?.addGeneratedSourceDirectory(
+                taskProvider = kspTaskProvider,
+                wiredWith = { task -> task.kspConfig.kotlinOutputDir },
+                DirectoryEntry.Kind.KSP
+            )
 
             androidComponent.sources.resources?.addGeneratedSourceDirectory(
                 taskProvider = kspTaskProvider,

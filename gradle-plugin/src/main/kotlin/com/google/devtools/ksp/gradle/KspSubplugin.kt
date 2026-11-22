@@ -23,6 +23,8 @@ import com.google.devtools.ksp.gradle.model.builder.KspModelBuilder
 import com.google.devtools.ksp.gradle.utils.canUseGeneratedKotlinApi
 import com.google.devtools.ksp.gradle.utils.canUseInternalKspApis
 import com.google.devtools.ksp.gradle.utils.checkMinimumAgpVersion
+import com.google.devtools.ksp.gradle.utils.checkMinimumGradleVersion
+import com.google.devtools.ksp.gradle.utils.checkMinimumKgpVersion
 import com.google.devtools.ksp.gradle.utils.enableProjectIsolationCompatibleCodepath
 import com.google.devtools.ksp.gradle.utils.isAgpBuiltInKotlinUsed
 import org.gradle.api.GradleException
@@ -39,7 +41,6 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
-import org.gradle.util.GradleVersion
 import org.gradle.work.ChangeType
 import org.gradle.work.InputChanges
 import org.jetbrains.kotlin.buildtools.api.SourcesChanges
@@ -48,13 +49,14 @@ import org.jetbrains.kotlin.gradle.internal.kapt.incremental.CLASS_STRUCTURE_ART
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.ClasspathSnapshot
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.KaptClasspathChanges
 import org.jetbrains.kotlin.gradle.internal.kapt.incremental.StructureTransformAction
-import org.jetbrains.kotlin.gradle.internal.kapt.incremental.StructureTransformLegacyAction
+import org.jetbrains.kotlin.gradle.plugin.KotlinBasePlugin
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilationWithResources
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
+import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinCommonCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmCompilation
@@ -62,6 +64,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinSharedNativeCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinWithJavaCompilation
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
+import org.jetbrains.kotlin.tooling.core.KotlinToolingVersion
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
@@ -109,6 +112,11 @@ class KspGradleSubplugin @Inject internal constructor(private val registry: Tool
     private val androidComponentCache = ConcurrentHashMap<String, Component>()
 
     override fun apply(target: Project) {
+        checkMinimumGradleVersion()
+        target.plugins.withType(KotlinBasePlugin::class.java).configureEach {
+            checkMinimumKgpVersion(KotlinToolingVersion(target.getKotlinPluginVersion()))
+        }
+
         val ksp = target.extensions.create("ksp", KspExtension::class.java)
         ksp.useKsp2.convention(
             target.providers
@@ -338,18 +346,12 @@ internal val artifactType = Attribute.of("artifactType", String::class.java)
 internal fun maybeRegisterTransform(project: Project) {
     // Use the same flag with KAPT, so as to share the same transformation in case KAPT and KSP are both enabled.
     if (!project.extensions.extraProperties.has("KaptStructureTransformAdded")) {
-        val transformActionClass =
-            if (GradleVersion.current() >= GradleVersion.version("5.4"))
-                StructureTransformAction::class.java
-            else
-
-                StructureTransformLegacyAction::class.java
-        project.dependencies.registerTransform(transformActionClass) { transformSpec ->
+        project.dependencies.registerTransform(StructureTransformAction::class.java) { transformSpec ->
             transformSpec.from.attribute(artifactType, "jar")
             transformSpec.to.attribute(artifactType, CLASS_STRUCTURE_ARTIFACT_TYPE)
         }
 
-        project.dependencies.registerTransform(transformActionClass) { transformSpec ->
+        project.dependencies.registerTransform(StructureTransformAction::class.java) { transformSpec ->
             transformSpec.from.attribute(artifactType, "directory")
             transformSpec.to.attribute(artifactType, CLASS_STRUCTURE_ARTIFACT_TYPE)
         }
