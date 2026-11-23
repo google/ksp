@@ -32,8 +32,6 @@ import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolv
 import com.google.devtools.ksp.symbol.*
 import com.intellij.psi.PsiClass
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
-import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
-import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.types.abbreviationOrSelf
 import org.jetbrains.kotlin.name.Name
@@ -142,9 +140,7 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
             errorType = ::KSErrorType,
         )?.let { error -> return error }
         return analyze {
-            ktClassOrObjectSymbol.tryResolveToTypePhase()
             if (typeArguments.isEmpty()) {
-                // Resolving a class symbol also resolves its type parameters.
                 typeParameters.map { buildTypeParameterType((it as KSTypeParameterImpl).ktTypeParameterSymbol) }
                     .let { typeParameterTypes ->
                         buildClassType(ktClassOrObjectSymbol) {
@@ -159,19 +155,15 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
         }
     }
 
-    @OptIn(KaExperimentalApi::class, KaImplementationDetail::class)
+    @OptIn(KaExperimentalApi::class)
     override fun asStarProjectedType(): KSType {
         return analyze {
             KSTypeImpl.getCached(
-                useSiteSession.buildClassType(ktClassOrObjectSymbol.tryResolveToTypePhase()) {
+                useSiteSession.buildClassType(ktClassOrObjectSymbol) {
                     var current: KSNode? = this@KSClassDeclarationImpl
                     while (current is KSClassDeclarationImpl) {
                         current.ktClassOrObjectSymbol.typeParameters.forEach { _ ->
-                            argument(
-                                KaBaseStarTypeProjection(
-                                    current.ktClassOrObjectSymbol.token
-                                )
-                            )
+                            argument(typeCreator.starTypeProjection())
                         }
                         current = if (Modifier.INNER in current.modifiers) {
                             current.parent

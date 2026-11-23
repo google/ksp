@@ -56,9 +56,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.impl.compiled.ClsMemberImpl
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
-import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.KaNonPublicApi
-import org.jetbrains.kotlin.analysis.api.KaPlatformInterface
 import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.analysis.api.annotations.KaAnnotated
@@ -68,10 +66,6 @@ import org.jetbrains.kotlin.analysis.api.components.KaSubstitutorBuilder
 import org.jetbrains.kotlin.analysis.api.fir.evaluate.FirAnnotationValueConverter
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirSymbol
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirValueParameterSymbol
-import org.jetbrains.kotlin.analysis.api.fir.types.KaFirFunctionType
-import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseStarTypeProjection
-import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseTypeArgumentWithVariance
-import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeToken
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaLibraryModule
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaSourceModule
 import org.jetbrains.kotlin.analysis.api.symbols.KaBackingFieldSymbol
@@ -126,15 +120,11 @@ import org.jetbrains.kotlin.codegen.state.InfoForMangling
 import org.jetbrains.kotlin.codegen.state.collectFunctionSignatureForManglingSuffix
 import org.jetbrains.kotlin.codegen.state.md5base64
 import org.jetbrains.kotlin.fir.declarations.FirRegularClass
-import org.jetbrains.kotlin.fir.declarations.FirResolvePhase
 import org.jetbrains.kotlin.fir.declarations.utils.moduleName
 import org.jetbrains.kotlin.fir.java.JavaTypeParameterStack
 import org.jetbrains.kotlin.fir.java.toFirExpression
 import org.jetbrains.kotlin.fir.resolve.getContainingClassSymbol
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
-import org.jetbrains.kotlin.fir.symbols.lazyResolveToPhase
-import org.jetbrains.kotlin.fir.types.abbreviatedType
-import org.jetbrains.kotlin.fir.types.classId
 import org.jetbrains.kotlin.load.java.structure.JavaAnnotationArgument
 import org.jetbrains.kotlin.load.kotlin.TypeMappingMode
 import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmProtoBufUtil
@@ -292,7 +282,7 @@ internal fun KaType.toClassifierReference(parent: KSTypeReference?): KSReference
     }
 }
 
-@OptIn(KaImplementationDetail::class, KaPlatformInterface::class)
+@OptIn(KaExperimentalApi::class)
 internal fun KSTypeArgument.toKtTypeProjection(): KaTypeProjection {
     val variance = when (this.variance) {
         com.google.devtools.ksp.symbol.Variance.INVARIANT -> Variance.INVARIANT
@@ -301,12 +291,12 @@ internal fun KSTypeArgument.toKtTypeProjection(): KaTypeProjection {
         else -> null
     }
     val argType = (this.type?.resolve() as? KSTypeImpl)?.type
-    // TODO: maybe make a singleton of alwaysAccessibleLifetimeToken?
-    val alwaysAccessibleLifetimeToken = KotlinAlwaysAccessibleLifetimeToken(ResolverAAImpl.ktModule.project)
-    return if (argType == null || variance == null) {
-        KaBaseStarTypeProjection(alwaysAccessibleLifetimeToken)
-    } else {
-        KaBaseTypeArgumentWithVariance(argType, variance, alwaysAccessibleLifetimeToken)
+    return analyze {
+        if (argType == null || variance == null) {
+            typeCreator.starTypeProjection()
+        } else {
+            typeCreator.typeProjection(variance, argType)
+        }
     }
 }
 
@@ -670,12 +660,6 @@ internal fun ClassId.toKtClassSymbol(): KaClassSymbol? {
     }
 }
 
-internal fun ClassId.toTypeAlias(): KaTypeAliasSymbol? {
-    return analyze {
-        findTypeAlias(this@toTypeAlias)
-    }
-}
-
 internal fun KaType.classifierSymbol(): KaClassifierSymbol? {
     return try {
         when (this) {
@@ -683,7 +667,7 @@ internal fun KaType.classifierSymbol(): KaClassifierSymbol? {
             // TODO: upstream is not exposing enough information for captured types.
             is KaCapturedType -> TODO("fix in upstream")
             is KaClassErrorType, is KaErrorType -> null
-            is KaFunctionType -> (this as? KaFirFunctionType)?.abbreviatedSymbol() ?: symbol
+            is KaFunctionType -> abbreviatedSymbol() ?: symbol
             is KaUsualClassType -> symbol
             is KaDefinitelyNotNullType -> original.classifierSymbol()
             is KaDynamicType -> null
@@ -939,7 +923,7 @@ internal fun KaType.convertToKotlinType(): KaType {
             ?: declaration
     } else declaration
     return analyze {
-        buildClassType(base.tryResolveToTypePhase()) {
+        buildClassType(base) {
             this@convertToKotlinType.typeArguments().forEach { typeProjection ->
                 if (typeProjection is KaTypeArgumentWithVariance) {
                     argument(typeProjection.type.convertToKotlinType(), typeProjection.variance)
@@ -967,7 +951,7 @@ internal fun KaType.isAssignableFrom(that: KaType): Boolean {
 internal fun KaType.replace(newArgs: List<KaTypeProjection>): KaType {
     require(newArgs.isEmpty() || newArgs.size == this.typeArguments().size)
     return analyze {
-        when (val symbol = classifierSymbol().tryResolveToTypePhase()) {
+        when (val symbol = classifierSymbol()) {
             is KaClassLikeSymbol -> useSiteSession.buildClassType(symbol) {
                 newArgs.forEach { arg -> argument(arg) }
                 isMarkedNullable = this@replace.isMarkedNullable
@@ -1054,7 +1038,7 @@ internal fun KaType.toWildcard(mode: TypeMappingMode): KaType {
         when (this@toWildcard) {
             is KaClassType -> {
                 // TODO: missing annotations from original type.
-                buildClassType(symbol.tryResolveToTypePhase()) {
+                buildClassType(symbol) {
                     val parameters = symbol.typeParameters
                     parameters.zip(args).map { (param, arg) ->
                         val argMode = mode.updateFromAnnotations(arg.type)
@@ -1074,7 +1058,7 @@ internal fun KaType.toWildcard(mode: TypeMappingMode): KaType {
             }
 
             is KaTypeParameterType -> {
-                buildTypeParameterType(this@toWildcard.symbol.tryResolveToTypePhase())
+                buildTypeParameterType(this@toWildcard.symbol)
             }
 
             else -> throw IllegalStateException("Unexpected type ${this@toWildcard}")
@@ -1149,15 +1133,7 @@ internal fun TypeMappingMode.updateFromAnnotations(
     }
 }
 
-internal fun KaFunctionType.abbreviatedSymbol(): KaTypeAliasSymbol? {
-    val classId = (this as? KaFirFunctionType)?.coneType?.abbreviatedType?.classId ?: return null
-    return classId.toTypeAlias()
-}
-
-fun <T : KaSymbol?> T.tryResolveToTypePhase(): T {
-    (this as? KaFirSymbol<*>)?.firSymbol?.lazyResolveToPhase(FirResolvePhase.TYPES)
-    return this
-}
+internal fun KaFunctionType.abbreviatedSymbol(): KaTypeAliasSymbol? = abbreviation?.symbol as? KaTypeAliasSymbol
 
 private val KaType.upperBoundIfFlexible: KaType
     get() = (this as? KaFlexibleType)?.upperBound ?: this

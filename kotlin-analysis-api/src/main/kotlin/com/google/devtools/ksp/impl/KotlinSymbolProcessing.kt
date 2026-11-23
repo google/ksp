@@ -93,7 +93,6 @@ import org.jetbrains.kotlin.analysis.api.standalone.base.projectStructure.FirSta
 import org.jetbrains.kotlin.analysis.api.standalone.base.projectStructure.StandaloneProjectFactory
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getResolutionFacade
 import org.jetbrains.kotlin.analysis.low.level.api.fir.lazy.resolve.LLFirResolutionActivityTracker
-import org.jetbrains.kotlin.analysis.low.level.api.fir.providers.LLSealedInheritorsProvider
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleBuilder
 import org.jetbrains.kotlin.analysis.project.structure.builder.KtModuleProviderBuilder
 import org.jetbrains.kotlin.cli.jvm.compiler.CliMetadataFinderFactory
@@ -109,7 +108,6 @@ import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.config.LanguageVersion
 import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 import org.jetbrains.kotlin.diagnostics.KtRegisteredDiagnosticFactoriesStorage
-import org.jetbrains.kotlin.fir.declarations.SealedClassInheritorsProvider
 import org.jetbrains.kotlin.fir.session.registerResolveComponents
 import org.jetbrains.kotlin.load.kotlin.MetadataFinderFactory
 import org.jetbrains.kotlin.load.kotlin.PackagePartProvider
@@ -204,34 +202,20 @@ class KotlinSymbolProcessing(
             }
 
             fun KtModuleBuilder.addModuleDependencies(moduleName: String) {
-                addRegularDependency(
-                    buildKspLibraryModule {
-                        this.platform = platform
-                        addBinaryRoots(kspConfig.libraries.map { it.toPath() })
-                        libraryName = "Libraries for $moduleName"
-                    }
-                )
+                val libraryRoots = kspConfig.libraries.map { it.toPath() }
+                addRegularDependency(buildKspLibraryModule("Libraries for $moduleName", platform, libraryRoots))
 
-                addFriendDependency(
-                    buildKspLibraryModule {
-                        this.platform = platform
-                        addBinaryRoots(kspConfig.friends.map { it.toPath() })
-                        libraryName = "Friends of $moduleName"
-                    }
-                )
+                val friendRoots = kspConfig.friends.map { it.toPath() }
+                addFriendDependency(buildKspLibraryModule("Friends of $moduleName", platform, friendRoots))
 
                 if (kspConfig is KSPJvmConfig && kspConfig.jdkHome != null) {
-                    addRegularDependency(
-                        buildKspSdkModule {
-                            this.platform = platform
-                            addBinaryRootsFromJdkHome(kspConfig.jdkHome!!.toPath(), isJre = false)
-                            libraryName = "JDK for $moduleName"
-                        }
-                    )
+                    val jdkHome = kspConfig.jdkHome!!.toPath()
+                    addRegularDependency(buildKspSdkModule("JDK for $moduleName", platform, jdkHome))
                 }
             }
 
-            buildKspSourceModule {
+            // Single file java source roots are added in reinitJavaFileManager() later.
+            buildKspSourceModule(allSourceRoots().map { it.toPath() }) {
                 val languageVersion = LanguageVersion.fromFullVersionString(kspConfig.languageVersion)!!
                 val apiVersion = LanguageVersion.fromFullVersionString(kspConfig.apiVersion)!!
                 languageVersionSettings = LanguageVersionSettingsImpl(
@@ -247,9 +231,6 @@ class KotlinSymbolProcessing(
                 this.moduleName = kspConfig.moduleName
 
                 addModuleDependencies(moduleName)
-
-                // Single file java source roots are added in reinitJavaFileManager() later.
-                addSourceRoots(allSourceRoots().map { it.toPath() })
             }.apply(::addModule)
 
             this.platform = platform
@@ -371,11 +352,6 @@ class KotlinSymbolProcessing(
             registerService(
                 KotlinPackageProviderFactory::class.java,
                 IncrementalKotlinPackageProviderFactory(project, libraryRoots)
-            )
-
-            registerService(
-                SealedClassInheritorsProvider::class.java,
-                LLSealedInheritorsProvider::class.java,
             )
 
             registerService(
@@ -557,7 +533,7 @@ class KotlinSymbolProcessing(
                 KSPCoreEnvironment(project)
 
                 val psiManager = PsiManager.getInstance(project)
-                // KspModuleBuilder ensures this is always a KtSourceModule
+                // buildKspSourceModule ensures this is always a KaSourceModule
                 ResolverAAImpl.ktModule = modules.single() as KaSourceModule
                 ResolverAAImpl.kspConfig = kspConfig
 
