@@ -64,7 +64,6 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinWithJavaCompilation
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompile
 import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
 import java.io.File
-import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
@@ -393,7 +392,8 @@ internal fun findClasspathChanges(
     val snapshotFactory = ClasspathSnapshot.ClasspathSnapshotFactory
     val loadedPrevious = try {
         snapshotFactory.loadFrom(cacheDir)
-    } catch (e: IOException) {
+    } catch (e: Exception) {
+        // A corrupted or incompatible snapshot (e.g. written by another KGP version) fails to deserialize.
         logger.info(
             "[ksp] Could not read the previous classpath snapshot in $cacheDir. Rebuilding incremental state.",
             e,

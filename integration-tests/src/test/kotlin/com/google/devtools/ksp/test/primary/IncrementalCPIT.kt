@@ -9,7 +9,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.File
+import java.io.ObjectOutputStream
 import java.io.RandomAccessFile
+import java.io.Serializable
 
 @RunWith(Parameterized::class)
 class IncrementalCPIT(experimentalPsiResolution: Boolean) {
@@ -80,6 +82,35 @@ class IncrementalCPIT(experimentalPsiResolution: Boolean) {
         Assert.assertEquals(TaskOutcome.SUCCESS, incremental.task(task)?.outcome)
         val dirties = incremental.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
         Assert.assertEquals(emptyMessage + setOf("w: [ksp] p1/K1.kt", "w: [ksp] p1/K2.kt"), dirties)
+    }
+
+    // Not on the Gradle daemon's classpath, so deserializing it throws ClassNotFoundException.
+    private class TestOnlyValue : Serializable
+
+    @Test
+    fun testIncompatibleClasspathSnapshotRecovery() {
+        val task = ":workload:kspKotlin"
+        val gradleRunner = GradleRunner.create().withProjectDir(project.root)
+            .withArguments(task, "--no-build-cache", "--info")
+        Assert.assertEquals(TaskOutcome.SUCCESS, gradleRunner.build().task(task)?.outcome)
+
+        // loadFrom reads this file first and casts its content to List<File>.
+        val entries = File(project.root, "workload/build/kspCaches/main/classpath-entries.bin")
+        listOf(TestOnlyValue() to "ClassNotFoundException", "not a list" to "ClassCastException")
+            .forEachIndexed { i, (value, exception) ->
+                ObjectOutputStream(entries.outputStream()).use { it.writeObject(value) }
+                File(project.root, "workload/src/main/kotlin/p1/K1.kt").appendText("\n// Trigger KSP again $i.\n")
+
+                val rebuilt = gradleRunner.build()
+                Assert.assertEquals(TaskOutcome.SUCCESS, rebuilt.task(task)?.outcome)
+                Assert.assertTrue(rebuilt.output.contains("[ksp] Could not read the previous classpath snapshot"))
+                Assert.assertTrue(rebuilt.output.contains(exception))
+                val processed = rebuilt.output.lines().filter { it.startsWith("w: [ksp]") }.toSet()
+                Assert.assertEquals(
+                    emptyMessage + setOf("w: [ksp] p1/K1.kt", "w: [ksp] p1/K2.kt", "w: [ksp] p1/K3.kt"),
+                    processed,
+                )
+            }
     }
 
     @Test
