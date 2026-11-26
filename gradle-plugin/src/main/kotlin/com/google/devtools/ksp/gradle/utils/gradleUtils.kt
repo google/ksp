@@ -18,10 +18,16 @@ package com.google.devtools.ksp.gradle.utils
 
 import org.gradle.util.GradleVersion
 
+/**
+ * Verifies that [gradleVersion] meets [MINIMUM_SUPPORTED_GRADLE_VERSION].
+ *
+ * @throws RuntimeException if [gradleVersion] is below [MINIMUM_SUPPORTED_GRADLE_VERSION].
+ */
 fun checkMinimumGradleVersion(gradleVersion: GradleVersion = GradleVersion.current()) {
     if (gradleVersion < MINIMUM_SUPPORTED_GRADLE_VERSION) {
         throw RuntimeException(
-            "The minimum supported Gradle version is ${MINIMUM_SUPPORTED_GRADLE_VERSION.version}. " +
+            "The minimum supported Gradle version is ${MINIMUM_SUPPORTED_GRADLE_VERSION.version} " +
+                "(found ${gradleVersion.version}). " +
                 "Please upgrade the Gradle version in your project."
         )
     }
