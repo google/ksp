@@ -23,10 +23,16 @@ fun Project.isKotlinAndroidPluginApplied() = pluginManager.hasPlugin("org.jetbra
 
 fun Project.isLegacyKaptPluginApplied() = pluginManager.hasPlugin("com.android.legacy-kapt")
 
+/**
+ * Verifies that [kgpVersion] meets [MINIMUM_SUPPORTED_KGP_VERSION].
+ *
+ * @throws RuntimeException if [kgpVersion] is below [MINIMUM_SUPPORTED_KGP_VERSION].
+ */
 fun checkMinimumKgpVersion(kgpVersion: KotlinToolingVersion) {
     if (kgpVersion < MINIMUM_SUPPORTED_KGP_VERSION) {
         throw RuntimeException(
-            "The minimum supported Kotlin Gradle Plugin version is $MINIMUM_SUPPORTED_KGP_VERSION. " +
+            "The minimum supported Kotlin Gradle Plugin version is $MINIMUM_SUPPORTED_KGP_VERSION " +
+                "(found $kgpVersion). " +
                 "Please upgrade the Kotlin Gradle Plugin version in your project."
         )
     }

@@ -20,6 +20,7 @@ import com.google.common.truth.Truth.assertThat
 import com.google.devtools.ksp.gradle.testing.TestConfig
 import com.google.devtools.ksp.gradle.utils.MINIMUM_SUPPORTED_GRADLE_VERSION
 import groovy.json.JsonSlurper
+import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
@@ -35,87 +36,188 @@ class VersionCheckTest {
 
     @Test
     fun gradleBelowMinimumFails() {
-        writeSingleModuleProject(kgpVersion = MINIMUM_KGP_VERSION)
+        createSingleModuleProject(kgpVersion = MINIMUM_KGP_VERSION)
 
         val result = runner("8.12.1", "help").buildAndFail()
 
         assertThat(result.output)
             .contains(
-                "The minimum supported Gradle version is ${MINIMUM_SUPPORTED_GRADLE_VERSION.version}. " +
+                "The minimum supported Gradle version is ${MINIMUM_SUPPORTED_GRADLE_VERSION.version} " +
+                    "(found 8.12.1). " +
                     "Please upgrade the Gradle version in your project."
             )
     }
 
     @Test
     fun kgpBelowMinimumFails() {
-        writeSingleModuleProject(kgpVersion = "2.2.0")
+        createSingleModuleProject(kgpVersion = "2.2.0")
 
         val result = runner(MINIMUM_SUPPORTED_GRADLE_VERSION.version, "help").buildAndFail()
 
         assertThat(result.output)
             .contains(
-                "The minimum supported Kotlin Gradle Plugin version is $MINIMUM_KGP_VERSION. " +
+                "The minimum supported Kotlin Gradle Plugin version is $MINIMUM_KGP_VERSION " +
+                    "(found 2.2.0). " +
                     "Please upgrade the Kotlin Gradle Plugin version in your project."
             )
     }
 
     @Test
     fun kgpBelowMinimumFailsWhenKspAppliedFirst() {
-        writeSingleModuleProject(kgpVersion = "2.2.0", applyKspFirst = true)
+        createSingleModuleProject(kgpVersion = "2.2.0", applyKspFirst = true)
 
         val result = runner(MINIMUM_SUPPORTED_GRADLE_VERSION.version, "help").buildAndFail()
 
         assertThat(result.output)
             .contains(
-                "The minimum supported Kotlin Gradle Plugin version is $MINIMUM_KGP_VERSION. " +
+                "The minimum supported Kotlin Gradle Plugin version is $MINIMUM_KGP_VERSION " +
+                    "(found 2.2.0). " +
                     "Please upgrade the Kotlin Gradle Plugin version in your project."
             )
     }
 
     @Test
     fun minimumSupportedGradleAndKgpSucceeds() {
-        val gradleFloor = MINIMUM_SUPPORTED_GRADLE_VERSION.version
+        createProjectWithProcessor(kgpVersion = MINIMUM_KGP_VERSION)
 
+        val result = runner(MINIMUM_SUPPORTED_GRADLE_VERSION.version, ":app:compileKotlin").build()
+
+        assertThat(result.task(":processor:compileKotlin")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+        assertThat(result.task(":app:kspKotlin")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+        assertThat(result.task(":app:compileKotlin")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    }
+
+    @Test
+    fun publishedArtifactsUseKotlinStdlibFloor() {
+        val expectedFloor = testConfig.kotlinStdlibFloor
+
+        val artifactsWithPom =
+            listOf(
+                "symbol-processing-api",
+                "symbol-processing-common-deps",
+                "symbol-processing-aa",
+                "symbol-processing-aa-embeddable",
+            )
+        for (artifact in artifactsWithPom) {
+            val pomFile = latestPublishedFile(artifact, "pom")
+            val stdlibVersions = readKotlinStdlibVersionsFromPom(pomFile.readText())
+            assertThat(stdlibVersions).containsExactly(expectedFloor)
+        }
+
+        val artifactsWithModuleMetadata =
+            listOf(
+                "symbol-processing-api",
+                "symbol-processing-common-deps",
+            )
+        for (artifact in artifactsWithModuleMetadata) {
+            val moduleFile = latestPublishedFile(artifact, "module")
+            val stdlibVersions = readKotlinStdlibVersionsFromModuleMetadata(moduleFile.readText())
+            assertThat(stdlibVersions).isNotEmpty()
+            assertThat(stdlibVersions.toSet()).containsExactly(expectedFloor)
+        }
+    }
+
+    private fun latestPublishedFile(artifact: String, extension: String): File {
+        val versionDir =
+            testConfig.mavenRepoDir.resolve("com/google/devtools/ksp/$artifact/${testConfig.kspVersion}")
+        val file = versionDir.listFiles()?.filter { it.extension == extension }?.maxByOrNull { it.name }
+        return checkNotNull(file) { "No .$extension file found in $versionDir" }
+    }
+
+    private fun createGradleSettingsFile(
+        rootProjectName: String,
+        subprojects: List<String> = emptyList(),
+        includeDependencyResolutionRepos: Boolean = false,
+    ) {
+        val dependencyResolutionBlock =
+            if (includeDependencyResolutionRepos) {
+                """
+                dependencyResolutionManagement {
+                    repositories {
+                        maven("${testConfig.mavenRepoPath}")
+                        mavenCentral()
+                        maven("https://redirector.kotlinlang.org/maven/bootstrap/")
+                    }
+                }
+                """
+                    .trimIndent() + "\n"
+            } else {
+                ""
+            }
+        val includeLine =
+            if (subprojects.isNotEmpty()) {
+                subprojects.joinToString(prefix = "include(", postfix = ")\n") { "\"$it\"" }
+            } else {
+                ""
+            }
         tmpDir.root
             .resolve("settings.gradle.kts")
             .writeText(
                 """
-            pluginManagement {
-                repositories {
-                    maven("${testConfig.mavenRepoPath}")
-                    gradlePluginPortal()
-                    mavenCentral()
-                    maven("https://redirector.kotlinlang.org/maven/bootstrap/")
+                pluginManagement {
+                    repositories {
+                        maven("${testConfig.mavenRepoPath}")
+                        gradlePluginPortal()
+                        mavenCentral()
+                        maven("https://redirector.kotlinlang.org/maven/bootstrap/")
+                    }
                 }
-            }
-            dependencyResolutionManagement {
-                repositories {
-                    maven("${testConfig.mavenRepoPath}")
-                    mavenCentral()
-                    maven("https://redirector.kotlinlang.org/maven/bootstrap/")
-                }
-            }
-            rootProject.name = "ksp-floor-check"
-            include("processor", "app")
-            """
+                ${dependencyResolutionBlock}rootProject.name = "$rootProjectName"
+                $includeLine
+                """
                     .trimIndent()
             )
+    }
+
+    private fun createSingleModuleProject(kgpVersion: String, applyKspFirst: Boolean = false) {
+        createGradleSettingsFile(rootProjectName = "ksp-version-check")
+        val pluginsBlock =
+            if (applyKspFirst) {
+                """
+                plugins {
+                    id("com.google.devtools.ksp") version "${testConfig.kspVersion}"
+                    id("org.jetbrains.kotlin.jvm") version "$kgpVersion"
+                }
+                """
+                    .trimIndent()
+            } else {
+                """
+                plugins {
+                    id("org.jetbrains.kotlin.jvm") version "$kgpVersion"
+                    id("com.google.devtools.ksp") version "${testConfig.kspVersion}"
+                }
+                """
+                    .trimIndent()
+            }
+        tmpDir.root.resolve("build.gradle.kts").writeText(pluginsBlock)
+    }
+
+    private fun createProjectWithProcessor(kgpVersion: String) {
+        createGradleSettingsFile(
+            rootProjectName = "ksp-floor-check",
+            subprojects = listOf("processor", "app"),
+            includeDependencyResolutionRepos = true,
+        )
         tmpDir.root
             .resolve("gradle.properties")
             .writeText("kotlin.jvm.target.validation.mode=warning\n")
+        createProcessorProject(kgpVersion)
+        createAppProject(kgpVersion)
+    }
 
+    private fun createProcessorProject(kgpVersion: String) {
         val processorDir = tmpDir.root.resolve("processor").apply { mkdirs() }
         processorDir
             .resolve("build.gradle.kts")
             .writeText(
                 """
-            plugins {
-                kotlin("jvm") version "$MINIMUM_KGP_VERSION"
-            }
-            dependencies {
-                implementation("com.google.devtools.ksp:symbol-processing-api:${testConfig.kspVersion}")
-            }
-            """
+                plugins {
+                    kotlin("jvm") version "$kgpVersion"
+                }
+                dependencies {
+                    implementation("com.google.devtools.ksp:symbol-processing-api:${testConfig.kspVersion}")
+                }
+                """
                     .trimIndent()
             )
         processorDir
@@ -152,20 +254,22 @@ class VersionCheckTest {
             )
             .apply { parentFile.mkdirs() }
             .writeText("TestProcessorProvider\n")
+    }
 
+    private fun createAppProject(kgpVersion: String) {
         val appDir = tmpDir.root.resolve("app").apply { mkdirs() }
         appDir
             .resolve("build.gradle.kts")
             .writeText(
                 """
-            plugins {
-                kotlin("jvm") version "$MINIMUM_KGP_VERSION"
-                id("com.google.devtools.ksp") version "${testConfig.kspVersion}"
-            }
-            dependencies {
-                ksp(project(":processor"))
-            }
-            """
+                plugins {
+                    kotlin("jvm") version "$kgpVersion"
+                    id("com.google.devtools.ksp") version "${testConfig.kspVersion}"
+                }
+                dependencies {
+                    ksp(project(":processor"))
+                }
+                """
                     .trimIndent()
             )
         appDir
@@ -177,82 +281,6 @@ class VersionCheckTest {
                     val generated = Generated()
                 }
                 """
-                    .trimIndent()
-            )
-
-        val result = runner(gradleFloor, ":app:compileKotlin").build()
-
-        assertThat(result.task(":processor:compileKotlin")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
-        assertThat(result.task(":app:kspKotlin")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
-        assertThat(result.task(":app:compileKotlin")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
-    }
-
-    @Test
-    fun publishedArtifactsUseKotlinStdlibFloor() {
-        val kspGroupDir = testConfig.mavenRepoDir.resolve("com/google/devtools/ksp")
-        val expectedFloor = testConfig.kotlinStdlibFloor
-
-        val artifactsWithPom =
-            listOf(
-                "symbol-processing-api",
-                "symbol-processing-common-deps",
-                "symbol-processing-aa",
-                "symbol-processing-aa-embeddable",
-            )
-        for (artifact in artifactsWithPom) {
-            val versionDir = kspGroupDir.resolve("$artifact/${testConfig.kspVersion}")
-            val pomFile =
-                versionDir.listFiles()?.filter { it.extension == "pom" }?.maxByOrNull { it.name }
-            checkNotNull(pomFile) { "No .pom file found in $versionDir" }
-            val stdlibVersions = readKotlinStdlibVersionsFromPom(pomFile.readText())
-            assertThat(stdlibVersions).containsExactly(expectedFloor)
-        }
-
-        val artifactsWithModuleMetadata =
-            listOf(
-                "symbol-processing-api",
-                "symbol-processing-common-deps",
-            )
-        for (artifact in artifactsWithModuleMetadata) {
-            val versionDir = kspGroupDir.resolve("$artifact/${testConfig.kspVersion}")
-            val moduleFile =
-                versionDir.listFiles()?.filter { it.extension == "module" }?.maxByOrNull { it.name }
-            checkNotNull(moduleFile) { "No .module file found in $versionDir" }
-            val stdlibVersions = readKotlinStdlibVersionsFromModuleMetadata(moduleFile.readText())
-            assertThat(stdlibVersions).isNotEmpty()
-            assertThat(stdlibVersions.toSet()).containsExactly(expectedFloor)
-        }
-    }
-
-    private fun writeSingleModuleProject(kgpVersion: String, applyKspFirst: Boolean = false) {
-        tmpDir.root
-            .resolve("settings.gradle.kts")
-            .writeText(
-                """
-            pluginManagement {
-                repositories {
-                    maven("${testConfig.mavenRepoPath}")
-                    gradlePluginPortal()
-                    mavenCentral()
-                    maven("https://redirector.kotlinlang.org/maven/bootstrap/")
-                }
-            }
-            rootProject.name = "ksp-version-check"
-            """
-                    .trimIndent()
-            )
-        val kotlinPlugin = """id("org.jetbrains.kotlin.jvm") version "$kgpVersion""""
-        val kspPlugin = """id("com.google.devtools.ksp") version "${testConfig.kspVersion}""""
-        val orderedPlugins =
-            if (applyKspFirst) "$kspPlugin\n    $kotlinPlugin" else "$kotlinPlugin\n    $kspPlugin"
-        tmpDir.root
-            .resolve("build.gradle.kts")
-            .writeText(
-                """
-            plugins {
-                $orderedPlugins
-            }
-            """
                     .trimIndent()
             )
     }
