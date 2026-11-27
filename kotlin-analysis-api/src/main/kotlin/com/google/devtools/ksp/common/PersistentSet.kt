@@ -17,6 +17,9 @@
 
 package com.google.devtools.ksp.common
 
+import com.google.devtools.ksp.common.jvm.ChangedClassName
+import com.google.devtools.ksp.common.jvm.dotPrefixesOf
+import com.google.devtools.ksp.common.jvm.isClassAffectedBy
 import java.io.BufferedInputStream
 import java.io.File
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -62,34 +65,6 @@ abstract class PersistentSet<T>(
     }
 }
 
-internal fun dotPrefixesOf(fqns: Iterable<String>): Set<String> = buildSet {
-    for (fqn in fqns) {
-        var dot = fqn.indexOf('.')
-        while (dot != -1) {
-            add(fqn.substring(0, dot))
-            dot = fqn.indexOf('.', dot + 1)
-        }
-    }
-}
-
-internal fun hasDotPrefixIn(fqn: String, candidates: Set<String>): Boolean {
-    var dot = fqn.indexOf('.')
-    while (dot != -1) {
-        if (fqn.substring(0, dot) in candidates) return true
-        dot = fqn.indexOf('.', dot + 1)
-    }
-    return false
-}
-
-internal fun isClassAffectedBy(
-    targetFqn: String,
-    changedClasses: Set<String>,
-    changedEnclosingPrefixes: Set<String>,
-): Boolean =
-    targetFqn in changedClasses ||
-        targetFqn in changedEnclosingPrefixes ||
-        hasDotPrefixIn(targetFqn, changedClasses)
-
 /**
  * Class FQNs queried by processors via `Resolver` APIs (e.g. `getClassDeclarationByName`, member lookups in
  * `getFunctionDeclarationsByName` / `getPropertyDeclarationByName`, and library classes yielded by
@@ -103,14 +78,13 @@ internal fun isClassAffectedBy(
 class ClassQueries(
     storage: File,
 ) : PersistentSet<String>(stringSetSerializer, storage, deserialize(stringSetSerializer, storage)) {
-    fun isAffectedBy(changedClasses: Collection<String>): Boolean {
+    internal fun isAffectedBy(changedClasses: Collection<ChangedClassName>): Boolean {
         if (isEmpty() || changedClasses.isEmpty()) return false
         val enclosingPrefixes by lazy(LazyThreadSafetyMode.NONE) {
             dotPrefixesOf(this@ClassQueries)
         }
-        return changedClasses.any { rawFqn ->
-            val fqn = rawFqn.replace('$', '.')
-            fqn in this || hasDotPrefixIn(fqn, this) || fqn in enclosingPrefixes
+        return changedClasses.any { changed ->
+            isClassAffectedBy(changed.normalizedFqn, this, enclosingPrefixes)
         }
     }
 }
@@ -121,23 +95,23 @@ class ClassQueries(
  * Persisted across incremental runs.
  *
  * Entries in `changedClasses` use `.` for package separators while preserving `$` inside class and file-facade names.
- * Thus `rawFqn.substringBeforeLast('.', "")` extracts the exact package without confusing `$`-containing class names
- * (`hints.Bar$Generated`, `hints.My$UtilKt`) with subpackages (`hints.Bar.Generated`). Also checks `dotNormalizedFqn`
- * and `enclosingPrefixes` so `includeTopLevel = true` callable lookups on a previously missing owner or enclosing
- * subclass match when that class is added, without matching subpackages or sibling classes.
+ * Thus [ChangedClassName.normalizedPackageName] extracts the exact package without confusing `$`-containing class names
+ * (`hints.Bar$Generated`, `hints.My$UtilKt`) with subpackages (`hints.Bar.Generated`). Also checks
+ * [ChangedClassName.normalizedFqn] and `enclosingPrefixes` so `includeTopLevel = true` callable lookups on a previously
+ * missing owner or enclosing subclass match when that class is added, without matching subpackages or sibling classes.
  */
 class PackageQueries(
     storage: File,
 ) : PersistentSet<String>(stringSetSerializer, storage, deserialize(stringSetSerializer, storage)) {
-    fun isAffectedBy(changedClasses: Collection<String>): Boolean {
+    internal fun isAffectedBy(changedClasses: Collection<ChangedClassName>): Boolean {
         if (isEmpty() || changedClasses.isEmpty()) return false
         val enclosingPrefixes by lazy(LazyThreadSafetyMode.NONE) {
             dotPrefixesOf(this@PackageQueries)
         }
-        return changedClasses.any { rawFqn ->
-            val pkg = rawFqn.substringBeforeLast('.', "").replace('$', '.')
-            val dotNormalizedFqn = rawFqn.replace('$', '.')
-            pkg in this || dotNormalizedFqn in this || dotNormalizedFqn in enclosingPrefixes
+        return changedClasses.any { changed ->
+            changed.normalizedPackageName in this ||
+                changed.normalizedFqn in this ||
+                changed.normalizedFqn in enclosingPrefixes
         }
     }
 }

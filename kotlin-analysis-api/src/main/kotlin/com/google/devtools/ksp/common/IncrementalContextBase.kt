@@ -19,6 +19,11 @@ package com.google.devtools.ksp.common
 
 import com.google.devtools.ksp.IncrementalContextLoggingOptions
 import com.google.devtools.ksp.buildApiFeatures
+import com.google.devtools.ksp.common.jvm.ChangedClassName
+import com.google.devtools.ksp.common.jvm.dotPrefixesOf
+import com.google.devtools.ksp.common.jvm.isClassAffectedBy
+import com.google.devtools.ksp.common.jvm.normalizeJvmDollars
+import com.google.devtools.ksp.common.jvm.withRootScopeAliases
 import com.google.devtools.ksp.impl.symbol.kotlin.separateQualifierAndName
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
@@ -104,6 +109,8 @@ abstract class IncrementalContextBase(
     // Class and package API queries persisted across incremental runs.
     protected val classQueries = ClassQueries(File(cachesDir, "classQueries"))
     protected val packageQueries = PackageQueries(File(cachesDir, "packageQueries"))
+
+    private val changedClassNames: List<ChangedClassName> = changedClasses.map(::ChangedClassName)
 
     private val cachesUpToDateFile = File(cachesDir, "caches.uptodate")
     // Missing query cache files mean the caches were written by an older KSP that didn't record Resolver API
@@ -295,7 +302,7 @@ abstract class IncrementalContextBase(
         // A missing key means the caches were written by an older KSP that didn't record outputs without sources
         // (Dependencies(false)). We can't prove there are none, and they'd be lost if we exited early.
         if (unassociatedOutputsKey !in sourceToOutputsMap) return false
-        if (classQueries.isAffectedBy(changedClasses) || packageQueries.isAffectedBy(changedClasses)) return false
+        if (classQueries.isAffectedBy(changedClassNames) || packageQueries.isAffectedBy(changedClassNames)) return false
         // Nothing to propagate from means calcDirtyFiles would return no files. Newly defined symbols can be ignored:
         // they only come from modified files.
         if (initialDirtyFiles().isNotEmpty()) return false
@@ -326,83 +333,21 @@ abstract class IncrementalContextBase(
     private fun cleanOutputs(): Set<File> = sourceToOutputsMap.values.flatten().toSet()
 
     // Files in this module that looked up a class that changed on the classpath.
-    private fun dirtyFilesByClasspath(): Set<File> = buildSet {
-        for (rawFqn in changedClasses) {
-            val (rawScope, rawName) = separateQualifierAndName(rawFqn)
-            addDirtyFilesForSymbol(rawScope, rawName)
-            if (rawScope == "<anonymous>") {
-                addDirtyFilesForSymbol("", rawName)
-            }
-            val pkgPrefix = rawFqn.substringBeforeLast('.', "")
-            if ('$' in pkgPrefix) {
-                addDirtyFilesForSymbol(pkgPrefix.replace('$', '.'), rawName)
-            }
-            var dollar = rawName.indexOf('$')
-            while (dollar != -1) {
-                val rawOuterPart = rawName.substring(0, dollar)
-                val innerName = rawName.substring(dollar + 1)
-                if (rawOuterPart.isNotEmpty() && innerName.isNotEmpty()) {
-                    for (outerCandidate in outerScopeCandidates(rawOuterPart)) {
-                        val nestedScope = if (pkgPrefix.isEmpty()) outerCandidate else "$pkgPrefix.$outerCandidate"
-                        addDirtyFilesForSymbol(nestedScope, innerName)
-                        if ('$' in pkgPrefix) {
-                            addDirtyFilesForSymbol("${pkgPrefix.replace('$', '.')}.$outerCandidate", innerName)
-                        }
-                    }
-                }
-                dollar = rawName.indexOf('$', dollar + 1)
-            }
-        }
-    }
-
-    private fun outerScopeCandidates(rawOuterPart: String): Set<String> {
-        val dollarPositions = buildList {
-            var idx = rawOuterPart.indexOf('$')
-            while (idx != -1) {
-                if (idx > 0 && idx < rawOuterPart.length - 1) add(idx)
-                idx = rawOuterPart.indexOf('$', idx + 1)
-            }
-        }
-        val candidates = mutableSetOf(rawOuterPart)
-        val allDots = rawOuterPart.replace('$', '.')
-        if (!allDots.startsWith('.') && !allDots.endsWith('.') && ".." !in allDots) {
-            candidates.add(allDots)
-        }
-        if (dollarPositions.size in 1..4) {
-            val maskCount = 1 shl dollarPositions.size
-            for (mask in 1 until maskCount) {
-                val chars = rawOuterPart.toCharArray()
-                var valid = true
-                for (bit in dollarPositions.indices) {
-                    if ((mask and (1 shl bit)) != 0) {
-                        val pos = dollarPositions[bit]
-                        if (chars[pos - 1] == '.') {
-                            valid = false
-                            break
-                        }
-                        chars[pos] = '.'
-                    }
-                }
-                if (valid) candidates.add(String(chars))
-            }
-        }
-        return candidates
-    }
-
-    private fun MutableSet<File>.addDirtyFilesForSymbol(scope: String, name: String) {
-        val symbol = LookupSymbolWrapper(name, scope)
-        classLookupCache[symbol].mapTo(this) { it.toRelativeFile() }
-        symbolLookupCache[symbol].mapTo(this) { it.toRelativeFile() }
-    }
+    private fun dirtyFilesByClasspath(): Set<File> =
+        changedClassNames
+            .asSequence()
+            .flatMap { it.lookupSymbols }
+            .flatMap { sym -> classLookupCache[sym] + symbolLookupCache[sym] }
+            .mapTo(mutableSetOf()) { it.toRelativeFile() }
 
     private fun noSourceFilesOfChangedClasses(): Set<File> {
-        if (changedClasses.isEmpty()) return emptySet()
-        val normalizedChanged = changedClasses.mapTo(mutableSetOf()) { it.replace('$', '.') }
+        if (changedClassNames.isEmpty()) return emptySet()
+        val normalizedChanged = changedClassNames.mapTo(mutableSetOf()) { it.normalizedFqn }
         val changedEnclosingPrefixes = dotPrefixesOf(normalizedChanged)
         return sourceToOutputsMap.keys.filterTo(mutableSetOf()) { key ->
             NoSourceFile.isSyntheticFile(key.name) &&
                 isClassAffectedBy(
-                    stripSyntheticFileNameModifiers(key.name).replace('$', '.'),
+                    stripSyntheticFileNameModifiers(key.name).normalizeJvmDollars(),
                     normalizedChanged,
                     changedEnclosingPrefixes,
                 )
@@ -446,13 +391,7 @@ abstract class IncrementalContextBase(
         }
 
         val dirtyFilesByNewSyms = newSyms.flatMap { newSym ->
-            val direct = symbolLookupCache[newSym]
-            val anon = if (newSym.scope.isEmpty()) {
-                symbolLookupCache[LookupSymbolWrapper(newSym.name, "<anonymous>")]
-            } else {
-                emptyList()
-            }
-            (direct + anon).map { it.toRelativeFile() }
+            newSym.withRootScopeAliases().flatMap { symbolLookupCache[it] }.map { it.toRelativeFile() }
         }
         val dirtyFilesBySealed = sealedMap.keys
 
@@ -797,7 +736,7 @@ abstract class IncrementalContextBase(
             return
 
         // Normalize '$' to '.' so recorded class queries match dot-normalized changedClasses entries.
-        updatedClassQueries.add(fqn.replace('$', '.'))
+        updatedClassQueries.add(fqn.normalizeJvmDollars())
     }
 
     fun recordPackageQuery(packageName: String) {
@@ -805,7 +744,7 @@ abstract class IncrementalContextBase(
             return
 
         // Normalize '$' to '.' so package queries and includeTopLevel owner qualifiers match normalized lookups.
-        updatedPackageQueries.add(packageName.replace('$', '.'))
+        updatedPackageQueries.add(packageName.normalizeJvmDollars())
     }
 
     protected open fun logBeforeCacheFlush(outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>) {
@@ -853,10 +792,8 @@ internal class DirtinessPropagator(
         lookupCache[sym].forEach {
             visit(File(it))
         }
-        if (sym.scope.isEmpty()) {
-            visit(LookupSymbolWrapper(sym.name, "<anonymous>"))
-        } else if (sym.scope == "<anonymous>") {
-            visit(LookupSymbolWrapper(sym.name, ""))
+        sym.withRootScopeAliases().forEach { alias ->
+            if (alias != sym) visit(alias)
         }
     }
 
