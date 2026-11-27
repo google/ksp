@@ -23,13 +23,17 @@ import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.Modifier
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiWhiteSpace
+import org.jetbrains.kotlin.kdoc.psi.api.KDoc
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtClassOrObject
+import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtEnumEntry
 import org.jetbrains.kotlin.psi.KtModifierList
 import org.jetbrains.kotlin.psi.KtModifierListOwner
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
+import org.jetbrains.kotlin.psi.KtPrimaryConstructor
 import org.jetbrains.kotlin.psi.psiUtil.siblings
 
 private fun parseDocString(raw: String): String? {
@@ -42,10 +46,37 @@ private fun parseDocString(raw: String): String? {
     }
 }
 
-fun PsiElement.getDocString(): String? =
-    this.firstChild.siblings().firstOrNull { it is PsiComment }?.let {
-        parseDocString(it.text)
+private fun PsiElement.findLeadingKDoc(): KDoc? =
+    firstChild?.siblings()
+        ?.takeWhile { it is PsiWhiteSpace || it is PsiComment || it is KtModifierList }
+        ?.flatMap { child ->
+            if (child is KtModifierList) {
+                child.firstChild?.siblings() ?: emptySequence()
+            } else {
+                sequenceOf(child)
+            }
+        }
+        ?.filterIsInstance<KDoc>()
+        ?.lastOrNull()
+
+fun PsiElement.getDocString(): String? {
+    if (this is KtElement) {
+        val kdoc = findLeadingKDoc() ?: if (this is KtPrimaryConstructor) {
+            prevSibling?.siblings(forward = false)
+                ?.takeWhile { it is PsiWhiteSpace || it is PsiComment }
+                ?.filterIsInstance<KDoc>()
+                ?.firstOrNull()
+        } else {
+            null
+        }
+        return kdoc?.let { parseDocString(it.text) }
     }
+    return firstChild?.siblings()
+        ?.takeWhile { it is PsiWhiteSpace || it is PsiComment }
+        ?.filterIsInstance<PsiComment>()
+        ?.lastOrNull { it.text.trimStart().startsWith("/**") }
+        ?.let { parseDocString(it.text) }
+}
 
 fun KtModifierListOwner.toKSModifiers(): Set<Modifier> {
     val modifierList = this.modifierList

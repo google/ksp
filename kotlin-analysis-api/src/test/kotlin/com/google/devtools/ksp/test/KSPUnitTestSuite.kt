@@ -407,6 +407,13 @@ abstract class KSPUnitTestSuite(
         runKSPTest("docString.kt")
     }
 
+    @Bug("https://github.com/google/ksp/issues/3307", BugState.FIXED)
+    @TestMetadata("docStringPositions.kt")
+    @Test
+    fun testDocStringPositions() {
+        runKSPTest("docStringPositions.kt")
+    }
+
     @TestMetadata("equals.kt")
     @Test
     fun testEquals() {
