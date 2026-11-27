@@ -36,6 +36,7 @@ import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.logging.Logger
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
@@ -383,13 +384,25 @@ internal fun findClasspathChanges(
     allDataFiles: Set<File>,
     libs: List<File>,
     processorCP: List<File>,
+    logger: Logger,
 ): KaptClasspathChanges {
     cacheDir.mkdirs()
 
     val changedFiles =
         (changes as? SourcesChanges.Known)?.let { it.modifiedFiles + it.removedFiles }?.toSet() ?: allDataFiles
 
-    val loadedPrevious = ClasspathSnapshot.ClasspathSnapshotFactory.loadFrom(cacheDir)
+    val snapshotFactory = ClasspathSnapshot.ClasspathSnapshotFactory
+    val loadedPrevious = try {
+        snapshotFactory.loadFrom(cacheDir)
+    } catch (e: Exception) {
+        // A corrupted or incompatible snapshot (e.g. written by another KGP version) fails to deserialize.
+        logger.info(
+            "[ksp] Could not read the previous classpath snapshot in $cacheDir. Rebuilding incremental state.",
+            e,
+        )
+        // An empty snapshot makes the classpath diff unknown and triggers a full cache rebuild.
+        snapshotFactory.getEmptySnapshot()
+    }
     val previousAndCurrentDataFiles = lazy { loadedPrevious.getAllDataFiles() + allDataFiles }
     val allChangesRecognized = changedFiles.all {
         val extension = it.extension
@@ -404,11 +417,11 @@ internal fun findClasspathChanges(
     val previousSnapshot = if (allChangesRecognized) {
         loadedPrevious
     } else {
-        ClasspathSnapshot.ClasspathSnapshotFactory.getEmptySnapshot()
+        snapshotFactory.getEmptySnapshot()
     }
 
     val currentSnapshot =
-        ClasspathSnapshot.ClasspathSnapshotFactory.createCurrent(
+        snapshotFactory.createCurrent(
             cacheDir,
             libs,
             processorCP,
@@ -432,6 +445,7 @@ internal fun getCPChanges(
     classpathStructure: FileCollection,
     libraries: FileCollection,
     processorCP: FileCollection,
+    logger: Logger,
 ): List<String> {
     val apClasspath = processorCP.files.toList()
     val changedFiles = if (!inputChanges.isIncremental) {
@@ -454,7 +468,8 @@ internal fun getCPChanges(
         cacheDir,
         classpathStructure.files,
         libraries.files.toList(),
-        apClasspath
+        apClasspath,
+        logger,
     )
     return if (classpathChanges is KaptClasspathChanges.Known) {
         classpathChanges.names.map {
