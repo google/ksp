@@ -113,9 +113,7 @@ class IncrementalAnnotationArgumentClassReferences(experimentalPsiResolution: Bo
         // 3. Rebuild
         gradleRunner.withArguments(ASSEMBLE).build().let { result ->
             Assert.assertEquals(TaskOutcome.SUCCESS, result.task(KSP_KOTLIN)?.outcome)
-            // Bug: the downstream sources are wrongly considered up to date and nothing is
-            // reprocessed, because invalidation stops at the class file path of the changed class.
-            Assert.assertFalse(result.output.lines().contains(downstreamProcessed))
+            Assert.assertTrue(result.output.lines().contains(downstreamProcessed))
         }
     }
 

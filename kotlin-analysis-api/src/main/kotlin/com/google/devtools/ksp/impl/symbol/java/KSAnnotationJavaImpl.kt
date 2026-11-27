@@ -2,7 +2,6 @@ package com.google.devtools.ksp.impl.symbol.java
 
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
-import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.recordClassReferenceLookup
 import com.google.devtools.ksp.impl.symbol.kotlin.KSAnnotationOps.findAbsentDefaultArguments
@@ -146,7 +145,7 @@ fun calcValue(value: PsiAnnotationMemberValue?, parent: KSNode?): Any? {
         is PsiPrimitiveType -> {
             result.boxedTypeName?.let {
                 ResolverAAImpl.instance
-                    .getClassDeclarationByName(it)?.asStarProjectedType()
+                    .findClassDeclarationByName(it)?.asStarProjectedType()
             } ?: KSErrorType(result.boxedTypeName)
         }
 
@@ -154,12 +153,12 @@ fun calcValue(value: PsiAnnotationMemberValue?, parent: KSNode?): Any? {
             val componentType = when (val component = result.componentType) {
                 is PsiPrimitiveType -> component.boxedTypeName?.let { boxedTypeName ->
                     ResolverAAImpl.instance
-                        .getClassDeclarationByName(boxedTypeName)?.asStarProjectedType()
+                        .findClassDeclarationByName(boxedTypeName)?.asStarProjectedType()
                 } ?: KSErrorType(component.boxedTypeName)
 
                 else -> {
                     ResolverAAImpl.instance
-                        .getClassDeclarationByName(component.canonicalText)?.asStarProjectedType()
+                        .findClassDeclarationByName(component.canonicalText)?.asStarProjectedType()
                         ?.also { ksType ->
                             ksType.toKaType()?.let { kaType ->
                                 parent?.findParentDeclaration()?.let { decl ->
@@ -173,12 +172,12 @@ fun calcValue(value: PsiAnnotationMemberValue?, parent: KSNode?): Any? {
             val componentTypeRef = ResolverAAImpl.instance.createKSTypeReferenceFromKSType(componentType)
             val typeArgs = listOf(ResolverAAImpl.instance.getTypeArgument(componentTypeRef, Variance.INVARIANT))
             ResolverAAImpl.instance
-                .getClassDeclarationByName("kotlin.Array")!!.asType(typeArgs)
+                .findClassDeclarationByName("kotlin.Array")!!.asType(typeArgs)
         }
 
         is PsiType -> {
             ResolverAAImpl.instance
-                .getClassDeclarationByName(result.canonicalText)?.asStarProjectedType()
+                .findClassDeclarationByName(result.canonicalText)?.asStarProjectedType()
                 ?.also { ksType ->
                     ksType.toKaType()?.let { kaType ->
                         parent?.findParentDeclaration()?.let { decl ->
@@ -200,7 +199,7 @@ fun calcValue(value: PsiAnnotationMemberValue?, parent: KSNode?): Any? {
             if (containingClass?.classKind == JvmClassKind.ENUM) {
                 // this is an enum entry
                 containingClass.qualifiedName?.let {
-                    ResolverAAImpl.instance.getClassDeclarationByName(it)
+                    ResolverAAImpl.instance.findClassDeclarationByName(it)
                 }?.declarations?.find {
                     it is KSClassDeclaration && it.classKind == ClassKind.ENUM_ENTRY &&
                         it.simpleName.asString() == result.name

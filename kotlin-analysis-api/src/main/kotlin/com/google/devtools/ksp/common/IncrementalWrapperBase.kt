@@ -42,6 +42,7 @@ data class LookupSymbolWrapper(val name: String, val scope: String) : Comparable
 interface LookupStorageWrapper {
     fun removeLookupsFrom(files: Sequence<File>)
     fun update(lookupTracker: LookupTrackerWrapper, filesToCompile: Iterable<File>, removedFiles: Iterable<File>)
+    fun clean()
     fun flush()
     fun close()
     operator fun get(lookupSymbol: LookupSymbolWrapper): Collection<String>

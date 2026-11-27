@@ -106,6 +106,22 @@ fun isSyntheticFileName(name: String, baseDir: File? = null): Boolean {
 }
 
 /**
+ * Returns the source [KSFile] for [this] declaration, or `null` if it originates from a binary library (even when
+ * `containingFile` wraps a decompiled `.class` file, as with `Origin.JAVA_LIB` in KSP2).
+ */
+fun KSDeclaration.sourceFileOrNull(): KSFile? {
+    var current: KSDeclaration = this
+    while (current.origin == Origin.SYNTHETIC) {
+        current = current.parentDeclaration
+            ?: return current.containingFile?.takeUnless { it.fileName.endsWith(".class") }
+    }
+    return when (current.origin) {
+        Origin.KOTLIN, Origin.JAVA -> current.containingFile
+        Origin.KOTLIN_LIB, Origin.JAVA_LIB, Origin.SYNTHETIC -> null
+    }
+}
+
+/**
  * Returns `a.b.c.MyClass` if `name` is a synthetic [NoSourceFile] file for `a.b.c.MyClass`.
  */
 fun stripSyntheticFileNameModifiers(name: String, baseDir: File? = null): String {
