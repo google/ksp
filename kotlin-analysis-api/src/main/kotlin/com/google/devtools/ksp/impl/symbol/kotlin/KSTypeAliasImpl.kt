@@ -18,6 +18,7 @@ package com.google.devtools.ksp.impl.symbol.kotlin
 
 import com.google.devtools.ksp.common.KSObjectCache
 import com.google.devtools.ksp.common.impl.KSNameImpl
+import com.google.devtools.ksp.impl.recordIfFromLibrary
 import com.google.devtools.ksp.impl.symbol.kotlin.resolved.KSTypeReferenceResolvedImpl
 import com.google.devtools.ksp.symbol.*
 import org.jetbrains.kotlin.analysis.api.symbols.*
@@ -27,6 +28,11 @@ class KSTypeAliasImpl private constructor(private val ktTypeAliasSymbol: KaTypeA
     AbstractKSDeclarationImpl(),
     KSExpectActual by KSExpectActualImpl(ktTypeAliasSymbol) {
     override val ktDeclarationSymbol get() = ktTypeAliasSymbol
+
+    init {
+        recordIfFromLibrary(ktTypeAliasSymbol)
+    }
+
     companion object : KSObjectCache<KaTypeAliasSymbol, KSTypeAliasImpl>() {
         fun getCached(ktTypeAliasSymbol: KaTypeAliasSymbol) =
             cache.getOrPut(ktTypeAliasSymbol) { KSTypeAliasImpl(ktTypeAliasSymbol) }

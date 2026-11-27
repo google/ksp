@@ -40,10 +40,14 @@ import com.google.devtools.ksp.symbol.Origin
 import com.intellij.psi.PsiJavaFile
 import com.intellij.util.containers.MultiMap
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
+import org.jetbrains.kotlin.analysis.api.symbols.KaClassLikeSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaEnumEntrySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaFunctionSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaJavaFieldSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
+import org.jetbrains.kotlin.analysis.api.symbols.KaTypeAliasSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KaDeclarationContainerSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.typeParameters
 import org.jetbrains.kotlin.analysis.api.types.KaCapturedType
@@ -140,35 +144,37 @@ class IncrementalContextAA(
         return map
     }
 
-    private fun recordWithArgs(type: KaType, file: PsiJavaFile) {
+    private fun recordWithArgs(type: KaType, file: PsiJavaFile) = forEachClassIn(type) { recordLookup(file, it) }
+
+    // Calls [action] with the fully qualified name of every class in [type], including its type arguments.
+    private fun forEachClassIn(type: KaType, action: (String) -> Unit) {
         type.typeArguments().forEach {
-            it.type?.let { recordWithArgs(it, file) }
+            it.type?.let { forEachClassIn(it, action) }
         }
         when (type) {
             is KaClassType -> {
-                val fqn = type.classId.asFqNameString()
-                recordLookup(file, fqn)
+                action(type.classId.asFqNameString())
             }
 
             is KaFlexibleType -> {
-                recordWithArgs(type.lowerBound, file)
-                recordWithArgs(type.upperBound, file)
+                forEachClassIn(type.lowerBound, action)
+                forEachClassIn(type.upperBound, action)
             }
 
             is KaIntersectionType -> {
                 type.conjuncts.forEach {
-                    recordWithArgs(it, file)
+                    forEachClassIn(it, action)
                 }
             }
 
             is KaCapturedType -> {
                 type.projection.type?.let {
-                    recordWithArgs(it, file)
+                    forEachClassIn(it, action)
                 }
             }
 
             is KaDefinitelyNotNullType -> {
-                recordWithArgs(type.original, file)
+                forEachClassIn(type.original, action)
             }
 
             is KaErrorType, is KaDynamicType, is KaTypeParameterType -> {}
@@ -179,7 +185,13 @@ class IncrementalContextAA(
         if (!isIncremental)
             return
 
-        val file = (context?.containingFile as? KSFileJavaImpl)?.psi ?: return
+        val containingFile = context?.containingFile
+        if (containingFile == null) {
+            // Resolved outside of the sources, e.g. in a library. Only aggregating outputs can depend on it.
+            forEachClassIn(type, ::recordLibraryClass)
+            return
+        }
+        val file = (containingFile as? KSFileJavaImpl)?.psi ?: return
 
         recordWithArgs(type, file)
     }
@@ -478,9 +490,39 @@ internal fun recordLookupForGetAllFunctions(supers: List<KaType>) =
     }
 
 internal fun recordGetSealedSubclasses(classDeclaration: KSClassDeclaration) {
-    if (classDeclaration.origin == Origin.KOTLIN) {
-        ResolverAAImpl.instance.incrementalContext.recordGetSealedSubclasses(classDeclaration)
+    when (classDeclaration.origin) {
+        Origin.KOTLIN -> ResolverAAImpl.instance.incrementalContext.recordGetSealedSubclasses(classDeclaration)
+        // A new subclass is a new class in the same package; the sealed class itself may not change.
+        Origin.KOTLIN_LIB, Origin.JAVA_LIB ->
+            ResolverAAImpl.instance.incrementalContext.recordLibraryPackage(classDeclaration.packageName.asString())
+        else -> {}
     }
+}
+
+internal val KaSymbol.isFromLibrary: Boolean
+    get() = origin == KaSymbolOrigin.LIBRARY || origin == KaSymbolOrigin.JAVA_LIBRARY
+
+/**
+ * Records that a processor saw [symbol], if it is a library class or typealias. Like the other lookups, it must be
+ * recorded on the thread that runs the processors: [ResolverAAImpl.instance] throws elsewhere.
+ */
+internal fun recordIfFromLibrary(symbol: KaClassLikeSymbol) {
+    if (!symbol.isFromLibrary) return
+    val classId = symbol.classId ?: return
+    val incrementalContext = ResolverAAImpl.instance.incrementalContext
+    if (symbol is KaTypeAliasSymbol) {
+        // A typealias isn't a class: it only changes as the facade class that declares it does.
+        incrementalContext.recordLibraryPackage(classId.packageFqName.asString())
+    } else {
+        incrementalContext.recordLibraryClass(classId.asFqNameString())
+    }
+}
+
+/** Records that a processor saw [symbol], if it is an entry of a library enum class. */
+internal fun recordIfFromLibrary(symbol: KaEnumEntrySymbol) {
+    if (!symbol.isFromLibrary) return
+    val enumClassId = symbol.callableId?.classId ?: return
+    ResolverAAImpl.instance.incrementalContext.recordLibraryClass(enumClassId.asFqNameString())
 }
 
 class LookupTrackerWrapperImpl(val lookupTracker: LookupTracker, val trackerLogFile: Writer?) : LookupTrackerWrapper {

@@ -206,7 +206,9 @@ private constructor(
      * Create a [Dependencies] to associate with an output.
      *
      * @param aggregating whether the output should be invalidated by a new source file or a change
-     *   in any of the existing files. Namely, whenever there is new information.
+     *   in any of the existing files. Namely, whenever there is new information. A change on the classpath
+     *   invalidates it only if processors looked at the changed class, e.g. by asking the [Resolver] for it
+     *   or for the declarations in its package, or by reaching it from other declarations.
      * @param sources Sources for this output to depend on.
      */
     constructor(

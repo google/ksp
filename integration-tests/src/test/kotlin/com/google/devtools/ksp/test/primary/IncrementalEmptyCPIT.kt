@@ -27,12 +27,9 @@ class IncrementalEmptyCPIT(experimentalPsiResolution: Boolean) {
         fun data(): Collection<Boolean> = listOf(true, false)
     }
 
+    // No source uses MyTopProp1, and the processor doesn't look at it.
     private val prop2Dirty = listOf(
-        "l1/src/main/kotlin/p1/TopProp1.kt" to setOf(
-            "w: [ksp] p1/K1.kt",
-            "w: [ksp] p1/K2.kt",
-            "w: [ksp] p1/K3.kt",
-        ),
+        "l1/src/main/kotlin/p1/TopProp1.kt" to emptySet<String>(),
     )
 
     @Test
@@ -71,7 +68,8 @@ class IncrementalEmptyCPIT(experimentalPsiResolution: Boolean) {
 
     @Test
     fun testTypeChanges() {
-        // Type changes should result in re-processing of aggregating outputs, since such changes apply to the AST.
+        // Type changes reach KSP, since such changes apply to the AST. The aggregating outputs are only reprocessed if
+        // a processor looked at the changed class.
         val gradleRunner = GradleRunner.create().withProjectDir(project.root)
 
         gradleRunner.withArguments("clean", "assemble").build().let { result ->

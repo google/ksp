@@ -25,6 +25,7 @@ import com.google.devtools.ksp.common.isObjectOverride
 import com.google.devtools.ksp.common.lazyMemoizedSequence
 import com.google.devtools.ksp.impl.ResolverAAImpl
 import com.google.devtools.ksp.impl.recordGetSealedSubclasses
+import com.google.devtools.ksp.impl.recordIfFromLibrary
 import com.google.devtools.ksp.impl.recordLookup
 import com.google.devtools.ksp.impl.recordLookupForGetAllFunctions
 import com.google.devtools.ksp.impl.recordLookupForGetAllProperties
@@ -48,6 +49,10 @@ class KSClassDeclarationImpl private constructor(internal val ktClassOrObjectSym
     }
 
     override val ktDeclarationSymbol = ktClassOrObjectSymbol
+
+    init {
+        recordIfFromLibrary(ktClassOrObjectSymbol)
+    }
 
     companion object : KSObjectCache<KaClassSymbol, KSClassDeclarationImpl>() {
         fun getCached(ktClassOrObjectSymbol: KaClassSymbol) =
