@@ -178,6 +178,9 @@ abstract class KspAATask @Inject constructor(
             emptyList()
         }
 
+        // Instantiate the BuildService so Gradle invokes its close() hook when the build finishes.
+        isolatedClassLoaderCacheBuildService.get()
+
         val workerQueue = workerExecutor.noIsolation()
         workerQueue.submit(KspAAWorkerAction::class.java) {
             it.config.set(kspConfig)

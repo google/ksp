@@ -54,8 +54,17 @@ object IsolatedClassLoaderCache {
     internal val processorCache = ConcurrentHashMap<ProcessorClassLoaderKey, URLClassLoader>()
 
     fun clear() {
-        val classLoaders = cache.values + processorCache.values
-        classLoaders.forEach { classLoader ->
+        val engineLoaders = cache.values.toList()
+        val processorLoaders = processorCache.values.toList()
+        engineLoaders.forEach { classLoader ->
+            try {
+                val kspLoaderClass = classLoader.loadClass("com.google.devtools.ksp.impl.KSPLoader")
+                kspLoaderClass.getMethod("shutdown").invoke(null)
+            } catch (e: Exception) {
+                // Ignore exceptions during cleanup, but we could log them if a logger was available.
+            }
+        }
+        (processorLoaders + engineLoaders).forEach { classLoader ->
             try {
                 classLoader.close()
             } catch (e: Exception) {
