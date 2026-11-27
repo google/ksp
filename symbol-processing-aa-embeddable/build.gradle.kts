@@ -308,7 +308,7 @@ publishing {
                         addDependency(
                             "org.jetbrains.kotlin",
                             "kotlin-stdlib",
-                            libs.versions.kotlin.base.get(),
+                            libs.versions.kotlin.stdlib.floor.get(),
                         )
                         addDependency("com.google.devtools.ksp", "symbol-processing-api", version)
                         addDependency(

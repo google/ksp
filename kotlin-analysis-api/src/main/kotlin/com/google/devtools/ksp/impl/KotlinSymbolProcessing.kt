@@ -126,14 +126,30 @@ import org.jetbrains.kotlin.platform.wasm.WasmPlatforms
 import org.jetbrains.kotlin.psi.KtFile
 import java.io.File
 import java.nio.file.Path
+import java.util.function.Supplier
 
+/**
+ * Runs symbol processors over the sources described by [kspConfig].
+ *
+ * [processorProviders] is called when processing starts, or when [symbolProcessorProviders] is first read, and not
+ * again once it has returned. Unless [symbolProcessorProviders] is read, it isn't called at all when an incremental run
+ * has nothing to process, so callers can defer loading processors and any work that only processing needs.
+ */
 @OptIn(KaPlatformInterface::class)
 @Suppress("UnstableApiUsage")
 class KotlinSymbolProcessing(
     val kspConfig: KSPConfig,
-    val symbolProcessorProviders: List<SymbolProcessorProvider>,
+    processorProviders: Supplier<List<SymbolProcessorProvider>>,
     val logger: KSPLogger
 ) {
+    constructor(
+        kspConfig: KSPConfig,
+        symbolProcessorProviders: List<SymbolProcessorProvider>,
+        logger: KSPLogger,
+    ) : this(kspConfig, Supplier { symbolProcessorProviders }, logger)
+
+    val symbolProcessorProviders: List<SymbolProcessorProvider> by lazy { processorProviders.get() }
+
     enum class ExitCode(
         val code: Int
     ) {
@@ -151,7 +167,6 @@ class KotlinSymbolProcessing(
         if (System.getProperty("java.awt.headless") == null) {
             System.setProperty("java.awt.headless", "true")
         }
-        setupIdeaStandaloneExecution()
     }
 
     @OptIn(KaExperimentalApi::class, KaImplementationDetail::class, KaIdeApi::class)
@@ -530,6 +545,9 @@ class KotlinSymbolProcessing(
         if (incrementalContext.tryEarlyExitIfClean(::listAllSourceFiles)) {
             return ExitCode.OK
         }
+        // Only after the early exit: a run with nothing to process needs neither the IDEA setup nor the processors.
+        setupIdeaStandaloneExecution()
+        val providers = incrementalContext.closeFilesOnException { symbolProcessorProviders }
 
         KotlinCoreProjectEnvironmentManager.withKotlinCoreProjectEnvironment { kotlinCoreProjectEnvironment ->
             try {
@@ -539,7 +557,6 @@ class KotlinSymbolProcessing(
                 KSPCoreEnvironment(project)
 
                 val psiManager = PsiManager.getInstance(project)
-                val providers: List<SymbolProcessorProvider> = symbolProcessorProviders
                 // KspModuleBuilder ensures this is always a KtSourceModule
                 ResolverAAImpl.ktModule = modules.single() as KaSourceModule
                 ResolverAAImpl.kspConfig = kspConfig

@@ -21,6 +21,8 @@
 // Q
 // T
 // f1
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: field
+// EXPECT ENABLE_BACKING_FIELDS = TRUE: field
 // p2
 // v2
 // v3

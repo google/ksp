@@ -24,3 +24,13 @@ dependencies {
 sourceSets.main {
     java.srcDirs("src/main/kotlin")
 }
+
+// Keep :test-processor metadata and stdlib compatible with AGP 9.0+'s bundled KGP (2.2.10)
+// when Built-in Kotlin is tested without overriding KGP on buildscript.classpath.
+kotlin {
+    coreLibrariesVersion = "2.2.10"
+    compilerOptions {
+        languageVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2)
+        apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2)
+    }
+}

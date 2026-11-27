@@ -88,9 +88,14 @@ Read `CONTRIBUTING.md`.
 
 ### JDK & Kotlin Version Constraints
 * Carefully read the Gradle build files for a particular module to find out what its Java and Kotlin constraints are.
+* **Runtime Minimum Supported Versions (`gradle-plugin`)**:
+  * `MINIMUM_SUPPORTED_GRADLE_VERSION` (`gradleUtils.kt`): Gradle `8.13`, checked in `KspGradleSubplugin.apply`.
+  * `MINIMUM_SUPPORTED_KGP_VERSION` (`kgpUtils.kt`): Kotlin Gradle Plugin `2.2.10`, checked when `KotlinBasePlugin` is applied (`:api` targets `languageVersion = 2.3`, whose $N-1$ metadata reader floor is Kotlin `2.2.x`, and AGP 9.0–9.4 built-in Kotlin bundles KGP `2.2.10`).
+  * `MINIMUM_SUPPORTED_AGP_VERSION` (`agpUtils.kt`): Android Gradle Plugin `8.12.0` (`9.0.0-alpha14` when AGP built-in Kotlin is enabled).
 * **Decoupled Versions (`gradle.properties` & `gradle/libs.versions.toml`)**:
   * `buildKotlinVersion` / `buildKspVersion`: Used in `gradle.properties` to bootstrap and compile the KSP project itself.
   * `kotlinBaseVersion` (`kotlin-base`) & `agpBaseVersion` (`agp-base`): **Duplicated in both `gradle.properties` and `gradle/libs.versions.toml`**. `gradle-plugin`'s `TestConfig` loads `gradle.properties` directly at test runtime—**always keep both files in sync**.
+  * `kotlin-stdlib-floor` (`gradle/libs.versions.toml`, passed to `TestConfig` via `:gradle-plugin:prepareTestConfiguration`): Pins `coreLibrariesVersion` across subprojects, published POM/module `kotlin-stdlib` dependencies, and `:kotlin-analysis-api:validateShadowJar` (`jdeps`) so bumping `buildKotlinVersion` or `kotlin-base` (e.g., to `2.4.x`) does not leak newer `kotlin-stdlib` metadata to Kotlin `2.2.x`+ consumers.
   * `aa-kotlin-base` (`aaKotlinBaseVersion`): The specific (often developmental) Kotlin version used for Analysis API dependencies in `:kotlin-analysis-api` and `:symbol-processing-aa-embeddable`.
 
 ### Essential Gradle Tasks

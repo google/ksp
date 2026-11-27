@@ -56,50 +56,25 @@ class PsiConfiguredDefaultFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase
         enableBackingFields = false
         enableContextParameters = false
     }
-) {
-    @TestMetadata("deferredBackingFields.kt")
-    @Test
-    override fun testDeferredBackingFields() {
-        runKSPTest("deferredBackingFields.kt")
-    }
-}
+)
 
 class PsiConfiguredBackingFieldsUnitTestSuite : PsiConfiguredUnitTestSuiteBase(
     buildApiFeatures {
         enableBackingFields = true
         enableContextParameters = false
     }
-) {
-    @TestMetadata("deferredBackingFields.kt")
-    @Test
-    override fun testDeferredBackingFields() {
-        runFailingKSPTest("deferredBackingFields.kt")
-    }
-}
+)
 
 class PsiConfiguredContextParametersUnitTestSuite : PsiConfiguredUnitTestSuiteBase(
     buildApiFeatures {
         enableBackingFields = false
         enableContextParameters = true
     }
-) {
-    @TestMetadata("deferredBackingFields.kt")
-    @Test
-    override fun testDeferredBackingFields() {
-        runKSPTest("deferredBackingFields.kt")
-    }
-}
+)
 
 class PsiConfiguredAllFeaturesUnitTestSuite : PsiConfiguredUnitTestSuiteBase(
     buildApiFeatures {
         enableBackingFields = true
         enableContextParameters = true
     }
-) {
-    @TestMetadata("deferredBackingFields.kt")
-    @Test
-    override fun testDeferredBackingFields() {
-        runFailingKSPTest("deferredBackingFields.kt")
-    }
-}
-
+)
