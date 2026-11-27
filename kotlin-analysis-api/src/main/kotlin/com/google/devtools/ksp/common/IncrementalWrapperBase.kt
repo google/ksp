@@ -17,8 +17,45 @@
 
 package com.google.devtools.ksp.common
 
+import com.google.devtools.ksp.symbol.KSDeclaration
 import com.intellij.util.containers.MultiMap
 import java.io.File
+
+/**
+ * Canonical scope identifier used by Kotlin's incremental lookup storage for declarations in the root (unnamed)
+ * package.
+ */
+internal const val ROOT_PACKAGE_SCOPE: String = "<anonymous>"
+
+/**
+ * Normalizes an empty package/classifier scope to [ROOT_PACKAGE_SCOPE] so all lookup trackers and symbol collectors
+ * agree on the root-package scope key.
+ */
+internal fun String.normalizeLookupScope(): String = ifEmpty { ROOT_PACKAGE_SCOPE }
+
+/**
+ * Extracts a [LookupSymbolWrapper] from this [KSDeclaration] by stripping [KSDeclaration.simpleName] from the end of
+ * [KSDeclaration.qualifiedName], preserving dots inside backticked simple names and normalizing root-package scopes to
+ * [ROOT_PACKAGE_SCOPE]. Returns `null` when [KSDeclaration.qualifiedName] is `null` (e.g., local or anonymous symbols).
+ */
+internal fun KSDeclaration.toLookupSymbolWrapper(): LookupSymbolWrapper? {
+    val qName = qualifiedName?.asString() ?: return null
+    val name = simpleName.asString()
+    val scope = when {
+        qName == name -> ROOT_PACKAGE_SCOPE
+        qName.length > name.length && qName.endsWith(name) && qName[qName.length - name.length - 1] == '.' ->
+            qName.substring(0, qName.length - name.length - 1).normalizeLookupScope()
+        else -> qName.removeSuffix(name).removeSuffix(".").normalizeLookupScope()
+    }
+    return LookupSymbolWrapper(name, scope)
+}
+
+/**
+ * Formats this [LookupSymbolWrapper] as a Graphviz `.dot` vertex name, omitting [ROOT_PACKAGE_SCOPE] (and legacy empty
+ * scopes) while preserving any leading dots that belong to [LookupSymbolWrapper.name].
+ */
+internal fun LookupSymbolWrapper.toGraphVertexName(): String =
+    if (scope.isEmpty() || scope == ROOT_PACKAGE_SCOPE) name else "$scope.$name"
 
 interface LookupTrackerWrapper {
     fun record(

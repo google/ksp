@@ -48,11 +48,7 @@ object SymbolCollector : KSDefaultVisitor<(LookupSymbolWrapper) -> Unit, Unit>(
     override fun defaultHandler(node: KSNode, data: (LookupSymbolWrapper) -> Unit) = Unit
 
     override fun visitDeclaration(declaration: KSDeclaration, data: (LookupSymbolWrapper) -> Unit) {
-        val name = declaration.simpleName.asString()
-        val scope =
-            declaration.qualifiedName?.asString()?.let { it.substring(0, Math.max(it.length - name.length - 1, 0)) }
-                ?: return
-        data(LookupSymbolWrapper(name, scope))
+        declaration.toLookupSymbolWrapper()?.let(data)
     }
 
     override fun visitDeclarationContainer(
@@ -622,14 +618,22 @@ abstract class IncrementalContextBase(
         if (!isIncremental)
             return
 
-        val path = psiFile.virtualFile.path
         val (scope, name) = separateQualifierAndName(fqn)
+        recordLookup(psiFile, scope, name)
+    }
+
+    fun recordLookup(psiFile: PsiJavaFile, scope: String, name: String) {
+        if (!isIncremental)
+            return
+
+        val path = psiFile.virtualFile.path
+        val normalizedScope = scope.normalizeLookupScope()
 
         // Java types are classes. Therefore lookups only happen in packages.
         fun record(scope: String, name: String) =
             symbolLookupTracker.record(path, scope, name)
 
-        record(scope, name)
+        record(normalizedScope, name)
 
         // If a resolved name is from some * import, it is overridable by some out-of-file changes.
         // Therefore, the potential providers all need to be inserted. They are
@@ -638,7 +642,7 @@ abstract class IncrementalContextBase(
         val onDemandImports = onDemandImportsCache.getOrPut(psiFile) {
             psiFile.getOnDemandImports().mapNotNull { (it.importReference?.resolve() as? PsiPackage)?.qualifiedName }
         }
-        if (scope in onDemandImports) {
+        if (normalizedScope in onDemandImports) {
             record(psiFile.packageName, name)
             onDemandImports.forEach {
                 record(it, name)
@@ -658,10 +662,8 @@ abstract class IncrementalContextBase(
         if (!isIncremental)
             return
 
-        val name = classDeclaration.simpleName.asString()
-        val scope = classDeclaration.qualifiedName?.asString()
-            ?.let { it.substring(0, (it.length - name.length - 1).coerceAtLeast(0)) } ?: return
-        updatedSealed.putValue(classDeclaration.containingFile!!.relativeFile, LookupSymbolWrapper(name, scope))
+        val symbol = classDeclaration.toLookupSymbolWrapper() ?: return
+        updatedSealed.putValue(classDeclaration.containingFile!!.relativeFile, symbol)
     }
 
     protected open fun logBeforeCacheFlush(outputs: Set<File>, sourceToOutputs: Map<File, Set<File>>) {

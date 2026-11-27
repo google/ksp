@@ -23,8 +23,8 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSNode
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.Origin
 
@@ -39,9 +39,12 @@ class TestProcessor(val environment: SymbolProcessorEnvironment) : SymbolProcess
 
     private val createdFiles = mutableSetOf<String>()
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        sequenceOf("ExampleReference", "com.example.upstream.ExampleReferenceJava")
-            .flatMap { resolver.getSymbolsWithAnnotation(it) }
-            .filter { it.origin == Origin.KOTLIN }
+        (
+            sequenceOf("ExampleReference", "ExampleJavaReference")
+                .flatMap { resolver.getSymbolsWithAnnotation(it) } +
+                resolver.getSymbolsWithAnnotation("com.example.upstream.ExampleReferenceJava")
+                    .filter { it.origin == Origin.KOTLIN }
+            )
             .filterIsInstance<KSClassDeclaration>().forEach { sym ->
                 // Follow dependencies to let KSP capture dependency graph
                 followSym(sym)
@@ -67,7 +70,7 @@ class TestProcessor(val environment: SymbolProcessorEnvironment) : SymbolProcess
     private val queue = mutableListOf<KSNode>()
 
     private fun followSym(sym: KSAnnotated) {
-        if (!seen.contains(sym)) {
+        if (!seen.contains(sym) && !queue.contains(sym)) {
             queue.add(sym)
         }
         while (queue.isNotEmpty()) {
@@ -97,13 +100,13 @@ class TestProcessor(val environment: SymbolProcessorEnvironment) : SymbolProcess
                         is List<*> -> {
                             value.filterIsInstance<KSType>()
                                 .map { ksType -> ksType.declaration }
-                                .filterNot(seen::contains)
+                                .filterNot { seen.contains(it) || queue.contains(it) }
                                 .forEach(queue::add)
                         }
 
                         is KSType -> {
                             val decl = value.declaration
-                            if (!seen.contains(decl)) {
+                            if (!seen.contains(decl) && !queue.contains(decl)) {
                                 queue.add(decl)
                             }
                         }
@@ -120,20 +123,20 @@ class TestProcessor(val environment: SymbolProcessorEnvironment) : SymbolProcess
     private fun followDeclaration(ksDecl: KSDeclaration): Unit = when (ksDecl) {
         is KSClassDeclaration -> {
             ksDecl.declarations
-                .filterNot(seen::contains)
+                .filterNot { seen.contains(it) || queue.contains(it) }
                 .filter { it !is KSPropertyDeclaration }
                 .forEach(queue::add)
         }
 
         is KSFunctionDeclaration -> {
             ksDecl.returnType?.resolve()?.declaration?.let {
-                if (!seen.contains(it)) {
+                if (!seen.contains(it) && !queue.contains(it)) {
                     queue.add(it)
                 }
             }
             ksDecl.parameters
                 .map { it.type.resolve().declaration }
-                .filterNot(seen::contains)
+                .filterNot { seen.contains(it) || queue.contains(it) }
                 .forEach(queue::add)
         }
 
