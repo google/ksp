@@ -457,13 +457,18 @@ internal fun getCPChanges(
         apClasspath
     )
     return if (classpathChanges is KaptClasspathChanges.Known) {
-        classpathChanges.names.map {
-            it.replace('/', '.').replace('$', '.')
-        }
+        classpathChanges.names.map(::toChangedClassName)
     } else {
         emptyList()
     }
 }
+
+/**
+ * Converts JVM internal names ('/' package separators, '$' nested or literal class-name characters) to package-dot
+ * form while keeping '$' intact so KSP can distinguish subpackages ('a/b/C' -> 'a.b.C') from '$'-named classes and
+ * file facades ('a/B$C' -> 'a.B$C').
+ */
+internal fun toChangedClassName(internalName: String): String = internalName.replace('/', '.')
 
 internal fun Configuration.markResolvable(): Configuration = apply {
     isCanBeResolved = true

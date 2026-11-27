@@ -18,6 +18,7 @@
 package com.google.devtools.ksp.common.impl
 
 import com.google.devtools.ksp.common.NoSourceFile
+import com.google.devtools.ksp.common.sourceFileOrNull
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -95,7 +96,7 @@ class CodeGeneratorImpl(
     ) {
         val path = pathOf(packageName, fileName, extensionName)
         val files = classes.map {
-            it.containingFile ?: NoSourceFile(projectBase, it.qualifiedName?.asString().toString())
+            it.sourceFileOrNull() ?: NoSourceFile(projectBase, it.qualifiedName?.asString().toString())
         }
         associate(files, path, extensionToDirectory(extensionName))
     }
@@ -113,7 +114,7 @@ class CodeGeneratorImpl(
     ) {
         val path = pathOf(packageName, fileName, extensionName)
         val files = functions.map {
-            it.containingFile ?: anyChangesWildcard
+            it.sourceFileOrNull() ?: anyChangesWildcard
         }
         associate(files, path, extensionToDirectory(extensionName))
     }
@@ -131,7 +132,7 @@ class CodeGeneratorImpl(
     ) {
         val path = pathOf(packageName, fileName, extensionName)
         val files = properties.map {
-            it.containingFile ?: anyChangesWildcard
+            it.sourceFileOrNull() ?: anyChangesWildcard
         }
         associate(files, path, extensionToDirectory(extensionName))
     }

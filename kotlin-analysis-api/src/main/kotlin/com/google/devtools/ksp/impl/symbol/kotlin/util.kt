@@ -69,6 +69,7 @@ import org.jetbrains.kotlin.analysis.api.fir.evaluate.FirAnnotationValueConverte
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirSymbol
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KaFirValueParameterSymbol
 import org.jetbrains.kotlin.analysis.api.fir.types.KaFirFunctionType
+import org.jetbrains.kotlin.analysis.api.fir.types.KaFirType
 import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseStarTypeProjection
 import org.jetbrains.kotlin.analysis.api.impl.base.types.KaBaseTypeArgumentWithVariance
 import org.jetbrains.kotlin.analysis.api.platform.lifetime.KotlinAlwaysAccessibleLifetimeToken
@@ -728,6 +729,14 @@ internal fun KSAnnotation.getFqn(): String? =
  */
 internal fun KaType.getFqn(): String? =
     fullyExpand().symbol?.classId?.asFqNameString()
+
+/**
+ * Best-effort fully qualified name for an unresolved [KaClassErrorType] (e.g., a missing `compileOnly`
+ * class referenced in a compiled annotation argument).
+ */
+internal fun KaClassErrorType.unresolvedFqn(): String? =
+    (this as? KaFirType)?.coneType?.classId?.asFqNameString()
+        ?: qualifiers.joinToString(".") { it.name.asString() }.takeIf { it.isNotEmpty() }
 
 /**
  * Returns the Psi element for [KSFile], if it exists.

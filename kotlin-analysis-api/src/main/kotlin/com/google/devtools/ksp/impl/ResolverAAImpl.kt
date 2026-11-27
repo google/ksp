@@ -41,7 +41,6 @@ import com.google.devtools.ksp.common.impl.findRefPosition
 import com.google.devtools.ksp.common.impl.isReturnTypeOfAnnotationMethod
 import com.google.devtools.ksp.common.javaModifiers
 import com.google.devtools.ksp.common.lazyMemoizedSequence
-import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.getVisibility
@@ -73,6 +72,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.toKSDeclaration
 import com.google.devtools.ksp.impl.symbol.kotlin.toKSName
 import com.google.devtools.ksp.impl.symbol.kotlin.toKtClassSymbol
 import com.google.devtools.ksp.impl.symbol.kotlin.toLocation
+import com.google.devtools.ksp.impl.symbol.kotlin.unresolvedFqn
 import com.google.devtools.ksp.impl.symbol.kotlin.toWildcard
 import com.google.devtools.ksp.impl.symbol.kotlin.typeArguments
 import com.google.devtools.ksp.impl.symbol.kotlin.updateFromParents
@@ -130,6 +130,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KaPropertyAccessorSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaPropertySymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaTypeAliasSymbol
+import org.jetbrains.kotlin.analysis.api.types.KaClassErrorType
 import org.jetbrains.kotlin.analysis.api.types.KaType
 import org.jetbrains.kotlin.analysis.api.types.symbol
 import org.jetbrains.kotlin.analysis.decompiler.stub.file.ClsKotlinBinaryClassCache
@@ -222,7 +223,7 @@ class ResolverAAImpl(
             override val nothingType: KSType by lazy { KSTypeImpl.getCached(builtIns.nothing) }
             override val unitType: KSType by lazy { KSTypeImpl.getCached(builtIns.unit) }
             override val numberType: KSType by lazy {
-                getClassDeclarationByName("kotlin.Number")!!.asStarProjectedType()
+                findClassDeclarationByName("kotlin.Number")!!.asStarProjectedType()
             }
             override val byteType: KSType by lazy { KSTypeImpl.getCached(builtIns.byte) }
             override val shortType: KSType by lazy { KSTypeImpl.getCached(builtIns.short) }
@@ -234,13 +235,13 @@ class ResolverAAImpl(
             override val booleanType: KSType by lazy { KSTypeImpl.getCached(builtIns.boolean) }
             override val stringType: KSType by lazy { KSTypeImpl.getCached(builtIns.string) }
             override val iterableType: KSType by lazy {
-                getClassDeclarationByName("kotlin.collections.Iterable")!!.asStarProjectedType()
+                findClassDeclarationByName("kotlin.collections.Iterable")!!.asStarProjectedType()
             }
             override val annotationType: KSType by lazy {
-                getClassDeclarationByName("kotlin.Annotation")!!.asStarProjectedType()
+                findClassDeclarationByName("kotlin.Annotation")!!.asStarProjectedType()
             }
             override val arrayType: KSType by lazy {
-                getClassDeclarationByName("kotlin.Array")!!.asStarProjectedType()
+                findClassDeclarationByName("kotlin.Array")!!.asStarProjectedType()
             }
         }
     }
@@ -401,6 +402,17 @@ class ResolverAAImpl(
     }
 
     override fun getClassDeclarationByName(name: KSName): KSClassDeclaration? {
+        incrementalContext.recordClassQuery(name.asString())
+        return findClassDeclarationByName(name, recordQueries = true)?.also { cls ->
+            cls.qualifiedName?.asString()?.let(incrementalContext::recordClassQuery)
+        }
+    }
+
+    internal fun findClassDeclarationByName(name: String, recordQueries: Boolean = false): KSClassDeclaration? =
+        findClassDeclarationByName(KSNameImpl.getCached(name), recordQueries)
+
+    private fun findClassDeclarationByName(name: KSName, recordQueries: Boolean = false): KSClassDeclaration? {
+        val shouldRecordQueries = recordQueries && incrementalContext.isIncremental
         fun findClass(name: KSName): KaSymbol? {
             if (name.asString() == "") {
                 return null
@@ -411,13 +423,24 @@ class ResolverAAImpl(
             analyze {
                 classId.toKtClassSymbol()
             }?.let { return it }
-            return (findClass(KSNameImpl.getCached(name.getQualifier())) as? KaNamedClassSymbol)?.let {
+            return (findClass(KSNameImpl.getCached(name.getQualifier())) as? KaNamedClassSymbol)?.let { owner ->
                 analyze {
+                    if (shouldRecordQueries) {
+                        owner.classId?.asFqNameString()?.let { incrementalContext.recordClassQuery("$it.$simpleName") }
+                        owner.defaultType.allSupertypes.forEach { superType ->
+                            val superFqn = superType.symbol?.classId?.asFqNameString()
+                                ?: (superType as? KaClassErrorType)?.unresolvedFqn()
+                                ?: return@forEach
+                            if (superFqn != "kotlin.Any" && superFqn != "java.lang.Object") {
+                                incrementalContext.recordClassQuery("$superFqn.$simpleName")
+                            }
+                        }
+                    }
                     (
-                        it.staticMemberScope.classifiers { it.asString() == simpleName }.singleOrNull()
-                            ?: it.memberScope.classifiers { it.asString() == simpleName }.singleOrNull()
+                        owner.staticMemberScope.classifiers { it.asString() == simpleName }.singleOrNull()
+                            ?: owner.memberScope.classifiers { it.asString() == simpleName }.singleOrNull()
                         ) as? KaNamedClassSymbol
-                        ?: it.staticMemberScope.callables { it.asString() == simpleName }.singleOrNull()
+                        ?: owner.staticMemberScope.callables { it.asString() == simpleName }.singleOrNull()
                             as? KaEnumEntrySymbol
                 }
             }
@@ -438,6 +461,7 @@ class ResolverAAImpl(
     @OptIn(KaExperimentalApi::class)
     @KspExperimental
     override fun getDeclarationsFromPackage(packageName: String): Sequence<KSDeclaration> {
+        incrementalContext.recordPackageQuery(packageName)
         return analyze {
             findPackage(FqName(packageName))?.packageScope?.declarations?.distinct()?.mapNotNull { symbol ->
                 when (symbol) {
@@ -449,6 +473,13 @@ class ResolverAAImpl(
                     else -> null
                 }
             } ?: emptySequence()
+        }.onEach { declaration ->
+            if (incrementalContext.isIncremental &&
+                declaration is KSClassDeclaration &&
+                (declaration.origin == Origin.KOTLIN_LIB || declaration.origin == Origin.JAVA_LIB)
+            ) {
+                declaration.qualifiedName?.asString()?.let(incrementalContext::recordClassQuery)
+            }
         }
     }
 
@@ -497,7 +528,15 @@ class ResolverAAImpl(
     ): Sequence<KSFunctionDeclaration> {
         val qualifier = name.getQualifier()
         val functionName = name.getShortName()
-        val nonTopLevelResult = this.getClassDeclarationByName(qualifier)?.getDeclaredFunctions()
+        val cls = findClassDeclarationByName(qualifier, recordQueries = true)
+        if (!includeTopLevel || cls != null) {
+            incrementalContext.recordClassQuery(qualifier)
+            cls?.qualifiedName?.asString()?.let(incrementalContext::recordClassQuery)
+        }
+        if (includeTopLevel) {
+            incrementalContext.recordPackageQuery(qualifier)
+        }
+        val nonTopLevelResult = cls?.getDeclaredFunctions()
             ?.filter { it.simpleName.asString() == functionName } ?: emptySequence()
         return if (!includeTopLevel) nonTopLevelResult else {
             nonTopLevelResult.plus(
@@ -698,7 +737,15 @@ class ResolverAAImpl(
     override fun getPropertyDeclarationByName(name: KSName, includeTopLevel: Boolean): KSPropertyDeclaration? {
         val qualifier = name.getQualifier()
         val propertyName = name.getShortName()
-        val nonTopLevelResult = this.getClassDeclarationByName(qualifier)?.getDeclaredProperties()
+        val cls = findClassDeclarationByName(qualifier, recordQueries = true)
+        if (!includeTopLevel || cls != null) {
+            incrementalContext.recordClassQuery(qualifier)
+            cls?.qualifiedName?.asString()?.let(incrementalContext::recordClassQuery)
+        }
+        if (includeTopLevel) {
+            incrementalContext.recordPackageQuery(qualifier)
+        }
+        val nonTopLevelResult = cls?.getDeclaredProperties()
             ?.singleOrNull { it.simpleName.asString() == propertyName }
         return if (!includeTopLevel) {
             nonTopLevelResult

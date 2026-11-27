@@ -18,11 +18,13 @@
 package com.google.devtools.ksp.impl
 
 import com.google.devtools.ksp.IncrementalContextLoggingOptions
+import com.google.devtools.ksp.closestClassDeclaration
 import com.google.devtools.ksp.common.IncrementalContextBase
 import com.google.devtools.ksp.common.LookupStorageWrapper
 import com.google.devtools.ksp.common.LookupSymbolWrapper
 import com.google.devtools.ksp.common.LookupTrackerWrapper
 import com.google.devtools.ksp.common.NoSourceFile
+import com.google.devtools.ksp.common.sourceFileOrNull
 import com.google.devtools.ksp.common.stripSyntheticFileNameModifiers
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.impl.symbol.kotlin.KSFileJavaImpl
@@ -30,6 +32,7 @@ import com.google.devtools.ksp.impl.symbol.kotlin.KSFunctionDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.KSPropertyDeclarationJavaImpl
 import com.google.devtools.ksp.impl.symbol.kotlin.analyze
+import com.google.devtools.ksp.impl.symbol.kotlin.findParentDeclaration
 import com.google.devtools.ksp.impl.symbol.kotlin.getFqn
 import com.google.devtools.ksp.impl.symbol.kotlin.separateQualifierAndName
 import com.google.devtools.ksp.impl.symbol.kotlin.typeArguments
@@ -69,7 +72,7 @@ import java.io.File
 import java.io.Writer
 
 class IncrementalContextAA(
-    override val isIncremental: Boolean,
+    public override val isIncremental: Boolean,
     lookupTracker: LookupTracker,
     anyChangesWildcard: File,
     loggingOptions: IncrementalContextLoggingOptions,
@@ -179,9 +182,17 @@ class IncrementalContextAA(
         if (!isIncremental)
             return
 
-        val file = (context?.containingFile as? KSFileJavaImpl)?.psi ?: return
+        val file = (context?.containingFile as? KSFileJavaImpl)?.psi?.takeUnless { it.fileType.isBinary }
+        if (file != null) {
+            recordWithArgs(type, file)
+            return
+        }
 
-        recordWithArgs(type, file)
+        if (context == null) return
+        val decl = context.findParentDeclaration()
+        if (decl != null && decl.sourceFileOrNull() == null) {
+            recordClassReferenceLookup(type, decl)
+        }
     }
 
     /**
@@ -216,27 +227,39 @@ class IncrementalContextAA(
         }
 
         val (scope, name) = separateQualifierAndName(fqn)
+        val sourceFilePath = declaration.sourceFileOrNull()?.filePath
+        if (sourceFilePath != null) {
+            symbolLookupTracker.record(sourceFilePath, scope, name)
+            return
+        }
 
-        symbolLookupTracker.record(filePathFor(declaration), scope, name)
+        // For binary declarations without a source file, record against every enclosing class
+        // declaration (e.g. enum entry -> enum class, nested class -> outer class) so DirtinessPropagator
+        // connects to outputs associated via CodeGeneratorImpl.associateWithClasses at any enclosing level.
+        var current: KSClassDeclaration? = declaration.closestClassDeclaration()
+        if (current == null) {
+            // Top-level binary callables cannot be associated via CodeGeneratorImpl.associateWithClasses,
+            // so fall back to module-wide classQueries instead of an unassociable NoSourceFile.
+            recordClassQuery(fqn)
+            return
+        }
+        while (current != null) {
+            symbolLookupTracker.record(noSourceFilePathFor(current), scope, name)
+            current = current.parentDeclaration as? KSClassDeclaration
+        }
     }
 
     /**
-     * Returns a string representing a file path for [declaration].
-     *
-     * If the filepath is already available, it is returned. Otherwise, a synthetic filepath is generated.
+     * Returns a synthetic [NoSourceFile] path for a binary [declaration] without a source file.
      */
-    private fun filePathFor(declaration: KSDeclaration): String {
-        // Try directly getting the filepath
-        val maybeAvailableFilePath = declaration.containingFile?.filePath
-        if (maybeAvailableFilePath != null) {
-            return maybeAvailableFilePath
-        }
-
-        // Construct synthetic filepath
+    private fun noSourceFilePathFor(declaration: KSDeclaration): String {
         val parentDeclarationName = declaration.qualifiedName?.asString()
             ?: buildString {
-                append(declaration.packageName.asString())
-                append('.')
+                val pkg = declaration.packageName.asString()
+                if (pkg.isNotEmpty()) {
+                    append(pkg)
+                    append('.')
+                }
                 append(declaration.simpleName.asString())
             }
 
@@ -264,7 +287,7 @@ class IncrementalContextAA(
         if (!isIncremental)
             return
 
-        val file = (declaration.containingFile as? KSFileJavaImpl)?.psi ?: return
+        val file = (declaration.containingFile as? KSFileJavaImpl)?.psi?.takeUnless { it.fileType.isBinary } ?: return
 
         val symbol = when (declaration) {
             is KSPropertyDeclarationJavaImpl -> declaration.ktJavaFieldSymbol
@@ -299,7 +322,7 @@ class IncrementalContextAA(
     }
 
     private val KaSymbol.psiJavaFile: PsiJavaFile?
-        get() = psi?.containingFile as? PsiJavaFile
+        get() = (psi?.containingFile as? PsiJavaFile)?.takeUnless { it.fileType.isBinary }
 
     private val KaType.psiJavaFiles: List<PsiJavaFile>
         get() {
@@ -512,6 +535,8 @@ class LookupStorageWrapperImpl(
     }
 
     override fun removeLookupsFrom(files: Sequence<File>) = impl.removeLookupsFrom(files)
+
+    override fun clean() = impl.clean()
 
     override fun close() = impl.close()
 
