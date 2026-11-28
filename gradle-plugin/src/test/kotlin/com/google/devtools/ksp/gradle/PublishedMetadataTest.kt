@@ -19,6 +19,7 @@ package com.google.devtools.ksp.gradle
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import com.google.devtools.ksp.gradle.testing.TestConfig
+import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
@@ -29,133 +30,166 @@ import org.w3c.dom.Node
 import org.w3c.dom.NodeList
 
 private const val KSP_GROUP_ID = "com.google.devtools.ksp"
-private const val SNAPSHOT_RESOURCE = "published-metadata.txt"
+private const val GOLDEN = "published-metadata.json"
 
+/**
+ * Compares the POMs and Gradle Module Metadata of all published KSP artifacts against [GOLDEN].
+ *
+ * `./gradlew :gradle-plugin:checkPublishedMetadata` runs this test, and `updatePublishedMetadata`
+ * runs it with the system property `updateTestSnapshots=true`, which makes it write the golden.
+ */
 class PublishedMetadataTest {
     private val testConfig = TestConfig.read()
+    private val kspVersion = testConfig.kspVersion
     private val docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
     private val xpath = XPathFactory.newInstance().newXPath()
 
     @Test
     fun checkPublishedMetadata() {
-        val kspVersion = testConfig.kspVersion
         val groupDir = testConfig.mavenRepoDir.resolve(KSP_GROUP_ID.replace('.', '/'))
-        val dirs =
-            groupDir
-                .listFiles()
-                .orEmpty()
-                .filter { it.resolve(kspVersion).isDirectory }
-                .sortedBy { it.name }
-        assertThat(dirs).isNotEmpty()
-        val actual =
-            dirs.joinToString("\n") {
-                describeArtifact(it.name, it.resolve(kspVersion), kspVersion)
-            }
+        val artifactDirs = groupDir.listFiles().orEmpty().sortedBy { it.name }
+        val versionDirs = artifactDirs.map { it.resolve(kspVersion) }.filter { it.isDirectory }
+        assertThat(versionDirs).isNotEmpty()
+        val artifacts = versionDirs.map { readArtifact(it) }
+        val json = JsonOutput.prettyPrint(JsonOutput.toJson(artifacts.map { it.toJson() }))
+        val actual = json.replace("\r\n", "\n") + "\n"
 
-        if (System.getProperty("updateTestSnapshots") != null) {
-            val relPath =
-                "gradle-plugin/src/test/resources/com/google/devtools/ksp/gradle/$SNAPSHOT_RESOURCE"
-            testConfig.kspProjectDir
-                .resolve(relPath)
-                .apply { parentFile.mkdirs() }
-                .writeText(actual, Charsets.UTF_8)
+        if (System.getProperty("updateTestSnapshots") == "true") {
+            val packageDir = javaClass.packageName.replace('.', '/')
+            val golden = "gradle-plugin/src/test/resources/$packageDir/$GOLDEN"
+            testConfig.kspProjectDir.resolve(golden).apply { parentFile.mkdirs() }.writeText(actual)
             return
         }
 
-        val expected =
-            checkNotNull(javaClass.getResource(SNAPSHOT_RESOURCE)).readText().replace("\r\n", "\n")
-        val cmd =
-            "./gradlew :gradle-plugin:test --tests \"*PublishedMetadataTest\" -DupdateTestSnapshots=true"
-        assertWithMessage("Published Maven/Gradle metadata changed. If intentional, run: $cmd")
+        val expected = checkNotNull(javaClass.getResource(GOLDEN)).readText().replace("\r\n", "\n")
+        assertWithMessage(
+                "Published Maven/Gradle metadata changed. If intentional, run " +
+                    "./gradlew :gradle-plugin:updatePublishedMetadata"
+            )
             .that(actual)
             .isEqualTo(expected)
     }
 
-    private fun describeArtifact(artifactId: String, versionDir: File, kspVersion: String): String {
-        val resolved =
+    private fun readArtifact(versionDir: File): Artifact {
+        val artifactId = versionDir.parentFile.name
+        val version =
             if (kspVersion.endsWith("-SNAPSHOT")) {
-                val meta = docBuilder.parse(versionDir.resolve("maven-metadata.xml"))
-                val ts = meta.eval("/metadata/versioning/snapshot/timestamp")
-                val bn = meta.eval("/metadata/versioning/snapshot/buildNumber")
-                "${kspVersion.removeSuffix("-SNAPSHOT")}-$ts-$bn"
+                val metadata = docBuilder.parse(versionDir.resolve("maven-metadata.xml"))
+                val timestamp = metadata.eval("/metadata/versioning/snapshot/timestamp")
+                val buildNumber = metadata.eval("/metadata/versioning/snapshot/buildNumber")
+                "${kspVersion.removeSuffix("-SNAPSHOT")}-$timestamp-$buildNumber"
             } else kspVersion
-        val pom = docBuilder.parse(versionDir.resolve("$artifactId-$resolved.pom"))
+        val pom = docBuilder.parse(versionDir.resolve("$artifactId-$version.pom"))
         val project = xpath.evaluate("/project", pom, XPathConstants.NODE) as Node
-        val groupId = project.eval("groupId")
-        val version = normVer(groupId, project.eval("version"), kspVersion)
-        val packaging = project.eval("packaging")
-        val deps =
+        val dependencies =
             xpath.evaluate("dependencies/dependency", project, XPathConstants.NODESET) as NodeList
-        return buildString {
-            appendLine("$groupId:${project.eval("artifactId")}:$version")
-            if (packaging.isNotEmpty()) appendLine("  packaging=$packaging")
-            appendLine("  pomName=${project.eval("name")}")
-            appendLine("  description=${project.eval("description")}")
-            if (deps.length > 0) {
-                appendLine("  dependencies:")
-                for (i in 0 until deps.length) {
-                    val d = deps.item(i)
-                    val g = d.eval("groupId")
-                    appendLine(
-                        "    $g:${d.eval("artifactId")}:${normVer(g, d.eval("version"), kspVersion)} (${d.eval("scope")})"
-                    )
-                }
-            }
-            val moduleFile = versionDir.resolve("$artifactId-$resolved.module")
-            if (moduleFile.isFile) append(describeModuleVariants(moduleFile, kspVersion))
+        val moduleFile = versionDir.resolve("$artifactId-$version.module")
+        return Artifact(
+            coordinates = project.coordinates(),
+            packaging = project.eval("packaging").ifEmpty { null },
+            name = project.eval("name"),
+            description = project.eval("description"),
+            dependencies =
+                (0 until dependencies.length).map { readPomDependency(dependencies.item(it)) },
+            variants = if (moduleFile.isFile) readVariants(moduleFile) else emptyList(),
+        )
+    }
+
+    private fun readPomDependency(dependency: Node) =
+        PomDependency(dependency.coordinates(), dependency.eval("scope").ifEmpty { null })
+
+    private fun readVariants(moduleFile: File): List<Variant> {
+        val module = JsonSlurper().parse(moduleFile, Charsets.UTF_8.name()) as Map<*, *>
+        return module.listOfMaps("variants").map { variant ->
+            val attributes = (variant["attributes"] as? Map<*, *>).orEmpty()
+            Variant(
+                name = variant["name"].toString(),
+                attributes = attributes.mapKeys { it.key.toString() }.toSortedMap(),
+                dependencies = variant.listOfMaps("dependencies").map { readModuleDependency(it) },
+                dependencyConstraints =
+                    variant.listOfMaps("dependencyConstraints").map { readModuleDependency(it) },
+            )
         }
     }
 
-    private fun describeModuleVariants(moduleFile: File, kspVersion: String): String {
-        val root = JsonSlurper().parse(moduleFile, Charsets.UTF_8.name()) as Map<*, *>
-        val variants = (root["variants"] as? List<*>).orEmpty().filterIsInstance<Map<*, *>>()
-        if (variants.isEmpty()) return ""
-        return buildString {
-            appendLine("  variants:")
-            for (variant in variants) {
-                appendLine("    ${variant["name"]}:")
-                val attrs =
-                    (variant["attributes"] as? Map<*, *>).orEmpty().entries.sortedBy {
-                        it.key.toString()
-                    }
-                if (attrs.isNotEmpty()) {
-                    appendLine("      attributes:")
-                    attrs.forEach { (k, v) -> appendLine("        $k=$v") }
-                }
-                for (key in listOf("dependencies", "dependencyConstraints")) {
-                    val deps = (variant[key] as? List<*>).orEmpty().filterIsInstance<Map<*, *>>()
-                    if (deps.isNotEmpty()) {
-                        appendLine("      $key:")
-                        deps.forEach { appendLine("        ${formatModuleDep(it, kspVersion)}") }
+    private fun readModuleDependency(dependency: Map<*, *>): ModuleDependency {
+        val group = dependency["group"].toString()
+        val version = (dependency["version"] as? Map<*, *>).orEmpty()
+        // In a fixed order, so that the golden is deterministic.
+        val constraints =
+            listOf("requires", "strictly", "prefers", "rejects")
+                .filter { it in version }
+                .associateWith { key ->
+                    when (val value = version[key]) {
+                        is List<*> -> value.map { normalize(group, it.toString()) }
+                        else -> normalize(group, value.toString())
                     }
                 }
-            }
-        }
+        return ModuleDependency("$group:${dependency["module"]}", constraints)
     }
 
-    private fun formatModuleDep(dep: Map<*, *>, kspVersion: String): String {
-        val group = dep["group"].toString()
-        val ver = (dep["version"] as? Map<*, *>).orEmpty()
-        val clauses = buildList {
-            for (k in listOf("requires", "strictly", "prefers")) {
-                ver[k]?.let { add("$k ${normVer(group, it.toString(), kspVersion)}") }
-            }
-            (ver["rejects"] as? List<*>)?.let { list ->
-                add(
-                    "rejects " +
-                        list.joinToString(" | ") { normVer(group, it.toString(), kspVersion) }
-                )
-            }
-        }
-        val suffix =
-            if (clauses.size == 1 && clauses[0].startsWith("requires "))
-                ":${clauses[0].removePrefix("requires ")}"
-            else if (clauses.isNotEmpty()) " {${clauses.joinToString("; ")}}" else ""
-        return "$group:${dep["module"]}$suffix"
-    }
+    private fun Map<*, *>.listOfMaps(key: String): List<Map<*, *>> =
+        (this[key] as? List<*>).orEmpty().filterIsInstance<Map<*, *>>()
 
     private fun Node.eval(expr: String): String = xpath.evaluate(expr, this)
 
-    private fun normVer(groupId: String, version: String, kspVersion: String): String =
-        if (groupId == KSP_GROUP_ID && version == kspVersion) "\$KSP_VERSION" else version
+    /** `group:artifact:version` of a POM project or dependency. */
+    private fun Node.coordinates(): String {
+        val group = eval("groupId")
+        return "$group:${eval("artifactId")}:${normalize(group, eval("version"))}"
+    }
+
+    /** Replaces the version of KSP's own artifacts with `$KSP_VERSION`. */
+    private fun normalize(group: String, version: String): String =
+        if (group == KSP_GROUP_ID && version == kspVersion) "\$KSP_VERSION" else version
 }
+
+// toJson() fixes the order of the keys and leaves out empty values. JsonOutput writes the JSON.
+
+private data class Artifact(
+    val coordinates: String,
+    val packaging: String?,
+    val name: String,
+    val description: String,
+    val dependencies: List<PomDependency>,
+    val variants: List<Variant>,
+) {
+    fun toJson() =
+        jsonObject(
+            "coordinates" to coordinates,
+            "packaging" to packaging,
+            "name" to name,
+            "description" to description,
+            "dependencies" to dependencies.map { it.toJson() },
+            "variants" to variants.map { it.toJson() },
+        )
+}
+
+private data class PomDependency(val coordinates: String, val scope: String?) {
+    fun toJson() = jsonObject("coordinates" to coordinates, "scope" to scope)
+}
+
+private data class Variant(
+    val name: String,
+    val attributes: Map<String, Any?>,
+    val dependencies: List<ModuleDependency>,
+    val dependencyConstraints: List<ModuleDependency>,
+) {
+    fun toJson() =
+        jsonObject(
+            "name" to name,
+            "attributes" to attributes,
+            "dependencies" to dependencies.map { it.toJson() },
+            "dependencyConstraints" to dependencyConstraints.map { it.toJson() },
+        )
+}
+
+private data class ModuleDependency(val module: String, val version: Map<String, Any>) {
+    fun toJson() = jsonObject("module" to module, "version" to version)
+}
+
+private fun jsonObject(vararg entries: Pair<String, Any?>): Map<String, Any?> =
+    entries.filterNot { (_, value) -> value.isNullOrEmpty() }.toMap(LinkedHashMap())
+
+private fun Any?.isNullOrEmpty() =
+    this == null || this is Collection<*> && isEmpty() || this is Map<*, *> && isEmpty()

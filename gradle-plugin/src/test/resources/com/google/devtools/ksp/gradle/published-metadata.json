@@ -1,0 +1,222 @@
+[
+    {
+        "coordinates": "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:$KSP_VERSION",
+        "packaging": "pom",
+        "name": "com.google.devtools.ksp.gradle.plugin",
+        "description": "Kotlin symbol processing integration for Gradle",
+        "dependencies": [
+            {
+                "coordinates": "com.google.devtools.ksp:symbol-processing-gradle-plugin:$KSP_VERSION"
+            }
+        ]
+    },
+    {
+        "coordinates": "com.google.devtools.ksp:symbol-processing:$KSP_VERSION",
+        "packaging": "pom",
+        "name": "com.google.devtools.ksp:symbol-processing",
+        "description": "Symbol processing for Kotlin"
+    },
+    {
+        "coordinates": "com.google.devtools.ksp:symbol-processing-aa:$KSP_VERSION",
+        "name": "com.google.devtools.ksp:symbol-processing-aa",
+        "description": "KSP implementation on Kotlin Analysis API",
+        "dependencies": [
+            {
+                "coordinates": "org.jetbrains.kotlin:kotlin-stdlib:2.3.20",
+                "scope": "runtime"
+            },
+            {
+                "coordinates": "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.2",
+                "scope": "runtime"
+            },
+            {
+                "coordinates": "com.google.devtools.ksp:symbol-processing-api:$KSP_VERSION",
+                "scope": "compile"
+            },
+            {
+                "coordinates": "com.google.devtools.ksp:symbol-processing-common-deps:$KSP_VERSION",
+                "scope": "compile"
+            }
+        ]
+    },
+    {
+        "coordinates": "com.google.devtools.ksp:symbol-processing-aa-embeddable:$KSP_VERSION",
+        "name": "com.google.devtools.ksp:symbol-processing-aa-embeddable",
+        "description": "KSP implementation on Kotlin Analysis API",
+        "dependencies": [
+            {
+                "coordinates": "org.jetbrains.kotlin:kotlin-stdlib:2.3.20",
+                "scope": "runtime"
+            },
+            {
+                "coordinates": "com.google.devtools.ksp:symbol-processing-api:$KSP_VERSION",
+                "scope": "runtime"
+            },
+            {
+                "coordinates": "com.google.devtools.ksp:symbol-processing-common-deps:$KSP_VERSION",
+                "scope": "runtime"
+            }
+        ]
+    },
+    {
+        "coordinates": "com.google.devtools.ksp:symbol-processing-api:$KSP_VERSION",
+        "name": "com.google.devtools.ksp:symbol-processing-api",
+        "description": "Symbol processing for Kotlin",
+        "dependencies": [
+            {
+                "coordinates": "org.jetbrains.kotlin:kotlin-stdlib:2.4.0",
+                "scope": "compile"
+            }
+        ],
+        "variants": [
+            {
+                "name": "apiElements",
+                "attributes": {
+                    "org.gradle.category": "library",
+                    "org.gradle.dependency.bundling": "external",
+                    "org.gradle.jvm.environment": "standard-jvm",
+                    "org.gradle.jvm.version": 8,
+                    "org.gradle.libraryelements": "jar",
+                    "org.gradle.usage": "java-api",
+                    "org.jetbrains.kotlin.platform.type": "jvm"
+                },
+                "dependencies": [
+                    {
+                        "module": "org.jetbrains.kotlin:kotlin-stdlib",
+                        "version": {
+                            "requires": "2.4.0"
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "runtimeElements",
+                "attributes": {
+                    "org.gradle.category": "library",
+                    "org.gradle.dependency.bundling": "external",
+                    "org.gradle.jvm.environment": "standard-jvm",
+                    "org.gradle.jvm.version": 8,
+                    "org.gradle.libraryelements": "jar",
+                    "org.gradle.usage": "java-runtime",
+                    "org.jetbrains.kotlin.platform.type": "jvm"
+                },
+                "dependencies": [
+                    {
+                        "module": "org.jetbrains.kotlin:kotlin-stdlib",
+                        "version": {
+                            "requires": "2.4.0"
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "coordinates": "com.google.devtools.ksp:symbol-processing-common-deps:$KSP_VERSION",
+        "name": "com.google.devtools.ksp:symbol-processing-common-deps",
+        "description": "Kotlin Symbol processing Gradle Utils",
+        "dependencies": [
+            {
+                "coordinates": "org.jetbrains.kotlin:kotlin-stdlib:2.4.0",
+                "scope": "compile"
+            }
+        ],
+        "variants": [
+            {
+                "name": "apiElements",
+                "attributes": {
+                    "org.gradle.category": "library",
+                    "org.gradle.dependency.bundling": "external",
+                    "org.gradle.jvm.environment": "standard-jvm",
+                    "org.gradle.jvm.version": 8,
+                    "org.gradle.libraryelements": "jar",
+                    "org.gradle.usage": "java-api",
+                    "org.jetbrains.kotlin.platform.type": "jvm"
+                },
+                "dependencies": [
+                    {
+                        "module": "org.jetbrains.kotlin:kotlin-stdlib",
+                        "version": {
+                            "requires": "2.4.0"
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "runtimeElements",
+                "attributes": {
+                    "org.gradle.category": "library",
+                    "org.gradle.dependency.bundling": "external",
+                    "org.gradle.jvm.environment": "standard-jvm",
+                    "org.gradle.jvm.version": 8,
+                    "org.gradle.libraryelements": "jar",
+                    "org.gradle.usage": "java-runtime",
+                    "org.jetbrains.kotlin.platform.type": "jvm"
+                },
+                "dependencies": [
+                    {
+                        "module": "org.jetbrains.kotlin:kotlin-stdlib",
+                        "version": {
+                            "requires": "2.4.0"
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "coordinates": "com.google.devtools.ksp:symbol-processing-gradle-plugin:$KSP_VERSION",
+        "name": "symbol-processing-gradle-plugin",
+        "description": "Kotlin symbol processing integration for Gradle",
+        "dependencies": [
+            {
+                "coordinates": "com.google.devtools.ksp:symbol-processing-api:$KSP_VERSION",
+                "scope": "runtime"
+            },
+            {
+                "coordinates": "com.google.devtools.ksp:symbol-processing-common-deps:$KSP_VERSION",
+                "scope": "runtime"
+            }
+        ],
+        "variants": [
+            {
+                "name": "apiElements",
+                "attributes": {
+                    "org.gradle.category": "library",
+                    "org.gradle.dependency.bundling": "external",
+                    "org.gradle.jvm.environment": "standard-jvm",
+                    "org.gradle.jvm.version": 11,
+                    "org.gradle.libraryelements": "jar",
+                    "org.gradle.usage": "java-api",
+                    "org.jetbrains.kotlin.platform.type": "jvm"
+                }
+            },
+            {
+                "name": "runtimeElements",
+                "attributes": {
+                    "org.gradle.category": "library",
+                    "org.gradle.dependency.bundling": "external",
+                    "org.gradle.jvm.environment": "standard-jvm",
+                    "org.gradle.jvm.version": 11,
+                    "org.gradle.libraryelements": "jar",
+                    "org.gradle.usage": "java-runtime",
+                    "org.jetbrains.kotlin.platform.type": "jvm"
+                },
+                "dependencies": [
+                    {
+                        "module": "com.google.devtools.ksp:symbol-processing-api",
+                        "version": {
+                            "requires": "$KSP_VERSION"
+                        }
+                    },
+                    {
+                        "module": "com.google.devtools.ksp:symbol-processing-common-deps",
+                        "version": {
+                            "requires": "$KSP_VERSION"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+]

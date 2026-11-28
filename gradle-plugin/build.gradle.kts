@@ -138,7 +138,8 @@ tasks.named("processTestResources").configure {
     dependsOn(writeTestPropsTask)
 }
 
-tasks.named<Test>("test").configure {
+// All tests, including the published metadata tasks below, read the published test repository.
+tasks.withType<Test>().configureEach {
     dependsOn(":api:publishAllPublicationsToTestRepository")
     dependsOn(":common-deps:publishAllPublicationsToTestRepository")
     dependsOn(":gradle-plugin:publishAllPublicationsToTestRepository")
@@ -153,11 +154,35 @@ tasks.named<Test>("test").configure {
         )
         .withPropertyName("publishedTestRepoMetadata")
         .withPathSensitivity(PathSensitivity.RELATIVE)
-    System.getProperty("updateTestSnapshots")?.let {
-        systemProperty("updateTestSnapshots", it)
-        outputs.upToDateWhen { false }
-    }
 }
+
+/**
+ * Registers a task that runs only `PublishedMetadataTest`, which compares the published POMs and Gradle Module
+ * Metadata against a golden file. The regular `test` task runs it too, but never updates the golden.
+ */
+fun registerPublishedMetadataTask(name: String, taskDescription: String, update: Boolean) =
+    tasks.register<Test>(name) {
+        group = "verification"
+        description = taskDescription
+        testClassesDirs = sourceSets["test"].output.classesDirs
+        classpath = sourceSets["test"].runtimeClasspath
+        filter.includeTestsMatching("com.google.devtools.ksp.gradle.PublishedMetadataTest")
+        if (update) {
+            systemProperty("updateTestSnapshots", "true")
+            outputs.upToDateWhen { false }
+        }
+    }
+
+registerPublishedMetadataTask(
+    "checkPublishedMetadata",
+    "Checks the published POMs and Gradle Module Metadata against the golden file.",
+    update = false,
+)
+registerPublishedMetadataTask(
+    "updatePublishedMetadata",
+    "Updates the golden file with the published POMs and Gradle Module Metadata.",
+    update = true,
+)
 
 abstract class WriteVersionSrcTask : DefaultTask() {
     @get:Input abstract val kspVersion: Property<String>

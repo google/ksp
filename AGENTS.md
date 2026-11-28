@@ -111,10 +111,10 @@ Read `CONTRIBUTING.md`.
   ./gradlew :api:updateApi
   ```
 * **Check / Update Published Metadata Goldens (`Maven POM` & `Gradle Module Metadata`)**:
-  Whenever modifying published artifact dependencies, versions, or Gradle variant attributes across publishing subprojects, verify compatibility against `gradle-plugin/src/test/resources/com/google/devtools/ksp/gradle/published-metadata.txt`:
+  Whenever modifying published artifact dependencies, versions, or Gradle variant attributes across publishing subprojects, verify compatibility against `gradle-plugin/src/test/resources/com/google/devtools/ksp/gradle/published-metadata.json` (`:gradle-plugin:test` runs the same check):
   ```bash
-  ./gradlew :gradle-plugin:test --tests "*PublishedMetadataTest"
-  ./gradlew :gradle-plugin:test --tests "*PublishedMetadataTest" -DupdateTestSnapshots=true
+  ./gradlew :gradle-plugin:checkPublishedMetadata
+  ./gradlew :gradle-plugin:updatePublishedMetadata
   ```
 * **Shadow JAR & Relocation Validation**:
   * `./gradlew :kotlin-analysis-api:validateShadowJar`: Runs `jdeps` against `kotlin-analysis-api/shadow-validation-baseline.txt` and verifies no forbidden packages (such as `org/apache/log4j/jdbc`) leak into the shadow JAR.
