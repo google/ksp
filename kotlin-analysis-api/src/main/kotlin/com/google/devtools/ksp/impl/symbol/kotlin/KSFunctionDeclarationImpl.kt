@@ -536,7 +536,7 @@ internal fun KaFunctionSymbol.toModifiers(): Set<Modifier> {
             if (isOperator) {
                 result.add(Modifier.OPERATOR)
             }
-            if (isOperator) {
+            if (isOverride) {
                 result.add(Modifier.OVERRIDE)
             }
         }
