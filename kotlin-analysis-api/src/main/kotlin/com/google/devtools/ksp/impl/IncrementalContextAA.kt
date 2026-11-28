@@ -223,11 +223,14 @@ class IncrementalContextAA(
     /**
      * Returns a string representing a file path for [declaration].
      *
-     * If the filepath is already available, it is returned. Otherwise, a synthetic filepath is generated.
+     * If [declaration] comes from sources, the path of its file is returned. Otherwise, a synthetic filepath is generated.
      */
     private fun filePathFor(declaration: KSDeclaration): String {
         // Try directly getting the filepath
-        val maybeAvailableFilePath = declaration.containingFile?.filePath
+        val maybeAvailableFilePath = when (declaration.origin) {
+            Origin.JAVA_LIB, Origin.KOTLIN_LIB -> null
+            else -> declaration.containingFile?.filePath
+        }
         if (maybeAvailableFilePath != null) {
             return maybeAvailableFilePath
         }
