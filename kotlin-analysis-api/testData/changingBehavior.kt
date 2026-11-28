@@ -16,27 +16,53 @@
  */
 
 // TEST PROCESSOR: ChangingBehaviorProcessor
-// PROCESSOR INPUT: Anno, FieldAnno, PropAnno
+// PROCESSOR INPUT: Anno, CtxAnno, FieldAnno, PropAnno
 // EXPECTED:
 // apiFeatures = KSApiFeatures(enableBackingFields=false, enableContextParameters=false)
-// Resolver.getSymbolsWithAnnotation("Anno") = MyClass.x
-// Resolver.getSymbolsWithAnnotation("FieldAnno") = MyClass.x
-// Resolver.getSymbolsWithAnnotation("PropAnno") = MyClass.x
+// Resolver.getSymbolsWithAnnotation("Anno") = [MyClass.foo, MyClass.x, MyClass.y]
+// Resolver.getSymbolsWithAnnotation("CtxAnno") = []
+// Resolver.getSymbolsWithAnnotation("FieldAnno") = [MyClass.x]
+// Resolver.getSymbolsWithAnnotation("PropAnno") = [MyClass.x]
+// MyClass.foo.annotations = Anno
+// MyClass.foo.modifiers = FINAL, PUBLIC
+// MyClass.foo.contextParameters = []
 // MyClass.x.annotations = Anno, FieldAnno, PropAnno
 // MyClass.x.modifiers = FINAL, PUBLIC
+// MyClass.x.backingField = null
+// MyClass.x.contextParameters = []
+// MyClass.y.annotations = Anno
+// MyClass.y.modifiers = FINAL, PUBLIC
+// MyClass.y.backingField = null
+// MyClass.y.contextParameters = []
 // apiFeatures = KSApiFeatures(enableBackingFields=true, enableContextParameters=true)
-// Resolver.getSymbolsWithAnnotation("Anno") = MyClass.x
-// Resolver.getSymbolsWithAnnotation("FieldAnno") = MyClass.x.field
-// Resolver.getSymbolsWithAnnotation("PropAnno") = MyClass.x
+// Resolver.getSymbolsWithAnnotation("Anno") = [MyClass.foo, MyClass.x, MyClass.y]
+// Resolver.getSymbolsWithAnnotation("CtxAnno") = [MyClass.foo.ctx, MyClass.y.ctx]
+// Resolver.getSymbolsWithAnnotation("FieldAnno") = [MyClass.x.field]
+// Resolver.getSymbolsWithAnnotation("PropAnno") = [MyClass.x]
+// MyClass.foo.annotations = Anno
+// MyClass.foo.modifiers = FINAL, PUBLIC
+// MyClass.foo.contextParameters = [MyClass.foo.ctx]
+// MyClass.foo.ctx.annotations = CtxAnno
 // MyClass.x.annotations = Anno, PropAnno
 // MyClass.x.modifiers = FINAL, PUBLIC
+// MyClass.x.backingField = MyClass.x.field
+// MyClass.x.contextParameters = []
 // MyClass.x.field.annotations = FieldAnno
 // MyClass.x.field.modifiers = FINAL, PRIVATE
+// MyClass.y.annotations = Anno
+// MyClass.y.modifiers = FINAL, PUBLIC
+// MyClass.y.backingField = null
+// MyClass.y.contextParameters = [MyClass.y.ctx]
+// MyClass.y.ctx.annotations = CtxAnno
 // END
 
 // FILE: Anno.kt
 
 annotation class Anno
+
+// FILE: CtxAnno.kt
+
+annotation class CtxAnno
 
 // FILE: FieldAnno.kt
 
@@ -48,9 +74,20 @@ annotation class PropAnno
 
 // FILE: MyClass.kt
 
+interface Ctx
+
 class MyClass {
     @Anno
     @field:FieldAnno
     @property:PropAnno
     val x = 42
+
+    @Anno
+    context(@CtxAnno ctx: Ctx)
+    val y: Int
+        get() = 42
+
+    @Anno
+    context(@CtxAnno ctx: Ctx)
+    fun foo() {}
 }
